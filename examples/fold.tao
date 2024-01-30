@@ -1,0 +1,11 @@
+
+def fold<T>(f T -> T -> T, start T, list [T]) T:
+    var accum = start
+    for item in list[1:]:
+        accum = f(accum, item)
+    return accum
+    
+def main():
+    let sum = fold(lambda x, y: x + y, 0, [1 .. 100])
+    print(sum)
+

@@ -1,0 +1,78 @@
+lexer grammar TaoLexer;
+
+/* setup the indentation-based lexing */
+@lexer::members {
+	private int INDENT_TOKEN = TaoParser.INDENT;
+	private int DEDENT_TOKEN = TaoParser.DEDENT;
+}
+import DentLexer;
+
+/* our keywords */
+AND:        'and';
+AS:         'as';
+ASSERT:     'assert';
+BREAK:      'break';
+CONTINUE:   'continue';
+DEF:        'def';
+ELIF:       'elif';
+ELSE:       'else';
+FALSE:      'false';
+FOR:        'for';
+IF:         'if';
+IN:         'in';
+LAMBDA:     'lambda';
+LET:        'let';
+NOT:        'not';
+OF:         'of';
+OR:         'or';
+PASS:       'pass';
+RETURN:     'return';
+TRUE:       'true';
+TYPE:       'type';
+VAR:        'var';
+WHILE:      'while';
+
+/* type names */
+INT:        'Int';
+FLOAT:      'Float';
+STRING:     'String';
+BOOL:       'Bool';
+
+/* punctuations */
+PLUS:       '+';
+MINUS:      '-';
+DIVIDE:     '/';
+TIMES:      '*';
+LESS:       '<';
+GREATER:    '>';
+LESSEQ:     '<=';
+GREATEREQ:  '>=';
+EQUALS:     '==';
+NOTEQUALS:  '!=';
+COLON:      ':';
+SEMI:       ';';
+COMMA:      ',';
+ASSIGN:     '=';
+LPAREN:     '(';
+RPAREN:     ')';
+LBRACK:     '[';
+RBRACK:     ']';
+LBRACE:     '{';
+RBRACE:     '}';
+ELIPSIS:    '..';
+
+/* tao differentiates between id (start lower case) and type (upper case) names */
+IDNAME:     [a-z][_0-9a-zA-Z]*;
+TYPENAME:   [A-Z][_0-9a-zA-Z]*;
+
+/* TODO add in more for these (hex numbers, scientific notation, etc. */
+INTVAL:     [0-9]+;
+FLOATVAL:   [0-9]*'.'[0-9]+;
+
+/* thank you antlr book */
+STRINGVAL: '"' (ESC|.)*? '"';
+fragment ESC: '\\"' | '\\\\';
+
+/* comments */
+COMMENT: '#' .*? '\r'? '\n' -> channel(HIDDEN);
+

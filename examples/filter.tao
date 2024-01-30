@@ -1,0 +1,14 @@
+
+def filter<T>(f T -> bool, list [T]) [T]:
+    var result = []
+    for item in list:
+        if (f(item)):
+            result += item
+    return result
+
+def isEven(num int) bool:
+    return num % 2 == 0
+
+def main():
+    print(filter(isEven, [1 .. 20]))
+

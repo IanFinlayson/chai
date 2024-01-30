@@ -1,0 +1,23 @@
+Roadmap:
+    - write random code samples for each feature
+    - write a tree-walking interpreter in Java, not
+      efficient but easy to try things out in
+    - write a more efficient compiler/VM backend
+
+
+Features:
+    - Python based syntax
+    - static typing with local inference
+    - first class functions
+    - type parameters (a la Haskell)
+    - higher order functions
+    - GC
+    - currying
+    - algebraic types
+    - no nulls
+    - closures
+    - look into traits or protocols or classes
+    - lists, dicts, tuples, sets
+
+    - classes and/or protocols and/or traits?
+    - destructuring of tuples and lists, at least

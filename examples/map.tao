@@ -1,0 +1,10 @@
+
+def map<T>(f T -> T, list [T]) [T]:
+    var result = []
+    for item in list:
+        result += f(item)
+    return result
+
+def main():
+    print(map(lambda x: x * s, [1 .. 10]))
+

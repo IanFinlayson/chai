@@ -1,0 +1,21 @@
+#!/bin/bash
+
+# load aliases from bash profile
+shopt -s expand_aliases
+source ~/.bash_profile
+
+# compile lexer file
+antlr4 TaoLexer.g4 || exit 1
+
+# compile parser file
+antlr4 -no-listener TaoParser.g4 || exit 1
+
+# compile generated java files
+/usr/bin/javac *.java || exit 1
+
+echo "All done!"
+echo "To test lexer:"
+echo "    grun Tao program -tokens < test.tao"
+echo "    grun Tao program -tree < test.sl"
+echo "    grun Tao program -ps tree.ps < test.sl"
+
