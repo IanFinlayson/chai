@@ -1,4 +1,4 @@
-def fact(num int) int:
+def fact(num Int) Int:
     if num == 0:
         return 1
     else:

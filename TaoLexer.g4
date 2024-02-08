@@ -74,5 +74,5 @@ STRINGVAL: '"' (ESC|.)*? '"';
 fragment ESC: '\\"' | '\\\\';
 
 /* comments */
-COMMENT: '#' .*? '\r'? '\n' -> channel(HIDDEN);
+COMMENT: '#'~[\n\r]* -> channel(HIDDEN);
 

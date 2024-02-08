@@ -1,6 +1,5 @@
 # Tao Programming Language Overview
 
-
 ## Overview
 
 Tao aims to be a high-level, general-purpose programming language.  It combines
@@ -140,6 +139,8 @@ def main():
 
 ## Sets
 
+
+
 ## Unions
 
 ```
@@ -156,8 +157,13 @@ first class functions
 currying
 closures
 
+## Classes
+
+
 ## Type Parameters
 
-## TODO: objects or sth?
+
+## Libraries
+
 
 

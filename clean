@@ -1,4 +1,4 @@
 #!/bin/bash
 
-rm -f *.class *.interp *.tokens TaoLexer.java TaoLexerBaseListener.java TaoLexerLexer.java TaoLexerListener.java TaoLexerParser.java TaoParser.java
+rm -f *.class *.interp *.tokens TaoLexer.java TaoLexerBaseListener.java TaoLexerLexer.java TaoLexerListener.java TaoLexerParser.java TaoParser.java *.ps
 
