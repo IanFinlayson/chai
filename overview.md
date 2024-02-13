@@ -131,6 +131,16 @@ def main():
     var birthDay = (10, 26, 1984)
 ```
 
+Unlike Python, tuples in Tao require parentheses in all contexts.  (Python has
+them being optional sometimes but not others).  Likewise in Tao, one creates a
+tuple of size 1 whenever a value is enclosed in parens.  E.g. the code
+
+```
+let value = (a * 3)
+'''
+
+produces a tuple with one value as the contents.
+
 
 ## Dictionaries
 

@@ -16,6 +16,6 @@ antlr4 -no-listener TaoParser.g4 || exit 1
 echo "All done!"
 echo "To test lexer:"
 echo "    grun Tao program -tokens < test.tao"
-echo "    grun Tao program -tree < test.sl"
-echo "    grun Tao program -ps tree.ps < test.sl"
+echo "    grun Tao program -tree < test.tao"
+echo "    grun Tao program -ps tree.ps < test.tao"
 

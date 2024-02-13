@@ -16,7 +16,6 @@ CONTINUE:   'continue';
 DEF:        'def';
 ELIF:       'elif';
 ELSE:       'else';
-FALSE:      'false';
 FOR:        'for';
 IF:         'if';
 IN:         'in';
@@ -27,7 +26,6 @@ OF:         'of';
 OR:         'or';
 PASS:       'pass';
 RETURN:     'return';
-TRUE:       'true';
 TYPE:       'type';
 VAR:        'var';
 WHILE:      'while';
@@ -37,6 +35,8 @@ INT:        'Int';
 FLOAT:      'Float';
 STRING:     'String';
 BOOL:       'Bool';
+TRUE:       'True';
+FALSE:      'False';
 
 /* punctuations */
 PLUS:       '+';

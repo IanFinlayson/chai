@@ -7,14 +7,13 @@ endif
 
 " keywords
 syn keyword taoKeyword if elif else while for in def lambda return and or not var let type of
-syn keyword taoType Int Float String Bool
+syn keyword taoType Int Float String Bool True False
 
 " comments and TODOs
 syn keyword taoTodo contained TODO FIXME
 syn match taoComment "#.*$" contains=taoTodo
 
 " values
-syn keyword taoValue true false
 syn match taoValue '\d\+'
 syn match taoValue '[-+]\d\+'
 " floating point value regexes taken from c.vim syntax file

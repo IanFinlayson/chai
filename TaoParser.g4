@@ -26,6 +26,7 @@ type: INT
     | STRING
     | BOOL
     | TYPENAME
+    | LPAREN (type COMMA)* type RPAREN
     ;
 
 // a list of 0 or more statements (or blank lines)
@@ -34,12 +35,17 @@ statements: (statement | NEWLINE)*;
 // any valid Tao statement
 statement: functioncall
          | IDNAME ASSIGN expression
+         | VAR IDNAME ASSIGN expression
          | RETURN expression
-         | IF expression COLON NEWLINE INDENT statements DEDENT
-         | IF expression COLON NEWLINE INDENT statements DEDENT ELSE COLON NEWLINE INDENT statements DEDENT
+         | ifstmt
          | FOR IDNAME IN expression COLON NEWLINE INDENT statements DEDENT
          | WHILE expression COLON NEWLINE INDENT statements DEDENT
          ;
+
+// we don't get else if for free
+ifstmt: IF expression COLON NEWLINE INDENT statements DEDENT elifclause* elseclause?;
+elifclause: ELIF expression COLON NEWLINE INDENT statements DEDENT;
+elseclause: ELSE COLON NEWLINE INDENT statements DEDENT;
 
 // a function call
 functioncall: IDNAME LPAREN arglist RPAREN;
@@ -71,5 +77,6 @@ term: IDNAME
     | LPAREN expression RPAREN
     | LBRACK (expression (COMMA expression)*)? RBRACK
     | functioncall
+    | LPAREN (expression COMMA)+ expression RPAREN
     ;
 
