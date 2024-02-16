@@ -26,7 +26,7 @@ type: INT
     | STRING
     | BOOL
     | TYPENAME
-    | LPAREN (type COMMA)* type RPAREN
+    | LPAREN (type COMMA)+ type RPAREN
     ;
 
 // a list of 0 or more statements (or blank lines)
@@ -34,13 +34,18 @@ statements: (statement | NEWLINE)*;
 
 // any valid Tao statement
 statement: functioncall
-         | IDNAME ASSIGN expression
+         | lvalue ASSIGN expression
          | VAR IDNAME ASSIGN expression
          | RETURN expression
          | ifstmt
          | FOR IDNAME IN expression COLON NEWLINE INDENT statements DEDENT
          | WHILE expression COLON NEWLINE INDENT statements DEDENT
          ;
+
+// something that can be assigned into -- basically name or list/dict/tuple/set reference
+lvalue: IDNAME
+      | lvalue LBRACK expression RBRACK
+      ;
 
 // we don't get else if for free
 ifstmt: IF expression COLON NEWLINE INDENT statements DEDENT elifclause* elseclause?;
@@ -57,7 +62,8 @@ arglist: (expression COMMA)* expression
 
 // any valid Tao expression
 expression: NOT expression
-          | expression op=(TIMES | DIVIDE) expression
+          | op=(PLUS | MINUS) expression
+          | expression op=(TIMES | DIVIDE | MODULUS) expression
           | expression op=(PLUS | MINUS) expression
           | expression op=(LESS | GREATER | LESSEQ | GREATEREQ | EQUALS | NOTEQUALS) expression
           | expression AND expression
@@ -73,10 +79,23 @@ term: IDNAME
     | STRINGVAL
     | TRUE
     | FALSE
+    
+    // list index like nums[i]
     | term LBRACK expression RBRACK
+          
+    // sth in parens
     | LPAREN expression RPAREN
+    
+    // a list literal like [3, 4, 5]
     | LBRACK (expression (COMMA expression)*)? RBRACK
     | functioncall
+    
+    // tuple literal like (3, 4, 5) (we don't allow 0 or 1 length tuples)
     | LPAREN (expression COMMA)+ expression RPAREN
+    
+    // a dictionary literal
+    | LBRACE (dictentry (COMMA dictentry)*)? RBRACE
     ;
+
+dictentry: expression COLON expression;
 

@@ -1,9 +1,0 @@
-# some tuples
-
-def tests() (String, Int, Bool):
-    info = ("Ian", 39, True)
-    return info
-
-def main():
-    print(tests())
-

@@ -43,6 +43,7 @@ PLUS:       '+';
 MINUS:      '-';
 DIVIDE:     '/';
 TIMES:      '*';
+MODULUS:    '%';
 LESS:       '<';
 GREATER:    '>';
 LESSEQ:     '<=';
