@@ -41,7 +41,8 @@ def main():
 ```
 
 Note that variables are introduced with the `var` keyword.  This prevents the
-creation of variables accidentally by misspelling an existing variable name.
+creation of variables accidentally by misspelling an existing variable name,
+as can happen in Python.
 
 We can also use `let` instead to introduce constant values:
 
@@ -127,8 +128,8 @@ instance, here we define a specific type of tuple:
 ```
 type Date = (Int, Int, Int)
 
-def main():
-    var birthDay = (10, 26, 1984)
+def getBirthDay() Date:
+    return (10, 26, 1984)
 ```
 
 Unlike Python, tuples in Tao require parentheses in all contexts.  (Python has
@@ -138,9 +139,23 @@ as a tuple with 0 or 1 elements.  There is no reason to create such a thing.
 
 ## Dictionaries
 
-Dictionaries in Tao work much as they do in Python.
+Dictionaries in Tao work much as they do in Python.  The following code creates
+a dictionary:
 
+```
+sentiments = {"good": 2, "awesome": 4, "bad": -2, "awful": -3}
+```
 
+We can then add or modify dictionary elements with this syntax:
+
+```
+sentiments["great"] = 3
+```
+
+And read values using the same syntax:
+```
+print(sentiments["awesome"])
+```
 
 ## Sets
 
@@ -154,7 +169,8 @@ type Tree = Leaf
 ```
 
 
-no nulls
+
+
 
 ## Functions
 
@@ -162,10 +178,36 @@ first class functions
 currying
 closures
 
-## Classes
-
 
 ## Type Parameters
+
+
+## None
+
+In Tao, `None` works differently from how it does in Python.  Taking a cue
+from languages like Haskell, we include an Option type which is declared like
+this:
+
+```
+type Option<T> = None
+               | Some of T
+```
+
+Any function that may not return a good value is declared as returning an Option
+type.  For example, the following function returns a String or None:
+
+```
+def slope(x0 Int, y0 Int, x1 Int, y1 Int) Option<Int>:
+    if x0 != x1:
+        return Some (y1 - y0) / (x1 - x0)
+    else:
+        return None
+```
+
+
+
+
+## Classes
 
 
 ## Libraries

@@ -61,6 +61,14 @@ RBRACK:     ']';
 LBRACE:     '{';
 RBRACE:     '}';
 ELIPSIS:    '..';
+BAR:        '|';
+
+PLUSASSIGN: '+=';
+MINUSASSIGN:'-=';
+TIMESASSIGN:'*=';
+DIVASSIGN:  '/=';
+MODASSIGN:  '%=';
+
 
 /* tao differentiates between id (start lower case) and type (upper case) names */
 IDNAME:     [a-z][_0-9a-zA-Z]*;

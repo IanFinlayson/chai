@@ -1,7 +1,8 @@
-collatz: /= and += etc.
-         also, the Int() casts etc.
-         maybe think how we want input to work...
+- Go back and add more operators, and test them more fully
 
+- Go back and think about how to marry unions into language
+write some code with them, how does it look???  Do they work
+with if/elif chains?  Pattern matching?
 
 Design questions/decisions we may revisit
  - Are () required on tuple values and/or types?

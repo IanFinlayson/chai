@@ -1,10 +1,15 @@
-def main():
-    var number = Int(input("Starting number: "))
+def collatz(number Int) Int:
+    var steps = 0
     while number != 1:
         print(number)
         if number % 2 == 0:
             number /= 2
         else:
             number = number * 3 + 1
-    print("Done")
+        steps += 1
+
+def main():
+    let number = input("Starting number: ")
+    let steps = collatz(number)
+    print("Done in ", steps, " steps.")
 
