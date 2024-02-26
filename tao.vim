@@ -6,7 +6,10 @@ if exists("b:current_syntax")
 endif
 
 " keywords
-syn keyword taoKeyword if elif else while for in def lambda return and or not var let type of
+syn keyword taoKeyword if elif else while for in def lambda return and or not var let type of match case
+syn keyword taoKeyword assert break continue pass
+
+" types
 syn keyword taoType Int Float String Bool True False
 
 " comments and TODOs
@@ -29,7 +32,4 @@ hi def link taoValue Constant
 hi def link taoComment Comment
 hi def link taoTodo Todo
 hi def link taoError Error
-
-let b:current_syntax = "tao"
-
 

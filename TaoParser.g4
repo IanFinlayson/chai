@@ -13,21 +13,23 @@ toplevel: functiondef
         ;
 
 // a function definition line
-functiondef: DEF IDNAME LPAREN paramlist RPAREN type? COLON NEWLINE INDENT statements DEDENT;
+functiondef: DEF IDNAME typeparams? LPAREN paramlist? RPAREN type? COLON NEWLINE INDENT statements DEDENT;
 
 // a list of 0 or more formal parameters to a function
-paramlist: (IDNAME type COMMA)* IDNAME type
-         |
-         ;
+paramlist: (IDNAME type COMMA)* IDNAME type;
 
-typedef: TYPE TYPENAME ASSIGN type;
+// a type definition such as a discriminated union (but really anything)
+typedef: TYPE TYPENAME typeparams? ASSIGN type;
+
+// one or more type parameters for generic code
+typeparams: LESS (TYPENAME COMMA)* TYPENAME GREATER;
 
 // any data type
 type: INT
     | FLOAT
     | STRING
     | BOOL
-    | TYPENAME
+    | TYPENAME typeparamfills?
 
     // a tuple type
     | LPAREN (type COMMA)+ type RPAREN
@@ -37,26 +39,38 @@ type: INT
 
     // a dict type
     | LBRACE type COLON type RBRACE
+    
+    // a set type
+    | LBRACE type RBRACE
 
     // discriminated union
     | unionpart BAR unionpart (BAR unionpart)*
+    
+    // a function type
+    | type ARROW type
     ;
+
+// filling in type params with real types
+typeparamfills: LESS (type COMMA)* type GREATER;
     
 // piece of a discriminated union
 unionpart: TYPENAME (OF type)?;
 
-// a list of 0 or more statements (or blank lines)
-statements: (statement | NEWLINE)*;
+// a list of 1 or more statements (or blank lines)
+statements: (statement | NEWLINE)+;
 
 // any valid Tao statement
 statement: functioncall
          | lvalue ASSIGN expression
          | (VAR | LET) IDNAME type? (ASSIGN expression)?
          | modassign
+         | ASSERT expression
          | RETURN expression
          | ifstmt
+         | PASS | CONTINUE | BREAK
          | FOR IDNAME IN expression COLON NEWLINE INDENT statements DEDENT
          | WHILE expression COLON NEWLINE INDENT statements DEDENT
+         | MATCH expression COLON NEWLINE INDENT caseline+ DEDENT
          ;
 
 // something that can be assigned into -- basically name or list/dict/tuple/set reference
@@ -67,18 +81,19 @@ lvalue: IDNAME
 // an operator assign type statement like `i += 1`
 modassign: lvalue op=(PLUSASSIGN | MINUSASSIGN | TIMESASSIGN | DIVASSIGN | MODASSIGN) expression;
 
+// a case in a match statement -- TODO do more pattern matches!
+caseline: CASE TYPENAME COLON NEWLINE INDENT statements DEDENT;
+
 // we don't get else if for free
 ifstmt: IF expression COLON NEWLINE INDENT statements DEDENT elifclause* elseclause?;
 elifclause: ELIF expression COLON NEWLINE INDENT statements DEDENT;
 elseclause: ELSE COLON NEWLINE INDENT statements DEDENT;
 
 // a function call
-functioncall: IDNAME LPAREN arglist RPAREN;
+functioncall: term LPAREN arglist? RPAREN;
 
 // the supplied argument list, containing 0 or more expressions, separated with commas
-arglist: (expression COMMA)* expression
-       |
-       ;
+arglist: (expression COMMA)* expression;
 
 // any valid Tao expression
 expression: NOT expression
@@ -89,8 +104,15 @@ expression: NOT expression
           | expression AND expression
           | expression OR expression
           | expression ELIPSIS expression
+          | expression IN expression
+          | lambda
+          | functioncall
           | term
           ;
+
+// a lambda function
+lambda: LAMBDA lambdaParams? COLON expression;
+lambdaParams: (IDNAME type COMMA)* IDNAME type;
 
 // a term is an individual piece of an expression
 term: IDNAME
@@ -108,13 +130,18 @@ term: IDNAME
 
     // a list literal like [3, 4, 5]
     | LBRACK (expression (COMMA expression)*)? RBRACK
-    | functioncall
 
     // tuple literal like (3, 4, 5) (we don't allow 0 or 1 length tuples)
     | LPAREN (expression COMMA)+ expression RPAREN
 
+    // a set literal
+    | LBRACE (expression (COMMA expression)*)? RBRACE
+
     // a dictionary literal
     | LBRACE (dictentry (COMMA dictentry)*)? RBRACE
+    
+    // a discriminated union
+    | TYPENAME expression?
     ;
 
 dictentry: expression COLON expression;

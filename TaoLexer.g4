@@ -9,9 +9,9 @@ import DentLexer;
 
 /* our keywords */
 AND:        'and';
-AS:         'as';
 ASSERT:     'assert';
 BREAK:      'break';
+CASE:       'case';
 CONTINUE:   'continue';
 DEF:        'def';
 ELIF:       'elif';
@@ -21,6 +21,7 @@ IF:         'if';
 IN:         'in';
 LAMBDA:     'lambda';
 LET:        'let';
+MATCH:      'match';
 NOT:        'not';
 OF:         'of';
 OR:         'or';
@@ -30,7 +31,7 @@ TYPE:       'type';
 VAR:        'var';
 WHILE:      'while';
 
-/* type names */
+/* pre-defined type names */
 INT:        'Int';
 FLOAT:      'Float';
 STRING:     'String';
@@ -51,7 +52,6 @@ GREATEREQ:  '>=';
 EQUALS:     '==';
 NOTEQUALS:  '!=';
 COLON:      ':';
-SEMI:       ';';
 COMMA:      ',';
 ASSIGN:     '=';
 LPAREN:     '(';
@@ -62,13 +62,13 @@ LBRACE:     '{';
 RBRACE:     '}';
 ELIPSIS:    '..';
 BAR:        '|';
+ARROW:      '->';
 
 PLUSASSIGN: '+=';
 MINUSASSIGN:'-=';
 TIMESASSIGN:'*=';
 DIVASSIGN:  '/=';
 MODASSIGN:  '%=';
-
 
 /* tao differentiates between id (start lower case) and type (upper case) names */
 IDNAME:     [a-z][_0-9a-zA-Z]*;
