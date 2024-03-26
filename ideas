@@ -1,3 +1,10 @@
+Things to add in:
+    - list comprehensions
+    - generators, lazy sequences
+    - classes or alternative...
+    - libraries
+
+
 Roadmap:
     - write random code samples for each feature
     - write a tree-walking interpreter in Java, not
@@ -9,16 +16,15 @@ Features:
     - Python based syntax
     - static typing with local inference
     - first class functions
-    - type parameters (a la Haskell)
+    - type parameters (a la ML)
     - higher order functions
     - GC
     - currying
     - algebraic types
     - no nulls
     - closures
-    - look into traits or protocols or classes
     - lists, dicts, tuples, sets
+    - destructuring of unions, tuples and lists, at least
 
     - classes and/or protocols and/or traits?
-    - destructuring of tuples and lists, at least
     

@@ -7,7 +7,7 @@ endif
 
 " keywords
 syn keyword taoKeyword if elif else while for in def lambda return and or not var let type of match case
-syn keyword taoKeyword assert break continue pass
+syn keyword taoKeyword assert break continue pass class
 
 " types
 syn keyword taoType Int Float String Bool True False
@@ -17,12 +17,13 @@ syn keyword taoTodo contained TODO FIXME
 syn match taoComment "#.*$" contains=taoTodo
 
 " values
-syn match taoValue '\d\+'
+syn match taoValue '\<\d\+'
 syn match taoValue '[-+]\d\+'
+
 " floating point value regexes taken from c.vim syntax file
-syn match taoValue '\d\+\.\d*\(e[-+]\=\d\+\)\=[fl]\='
-syn match taoValue '\.\d\+\(e[-+]\=\d\+\)\=[fl]\=\>'
-syn match taoValue '\d\+e[-+]\=\d\+[fl]\=\>'
+syn match taoValue '\<\d\+\.\d*\(e[-+]\=\d\+\)\=[fl]\='
+syn match taoValue '\<\.\d\+\(e[-+]\=\d\+\)\=[fl]\=\>'
+syn match taoValue '\<\d\+e[-+]\=\d\+[fl]\=\>'
 syn region taoValue start='"' end='"' skip='\\"'
 
 " hook it up

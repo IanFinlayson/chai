@@ -65,7 +65,7 @@ statement: functioncall
          | (VAR | LET) IDNAME type? (ASSIGN expression)?
          | modassign
          | ASSERT expression
-         | RETURN expression
+         | RETURN expression?
          | ifstmt
          | PASS | CONTINUE | BREAK
          | FOR IDNAME IN expression COLON NEWLINE INDENT statements DEDENT
@@ -82,7 +82,12 @@ lvalue: IDNAME
 modassign: lvalue op=(PLUSASSIGN | MINUSASSIGN | TIMESASSIGN | DIVASSIGN | MODASSIGN) expression;
 
 // a case in a match statement -- TODO do more pattern matches!
-caseline: CASE TYPENAME COLON NEWLINE INDENT statements DEDENT;
+caseline: CASE TYPENAME destructure? COLON NEWLINE INDENT statements DEDENT;
+
+// a thing that can be used as part of a destructure
+destructure: IDNAME
+           | LPAREN (destructure COMMA)+ destructure RPAREN    // tuple destructure
+           ;
 
 // we don't get else if for free
 ifstmt: IF expression COLON NEWLINE INDENT statements DEDENT elifclause* elseclause?;

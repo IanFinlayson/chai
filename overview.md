@@ -206,7 +206,26 @@ data value, and left and right children:
 type Tree = Leaf | Node of (Int, Tree, Tree)
 ```
 
-TODO HOW TO USE THEM THOUGH???
+We can use the `match` construct to match the different options of
+a union.  For example, the following function inserts into a Tree
+structure given the above definition:
+
+```
+# insert a value into a tree
+def insert(tree Tree, value T) Tree:
+    match tree:
+        case Leaf:
+            return Node (value, Leaf, Leaf)
+        case Node (root, left, right):
+            if value < root:
+                return Node (root, insert(left, value), right)
+            else:
+                return Node (root, left, insert(right, value))
+```
+
+## More Matches
+
+match on lists, tuples, etc.
 
 
 
@@ -360,6 +379,8 @@ TODO EVERYTHING BELOW HERE NOT IN PARSER YET
 
 
 ## Classes
+
+
 
 
 ## Libraries
