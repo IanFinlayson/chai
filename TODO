@@ -1,28 +1,24 @@
-- Go back and add more operators, and test them more fully
 
-- think about closures and how they need to be handled
+Things to add into language:
+    - destructuring match for lists, tuples, others?
+    - generators, lazy sequences, yield
+    - slices
+    - classes or alternative...
+    - libraries
+    - 'in' and 'not in' operators
 
-- allow line breaks in discriminated unions?
+Front End improvements:
+    - allow line breaks in discriminated unions?
+    - make long lines being joined with \ work
+    - maybe steal python lexer...or write one by hand...
 
-- make long lines being joined with \ work
 
-- if expressions
+Roadmap:
+    - write random code samples for each feature
+    - write a tree-walking interpreter in Java, not
+      efficient but easy to try things out in
+    - write a more efficient compiler/VM backend
 
 
-Design questions/decisions we may revisit
- - Are () required on tuple values and/or types?
-   Python requires them sometimes and not others
-   Pyhton also has the weirdness where (thing,) is a 1-tuple
-   Complication is that superflous parens in Tao make tuples,
-   which could be confusing for people.  E.g:
-   var result = (sum + 1)
-   makes a tuple and not an int
 
-   Options:
-        1. Do the Pyhton thing of trying to have cake and eat it too
-        2. Let (sum + 1) be a tuple and basically dis-allow extra parens
-        3. Disallow 1-tuples altogether which have no purpose I can think of
-            also, a 0 tuple should probably be dis-allowed to right?
- 
-   Right now we chose option 3.  Parens are required and tuples need 2+ members.
 

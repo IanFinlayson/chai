@@ -36,15 +36,23 @@ INT:        'Int';
 FLOAT:      'Float';
 STRING:     'String';
 BOOL:       'Bool';
+VOID:       'Void';
 TRUE:       'True';
 FALSE:      'False';
 
-/* punctuations */
 PLUS:       '+';
 MINUS:      '-';
 DIVIDE:     '/';
 TIMES:      '*';
 MODULUS:    '%';
+POWER:      '**';
+
+COMPLEMENT: '~';
+LSHIFT:     '<<';
+RSHIFT:     '>>';
+BITAND:     '&';
+BITXOR:     '^';
+
 LESS:       '<';
 GREATER:    '>';
 LESSEQ:     '<=';
@@ -64,11 +72,19 @@ ELIPSIS:    '..';
 BAR:        '|';
 ARROW:      '->';
 
-PLUSASSIGN: '+=';
-MINUSASSIGN:'-=';
-TIMESASSIGN:'*=';
-DIVASSIGN:  '/=';
-MODASSIGN:  '%=';
+PLUSASSIGN:     '+=';
+MINUSASSIGN:    '-=';
+TIMESASSIGN:    '*=';
+DIVASSIGN:      '/=';
+MODASSIGN:      '%=';
+POWERASSIGN:    '**=';
+
+LSHIFTASSIGN:   '<<=';
+RSHIFTASSIGN:   '>>=';
+BITANDASSIGN:   '&=';
+BITORASSIGN:    '|=';
+BITXORASSIGN:   '^=';
+
 
 /* tao differentiates between id (start lower case) and type (upper case) names */
 IDNAME:     [a-z][_0-9a-zA-Z]*;

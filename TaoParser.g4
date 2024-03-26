@@ -29,6 +29,7 @@ type: INT
     | FLOAT
     | STRING
     | BOOL
+    | VOID
     | TYPENAME typeparamfills?
 
     // a tuple type
@@ -71,6 +72,7 @@ statement: functioncall
          | FOR IDNAME IN expression COLON NEWLINE INDENT statements DEDENT
          | WHILE expression COLON NEWLINE INDENT statements DEDENT
          | MATCH expression COLON NEWLINE INDENT caseline+ DEDENT
+         | toplevel
          ;
 
 // something that can be assigned into -- basically name or list/dict/tuple/set reference
@@ -79,7 +81,9 @@ lvalue: IDNAME
       ;
 
 // an operator assign type statement like `i += 1`
-modassign: lvalue op=(PLUSASSIGN | MINUSASSIGN | TIMESASSIGN | DIVASSIGN | MODASSIGN) expression;
+modassign: lvalue op=(PLUSASSIGN | MINUSASSIGN | TIMESASSIGN | DIVASSIGN | MODASSIGN
+                    | LSHIFTASSIGN | RSHIFTASSIGN | BITANDASSIGN | BITORASSIGN | BITXORASSIGN)
+                 expression;
 
 // a case in a match statement -- TODO do more pattern matches!
 caseline: CASE TYPENAME destructure? COLON NEWLINE INDENT statements DEDENT;
@@ -101,15 +105,20 @@ functioncall: term LPAREN arglist? RPAREN;
 arglist: (expression COMMA)* expression;
 
 // any valid Tao expression
-expression: NOT expression
-          | op=(PLUS | MINUS) expression
+expression: <assoc=right> expression POWER expression
+          | op=(COMPLEMENT | PLUS | MINUS) expression
           | expression op=(TIMES | DIVIDE | MODULUS) expression
           | expression op=(PLUS | MINUS) expression
+          | expression op=(LSHIFT | RSHIFT) expression
+          | expression BITAND expression
+          | expression BITXOR expression
+          | expression BAR expression
           | expression op=(LESS | GREATER | LESSEQ | GREATEREQ | EQUALS | NOTEQUALS) expression
+          | expression IN expression
+          | NOT expression
           | expression AND expression
           | expression OR expression
-          | expression ELIPSIS expression
-          | expression IN expression
+          | expression IF expression ELSE expression
           | lambda
           | functioncall
           | term
@@ -135,6 +144,12 @@ term: IDNAME
 
     // a list literal like [3, 4, 5]
     | LBRACK (expression (COMMA expression)*)? RBRACK
+          
+    // a list range
+    | LBRACK expression ELIPSIS expression RBRACK
+    
+    // a list comprehension
+    | LBRACK expression FOR IDNAME IN expression (IF expression)? RBRACK
 
     // tuple literal like (3, 4, 5) (we don't allow 0 or 1 length tuples)
     | LPAREN (expression COMMA)+ expression RPAREN

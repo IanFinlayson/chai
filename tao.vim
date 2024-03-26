@@ -10,7 +10,7 @@ syn keyword taoKeyword if elif else while for in def lambda return and or not va
 syn keyword taoKeyword assert break continue pass class
 
 " types
-syn keyword taoType Int Float String Bool True False
+syn keyword taoType Int Float String Bool True False Void
 
 " comments and TODOs
 syn keyword taoTodo contained TODO FIXME
