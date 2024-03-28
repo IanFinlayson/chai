@@ -4,8 +4,9 @@
 
 Tao aims to be a high-level, general-purpose programming language.  It combines
 the elegant syntax of Python with the powerful type system of languages in the
-ML family.  Tao supports features including algebraic types, first-class
-functions, powerful built-in data structures and more.
+ML family.  It is a pragmatic language that allows multiple styles of
+programming.  Tao supports features including algebraic types, first-class
+functions, built-in data structures, an object system and more.
 
 The language is in early development and will likely change as the initial
 interpreter for it is developed.
@@ -64,13 +65,13 @@ var num Float = 0
 
 In Tao all types begin with capital letters while variables, constants and
 functions always begin with lower-case letters.  This is a convention in some
-languages, but is enforced in Tao.
+languages, such as Java, but is enforced in Tao.
 
 Type declarations are required for the parameters and return value of functions.
 This following example shows how functions can be defined in Tao:
 
 ```
-def fact(num int) int:
+def fact(num Int) Int:
     if num == 0:
         return 1
     else:
@@ -243,7 +244,15 @@ def insert(tree Tree, value T) Tree:
 
 ## TODO More Matches!
 
-match on lists, tuples, etc.
+The match statement can also do pattern matching on tuples and lists.
+
+TODO tuple
+
+TODO list cons
+
+TODO list literal
+
+
 
 
 

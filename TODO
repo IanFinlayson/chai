@@ -1,6 +1,8 @@
 
 Things to add into language:
-    - destructuring match for lists, tuples, others?
+    - destructuring match for list values [0, 0, _] thing
+    - also destructuring for dictionaries and sets???
+    - combine up def and match stmts??
     - generators, lazy sequences, yield
     - slices
     - classes or alternative...
@@ -12,13 +14,11 @@ Front End improvements:
     - make long lines being joined with \ work
     - maybe steal python lexer...or write one by hand...
 
-
 Roadmap:
     - write random code samples for each feature
     - write a tree-walking interpreter in Java, not
       efficient but easy to try things out in
     - write a more efficient compiler/VM backend
-
 
 
 

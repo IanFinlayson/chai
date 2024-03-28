@@ -71,6 +71,7 @@ RBRACE:     '}';
 ELIPSIS:    '..';
 BAR:        '|';
 ARROW:      '->';
+CONS:       '::';
 
 PLUSASSIGN:     '+=';
 MINUSASSIGN:    '-=';

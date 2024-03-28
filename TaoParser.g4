@@ -86,11 +86,14 @@ modassign: lvalue op=(PLUSASSIGN | MINUSASSIGN | TIMESASSIGN | DIVASSIGN | MODAS
                  expression;
 
 // a case in a match statement -- TODO do more pattern matches!
-caseline: CASE TYPENAME destructure? COLON NEWLINE INDENT statements DEDENT;
+caseline: CASE destructure COLON NEWLINE INDENT statements DEDENT;
 
-// a thing that can be used as part of a destructure
+// a thing that can be used as part of a destructured match statement
 destructure: IDNAME
-           | LPAREN (destructure COMMA)+ destructure RPAREN    // tuple destructure
+           | literal
+           | LPAREN (destructure COMMA)+ destructure RPAREN    // tuple
+           | LBRACK (destructure CONS)+ destructure RBRACK     // cons
+           | TYPENAME destructure?                             // a discriminated union
            ;
 
 // we don't get else if for free
@@ -107,6 +110,7 @@ arglist: (expression COMMA)* expression;
 // any valid Tao expression
 expression: <assoc=right> expression POWER expression
           | op=(COMPLEMENT | PLUS | MINUS) expression
+          | expression CONS expression
           | expression op=(TIMES | DIVIDE | MODULUS) expression
           | expression op=(PLUS | MINUS) expression
           | expression op=(LSHIFT | RSHIFT) expression
@@ -124,18 +128,13 @@ expression: <assoc=right> expression POWER expression
           | term
           ;
 
+
 // a lambda function
 lambda: LAMBDA lambdaParams? COLON expression;
 lambdaParams: (IDNAME type COMMA)* IDNAME type;
 
 // a term is an individual piece of an expression
 term: IDNAME
-    | INTVAL
-    | FLOATVAL
-    | STRINGVAL
-    | TRUE
-    | FALSE
-
     // list index like nums[i]
     | term LBRACK expression RBRACK
 
@@ -162,7 +161,18 @@ term: IDNAME
     
     // a discriminated union
     | TYPENAME expression?
+
+    // an actual value from the lexer
+    | literal
     ;
 
 dictentry: expression COLON expression;
+
+literal: INTVAL
+       | FLOATVAL
+       | STRINGVAL
+       | TRUE
+       | FALSE
+       ;
+
 
