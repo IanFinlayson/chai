@@ -1,7 +1,6 @@
 
 Things to add into language:
-    - destructuring match for list values [0, 0, _] thing
-    - also destructuring for dictionaries and sets???
+    - destructuring for dictionaries and sets???
     - combine up def and match stmts??
     - generators, lazy sequences, yield
     - slices

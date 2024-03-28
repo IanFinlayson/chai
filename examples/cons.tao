@@ -1,12 +1,14 @@
 
 # returns the sum of the list, unless
 # there is a 0, then it returns 0
-def proccess(list [Int]) Int:
+def proccess(list [Int], accum Int) Int:
     match list:
-        case [0::rest]:
+        case []:
+            return accum
+        case 0 :: rest:
             return 0
-        case [x::rest]:
-            return x + proccess(rest)
+        case x :: rest:
+            return proccess(rest, x + accum)
 
 def main():
     let list1 = 4 :: 5 :: 0 :: [9, 8]

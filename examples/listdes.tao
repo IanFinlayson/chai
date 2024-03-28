@@ -1,0 +1,15 @@
+
+def printList(list [Int]):
+    match list:
+        case [0, 0, x]:
+            print("First two are 0, last is", x)
+        case [1, x, y]:
+            print("First is 1, next two are", x, "and", y)
+        case [x, y, z]:
+            print("Generic one...")
+
+def main():
+    printList([0, 1, 2])
+    printList([0, 0, 79])
+    printList([1, 0, 5])
+

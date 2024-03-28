@@ -85,15 +85,16 @@ modassign: lvalue op=(PLUSASSIGN | MINUSASSIGN | TIMESASSIGN | DIVASSIGN | MODAS
                     | LSHIFTASSIGN | RSHIFTASSIGN | BITANDASSIGN | BITORASSIGN | BITXORASSIGN)
                  expression;
 
-// a case in a match statement -- TODO do more pattern matches!
+// a case in a match statement
 caseline: CASE destructure COLON NEWLINE INDENT statements DEDENT;
 
 // a thing that can be used as part of a destructured match statement
 destructure: IDNAME
            | literal
-           | LPAREN (destructure COMMA)+ destructure RPAREN    // tuple
-           | LBRACK (destructure CONS)+ destructure RBRACK     // cons
-           | TYPENAME destructure?                             // a discriminated union
+           | LPAREN (destructure COMMA)+ destructure RPAREN     // tuple (x, y, z)
+           | destructure (CONS destructure)+                    // cons a::b::rest
+           | LBRACK (destructure COMMA)* RBRACK                 // list [a, b, c]
+           | TYPENAME destructure?                              // a discriminated union
            ;
 
 // we don't get else if for free
@@ -168,6 +169,7 @@ term: IDNAME
 
 dictentry: expression COLON expression;
 
+// any straight up value from the lexer
 literal: INTVAL
        | FLOATVAL
        | STRINGVAL

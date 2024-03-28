@@ -1,0 +1,15 @@
+
+
+def printInfo(info [(String, Int)]):
+    match info:
+        case []:
+            print("Done!")
+        case (name, 0) :: rest:
+            print(name, "is missing their age!")
+        case (name, age) :: rest:
+            print(name, "is", age, "years old.")
+            printInfo(rest)
+            
+def main():
+    printInfo([("Xavier", 26), ("Bob", 0), ("Alice", 36)])
+
