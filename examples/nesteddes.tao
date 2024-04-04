@@ -9,6 +9,8 @@ def printInfo(info [(String, Int)]):
         case (name, age) :: rest:
             print(name, "is", age, "years old.")
             printInfo(rest)
+        case ("Hammy", _):
+            print("If your name is Hammy, I don't care your age!")
             
 def main():
     printInfo([("Xavier", 26), ("Bob", 0), ("Alice", 36)])

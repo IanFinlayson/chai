@@ -72,6 +72,7 @@ ELIPSIS:    '..';
 BAR:        '|';
 ARROW:      '->';
 CONS:       '::';
+USCORE:     '_';
 
 PLUSASSIGN:     '+=';
 MINUSASSIGN:    '-=';

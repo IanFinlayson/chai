@@ -242,19 +242,57 @@ def insert(tree Tree, value T) Tree:
                 return Node (root, left, insert(right, value))
 ```
 
-## TODO More Matches!
+## More Matches!
 
 The match statement can also do pattern matching on tuples and lists.
+For example, we can use this to match values from a tuple:
 
-TODO tuple
+```
+def printInfo(info (String, Int)):
+    match info:
+        case ("", _):
+            print("No name given")
+        case (_, 0):
+            print("No age given")
+        case (name, age):
+            print(name, "is", age, "years old!")
+```
 
-TODO list cons
+The match statement _destructures_ its arguments.  Here the third
+case splits the tuple values into named values.  The first two match
+for specific values, with the underscore matching values we are not
+interested in capturing.
 
-TODO list literal
+This same syntax can be used with lists by replacing the parentheses with
+square brackets.  Lists can also be matched by pulling values out of the front
+using the cons operator:
 
-TODO nested one
+```
+def count(nums [Int], accum Int) Int:
+    match nums:
+        case []:
+            return accum
+        case next :: rest:
+            return count(rest, accum + next)
+```
 
+These destructuring matches can be nested of course:
 
+```
+def printInfo(info [(String, Int)]):
+    match info:
+        case []:
+            print("Done!")
+        case (name, 0) :: rest:
+            print(name, "is missing their age!")
+            printInfo(rest)
+        case ("Hammy", _) :: rest:
+            print("If your name is Hammy, I don't care your age!")
+            printInfo(rest)
+        case (name, age) :: rest:
+            print(name, "is", age, "years old.")
+            printInfo(rest)
+```
 
 
 ## Functions

@@ -16,7 +16,12 @@ toplevel: functiondef
 functiondef: DEF IDNAME typeparams? LPAREN paramlist? RPAREN type? COLON NEWLINE INDENT statements DEDENT;
 
 // a list of 0 or more formal parameters to a function
-paramlist: (IDNAME type COMMA)* IDNAME type;
+paramlist: (param COMMA)* param;
+
+// a single parameter, with a default value and/or a type
+param: IDNAME type
+     | IDNAME ASSIGN term type?
+     ;
 
 // a type definition such as a discriminated union (but really anything)
 typedef: TYPE TYPENAME typeparams? ASSIGN type;
@@ -91,6 +96,7 @@ caseline: CASE destructure COLON NEWLINE INDENT statements DEDENT;
 // a thing that can be used as part of a destructured match statement
 destructure: IDNAME
            | literal
+           | USCORE
            | LPAREN (destructure COMMA)+ destructure RPAREN     // tuple (x, y, z)
            | destructure (CONS destructure)+                    // cons a::b::rest
            | LBRACK (destructure COMMA)* RBRACK                 // list [a, b, c]
@@ -120,6 +126,7 @@ expression: <assoc=right> expression POWER expression
           | expression BAR expression
           | expression op=(LESS | GREATER | LESSEQ | GREATEREQ | EQUALS | NOTEQUALS) expression
           | expression IN expression
+          | expression NOT IN expression
           | NOT expression
           | expression AND expression
           | expression OR expression
@@ -138,6 +145,9 @@ lambdaParams: (IDNAME type COMMA)* IDNAME type;
 term: IDNAME
     // list index like nums[i]
     | term LBRACK expression RBRACK
+
+    // list slice
+    | term LBRACK expression? COLON expression? RBRACK
 
     // sth in parens
     | LPAREN expression RPAREN
