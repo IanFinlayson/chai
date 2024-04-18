@@ -8,7 +8,7 @@ source ~/.bash_profile
 antlr4 TaoLexer.g4 || exit 1
 
 # compile parser file
-antlr4 -no-listener TaoParser.g4 || exit 1
+antlr4 -visitor -no-listener TaoParser.g4 || exit 1
 
 # compile generated java files
 /usr/bin/javac *.java || exit 1

@@ -7,7 +7,7 @@ options {
 // the program is a list of toplevel constructs (or blank lines)
 program: (toplevel | NEWLINE)*;
 
-// TODO other top level things like classes
+// things that can exist outside of anything
 toplevel: functiondef
         | typedef
         ;
@@ -19,8 +19,8 @@ functiondef: DEF IDNAME typeparams? LPAREN paramlist? RPAREN type? COLON NEWLINE
 paramlist: (param COMMA)* param;
 
 // a single parameter, with a default value and/or a type
-param: IDNAME type
-     | IDNAME ASSIGN term type?
+param: IDNAME type                  # namedParam
+     | IDNAME ASSIGN term type?     # defaultParam
      ;
 
 // a type definition such as a discriminated union (but really anything)
@@ -30,30 +30,30 @@ typedef: TYPE TYPENAME typeparams? ASSIGN type;
 typeparams: LESS (TYPENAME COMMA)* TYPENAME GREATER;
 
 // any data type
-type: INT
-    | FLOAT
-    | STRING
-    | BOOL
-    | VOID
-    | TYPENAME typeparamfills?
+type: INT                           # intType
+    | FLOAT                         # floatType
+    | STRING                        # stringType
+    | BOOL                          # boolType
+    | VOID                          # voidType
+    | TYPENAME typeparamfills?      # namedType
 
     // a tuple type
-    | LPAREN (type COMMA)+ type RPAREN
+    | LPAREN (type COMMA)+ type RPAREN  # tupleType
 
     // a list type
-    | LBRACK type RBRACK
+    | LBRACK type RBRACK                # listType
 
     // a dict type
-    | LBRACE type COLON type RBRACE
+    | LBRACE type COLON type RBRACE     # dictType
     
     // a set type
-    | LBRACE type RBRACE
+    | LBRACE type RBRACE                # setType
 
     // discriminated union
-    | unionpart BAR unionpart (BAR unionpart)*
+    | unionpart BAR unionpart (BAR unionpart)*  # unionType
     
     // a function type
-    | type ARROW type
+    | type ARROW type                           # functionType
     ;
 
 // filling in type params with real types
@@ -66,18 +66,20 @@ unionpart: TYPENAME (OF type)?;
 statements: (statement | NEWLINE)+;
 
 // any valid Tao statement
-statement: functioncall
-         | lvalue ASSIGN expression
-         | (VAR | LET) IDNAME type? (ASSIGN expression)?
-         | modassign
-         | ASSERT expression
-         | RETURN expression?
-         | ifstmt
-         | PASS | CONTINUE | BREAK
-         | FOR IDNAME IN expression COLON NEWLINE INDENT statements DEDENT
-         | WHILE expression COLON NEWLINE INDENT statements DEDENT
-         | MATCH expression COLON NEWLINE INDENT caseline+ DEDENT
-         | toplevel
+statement: functioncall                                     # funcallStatement
+         | lvalue ASSIGN expression                         # assignStatement
+         | (VAR | LET) IDNAME type? (ASSIGN expression)?    # varStatement
+         | modassign                                        # modassignStatement
+         | ASSERT expression                                # assertStatement
+         | RETURN expression?                               # returnStatement
+         | ifstmt                                           # ifstatement
+         | PASS                                             # passStatement
+         | CONTINUE                                         # continueStatement
+         | BREAK                                            # breakStatement
+         | FOR IDNAME IN expression COLON NEWLINE INDENT statements DEDENT  # forStatement
+         | WHILE expression COLON NEWLINE INDENT statements DEDENT          # whileStatement
+         | MATCH expression COLON NEWLINE INDENT caseline+ DEDENT           # matchStatment
+         | toplevel                                                         # toplevelStatement
          ;
 
 // something that can be assigned into -- basically name or list/dict/tuple/set reference
@@ -94,13 +96,13 @@ modassign: lvalue op=(PLUSASSIGN | MINUSASSIGN | TIMESASSIGN | DIVASSIGN | MODAS
 caseline: CASE destructure COLON NEWLINE INDENT statements DEDENT;
 
 // a thing that can be used as part of a destructured match statement
-destructure: IDNAME
-           | literal
-           | USCORE
-           | LPAREN (destructure COMMA)+ destructure RPAREN     // tuple (x, y, z)
-           | destructure (CONS destructure)+                    // cons a::b::rest
-           | LBRACK (destructure COMMA)* RBRACK                 // list [a, b, c]
-           | TYPENAME destructure?                              // a discriminated union
+destructure: IDNAME                                             # idDestr
+           | literal                                            # literalDestr
+           | USCORE                                             # uscoreDestr
+           | LPAREN (destructure COMMA)+ destructure RPAREN     # tupleDestr
+           | destructure (CONS destructure)+                    # consDestr
+           | LBRACK (destructure COMMA)* RBRACK                 # listDestr
+           | TYPENAME destructure?                              # unionDestr
            ;
 
 // we don't get else if for free
@@ -108,32 +110,37 @@ ifstmt: IF expression COLON NEWLINE INDENT statements DEDENT elifclause* elsecla
 elifclause: ELIF expression COLON NEWLINE INDENT statements DEDENT;
 elseclause: ELSE COLON NEWLINE INDENT statements DEDENT;
 
-// a function call
-functioncall: term LPAREN arglist? RPAREN;
+// a function call TODO make this a term, so we can call functions through data structures
+functioncall: IDNAME LPAREN arglist? RPAREN;
 
-// the supplied argument list, containing 0 or more expressions, separated with commas
-arglist: (expression COMMA)* expression;
+// the supplied argument list, containing 0 or more expression, separated with commas
+arglist: (argument COMMA)* argument;
+
+// a single argument, maybe a keyword one
+argument: expression
+        | IDNAME ASSIGN expression
+        ;
 
 // any valid Tao expression
-expression: <assoc=right> expression POWER expression
-          | op=(COMPLEMENT | PLUS | MINUS) expression
-          | expression CONS expression
-          | expression op=(TIMES | DIVIDE | MODULUS) expression
-          | expression op=(PLUS | MINUS) expression
-          | expression op=(LSHIFT | RSHIFT) expression
-          | expression BITAND expression
-          | expression BITXOR expression
-          | expression BAR expression
-          | expression op=(LESS | GREATER | LESSEQ | GREATEREQ | EQUALS | NOTEQUALS) expression
-          | expression IN expression
-          | expression NOT IN expression
-          | NOT expression
-          | expression AND expression
-          | expression OR expression
-          | expression IF expression ELSE expression
-          | lambda
-          | functioncall
-          | term
+expression: <assoc=right> expression POWER expression               # powerExpression
+          | op=(COMPLEMENT | PLUS | MINUS) expression               # unaryExpression
+          | expression CONS expression                              # consExpression
+          | expression op=(TIMES | DIVIDE | MODULUS) expression     # timesdivExpression
+          | expression op=(PLUS | MINUS) expression                 # plusMinusExpression
+          | expression op=(LSHIFT | RSHIFT) expression              # shiftExpression
+          | expression BITAND expression                            # bitandExpression
+          | expression BITXOR expression                            # bitxorExpression
+          | expression BAR expression                               # bitorExpression
+          | expression op=(LESS | GREATER | LESSEQ | GREATEREQ | EQUALS | NOTEQUALS) expression     # compareExpression
+          | expression IN expression                                # inExpression
+          | expression NOT IN expression                            # notinExpression
+          | NOT expression                                          # notExpression
+          | expression AND expression                               # andExpression
+          | expression OR expression                                # orExpression
+          | expression IF expression ELSE expression                # ifelseExpression
+          | lambda                                                  # lambdaExpression
+          | functioncall                                            # funcallExpression
+          | term                                                    # termExpression
           ;
 
 
@@ -142,49 +149,49 @@ lambda: LAMBDA lambdaParams? COLON expression;
 lambdaParams: (IDNAME type COMMA)* IDNAME type;
 
 // a term is an individual piece of an expression
-term: IDNAME
+term: IDNAME                                                        # idTerm
     // list index like nums[i]
-    | term LBRACK expression RBRACK
+    | term LBRACK expression RBRACK                                 # listIndexTerm
 
     // list slice
-    | term LBRACK expression? COLON expression? RBRACK
+    | term LBRACK expression? COLON expression? RBRACK              # listSliceTerm
 
     // sth in parens
-    | LPAREN expression RPAREN
+    | LPAREN expression RPAREN                                      # parensTerm
 
     // a list literal like [3, 4, 5]
-    | LBRACK (expression (COMMA expression)*)? RBRACK
+    | LBRACK (expression (COMMA expression)*)? RBRACK               # listLiteralTerm
           
     // a list range
-    | LBRACK expression ELIPSIS expression RBRACK
+    | LBRACK expression ELIPSIS expression RBRACK                   # listRangeTerm
     
     // a list comprehension
-    | LBRACK expression FOR IDNAME IN expression (IF expression)? RBRACK
+    | LBRACK expression FOR IDNAME IN expression (IF expression)? RBRACK    # listcompTerm
 
     // tuple literal like (3, 4, 5) (we don't allow 0 or 1 length tuples)
-    | LPAREN (expression COMMA)+ expression RPAREN
+    | LPAREN (expression COMMA)+ expression RPAREN                  # tupleLiteralTerm
 
     // a set literal
-    | LBRACE (expression (COMMA expression)*)? RBRACE
+    | LBRACE (expression (COMMA expression)*)? RBRACE               # setLiteralTerm
 
     // a dictionary literal
-    | LBRACE (dictentry (COMMA dictentry)*)? RBRACE
+    | LBRACE (dictentry (COMMA dictentry)*)? RBRACE                 # dicLiteralTerm
     
     // a discriminated union
-    | TYPENAME expression?
+    | TYPENAME expression?                                          # unionTerm
 
     // an actual value from the lexer
-    | literal
+    | literal                                                       # simpleLiteralTerm
     ;
 
 dictentry: expression COLON expression;
 
 // any straight up value from the lexer
-literal: INTVAL
-       | FLOATVAL
-       | STRINGVAL
-       | TRUE
-       | FALSE
+literal: INTVAL         # intLiteral
+       | FLOATVAL       # floatLiteral
+       | STRINGVAL      # stringLiteral
+       | TRUE           # trueLiteral
+       | FALSE          # falseLiteral
        ;
 
 

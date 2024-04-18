@@ -1,11 +1,6 @@
-
 Things to add into language:
-    - keyword arguments
-    - destructuring for dictionaries and sets???
-        Look at "associative destructuring" here:
-        https://clojure.org/guides/destructuring
     - combine up def and match stmts??
-    - generators, lazy sequences, yield
+    - generators, lazy sequences, yield, how to encode in type system?
     - classes or alternative...
     - libraries
 
@@ -19,6 +14,4 @@ Roadmap:
     - write a tree-walking interpreter in Java, not
       efficient but easy to try things out in
     - write a more efficient compiler/VM backend
-
-
 
