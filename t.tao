@@ -1,2 +1,6 @@
 def main():
-    println("Hello World!")
+    print(42)
+    print(3.5)
+    print("Hello World!")
+    print(True)
+    print(False)

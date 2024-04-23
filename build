@@ -14,8 +14,4 @@ antlr4 -visitor -no-listener TaoParser.g4 || exit 1
 /usr/bin/javac *.java || exit 1
 
 echo "All done!"
-echo "To test lexer:"
-echo "    grun Tao program -tokens < test.tao"
-echo "    grun Tao program -tree < test.tao"
-echo "    grun Tao program -ps tree.ps < test.tao"
 

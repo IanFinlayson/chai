@@ -3,7 +3,7 @@
 
 public enum TaoType {
     INT,
-    REAL,
+    FLOAT,
     BOOL,
     STRING,
     ARRAY

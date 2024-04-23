@@ -113,12 +113,12 @@ public class TaoExecutor extends TaoParserBaseVisitor<TaoValue> {
         
         // here we just check for our library functions
         switch (name) {
-            case "print": libraryPrint(ctx.arglist()); break;
+            case "print": libraryPrint(ctx.arglist()); return null;
         }
 
 
         // TODO handle non-built-in functions!
-        return null;
+        throw new RuntimeException("Error function '" + name + "' not found");
     }
 
 	@Override
@@ -268,12 +268,12 @@ public class TaoExecutor extends TaoParserBaseVisitor<TaoValue> {
 
 	@Override
     public TaoValue visitIntLiteral(TaoParser.IntLiteralContext ctx) {
-        return visitChildren(ctx);
+        return new TaoValue(Integer.parseInt(ctx.INTVAL().getText()));
     }
 
 	@Override
     public TaoValue visitFloatLiteral(TaoParser.FloatLiteralContext ctx) {
-        return visitChildren(ctx);
+        return new TaoValue(Double.parseDouble(ctx.FLOATVAL().getText()));
     }
 
 	@Override
@@ -285,26 +285,27 @@ public class TaoExecutor extends TaoParserBaseVisitor<TaoValue> {
 
 	@Override
     public TaoValue visitTrueLiteral(TaoParser.TrueLiteralContext ctx) {
-        return visitChildren(ctx);
+        return new TaoValue(true);
     }
 
 	@Override
     public TaoValue visitFalseLiteral(TaoParser.FalseLiteralContext ctx) {
-        return visitChildren(ctx);
+        return new TaoValue(false);
     }
-    
     
     // standard library functions appear below
     private void libraryPrint(TaoParser.ArglistContext args) {
         for (TaoParser.ArgumentContext arg : args.argument()) {
             // TODO, we might want keyword args like end and sep -- they're in the tree!
-            
             TaoValue value = visit(arg.expression());
-            System.out.print(value);
+            System.out.println(value);
         }
     }
 
 
 
 }
+
+
+
 
