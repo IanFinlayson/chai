@@ -83,8 +83,8 @@ statement: functioncall                                     # funcallStatement
          ;
 
 // something that can be assigned into -- basically name or list/dict/tuple/set reference
-lvalue: IDNAME
-      | lvalue LBRACK expression RBRACK
+lvalue: IDNAME                              # justID
+      | lvalue LBRACK expression RBRACK     # nestedLvalue
       ;
 
 // an operator assign type statement like `i += 1`

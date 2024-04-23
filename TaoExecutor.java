@@ -21,6 +21,31 @@ public class TaoExecutor extends TaoParserBaseVisitor<TaoValue> {
         visit(functions.get("main").statements());
     }
 
+    // load a variable -- we check the top function first, then globals
+    private TaoValue loadVar(String name) {
+        if (!stack.empty()) {
+            if (stack.peek().get(name) != null) {
+                return stack.peek().get(name);
+            }
+        }
+
+        if (globals.get(name) != null) {
+            return globals.get(name);
+        }
+
+        else throw new RuntimeException("Could not load variable " + name);
+    }
+
+    // put a var -- again into the top function if there is one, or global
+    private void putVar(String name, TaoValue val) {
+        if (!stack.empty()) {
+            stack.peek().put(name, val);
+        } else {
+            globals.put(name, val);
+        }
+    }
+
+
 	@Override
     public TaoValue visitFunctiondef(TaoParser.FunctiondefContext ctx) {
         // simply put the function into the function table
@@ -34,12 +59,31 @@ public class TaoExecutor extends TaoParserBaseVisitor<TaoValue> {
 
 
 
-
-
 	@Override
     public TaoValue visitAssignStatement(TaoParser.AssignStatementContext ctx) {
-        return visitChildren(ctx);
+        // get the thing we are assigning
+        TaoValue val = visit(ctx.expression());
+
+        // get the lvalue we are writing into
+        TaoParser.LvalueContext lhs = ctx.lvalue();
+        
+        // if it's just an id, do that
+        if (lhs instanceof TaoParser.JustIDContext) {
+            putVar(((TaoParser.JustIDContext) lhs).IDNAME().getText(), val);
+        }
+        
+        // TODO also handle (possibly multiple) list/set/dict assignments!
+
+        return null;
     }
+    
+
+
+
+
+
+
+
 
 	@Override
     public TaoValue visitVarStatement(TaoParser.VarStatementContext ctx) {
@@ -213,7 +257,8 @@ public class TaoExecutor extends TaoParserBaseVisitor<TaoValue> {
 
 	@Override
     public TaoValue visitIdTerm(TaoParser.IdTermContext ctx) {
-        return visitChildren(ctx);
+        String name = ctx.IDNAME().getText();
+        return loadVar(name);
     }
 
 	@Override
@@ -301,11 +346,6 @@ public class TaoExecutor extends TaoParserBaseVisitor<TaoValue> {
             System.out.println(value);
         }
     }
-
-
-
 }
-
-
 
 
