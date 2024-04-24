@@ -1,3 +1,5 @@
+package net.ianfinlayson.tao;
+
 import java.util.Scanner;
 import java.util.List;
 import java.util.Stack;

@@ -1,3 +1,8 @@
+Immediate:
+    - get more of the tree-walk interpreter done
+    - move it to gradle build system
+    - make test suite with diffs and all
+
 Things to add into language:
     - combine up def and match stmts??
     - generators, lazy sequences, yield, how to encode in type system?

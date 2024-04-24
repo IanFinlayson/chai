@@ -1,8 +1,3 @@
-*.class
-*.interp
-*.tokens
-tree.ps
-TaoLexer.java
-TaoParser.java
-TaoParserBaseVisitor.java
-TaoParserVisitor.java
+.gradle/
+src/generated/
+build/

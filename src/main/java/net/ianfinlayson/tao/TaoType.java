@@ -1,3 +1,5 @@
+package net.ianfinlayson.tao;
+
 // an enum containing the 
 // set of possible Tao types
 

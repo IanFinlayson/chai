@@ -1,4 +1,0 @@
-#!/bin/bash
-
-rm -f *.class *.interp *.tokens *.ps TaoLexer.java TaoParser.java TaoParserBaseVisitor.java TaoParserVisitor.java
-
