@@ -47,7 +47,6 @@ public class TaoExecutor extends TaoParserBaseVisitor<TaoValue> {
         }
     }
 
-
 	@Override
     public TaoValue visitFunctiondef(TaoParser.FunctiondefContext ctx) {
         // simply put the function into the function table
@@ -342,11 +341,28 @@ public class TaoExecutor extends TaoParserBaseVisitor<TaoValue> {
     
     // standard library functions appear below
     private void libraryPrint(TaoParser.ArglistContext args) {
+        // TODO get the end and sep from kw args, if there
+        String end = "\n";
+        String sep = " ";
+        boolean first = true;
+
+        // for each argument that we are given
         for (TaoParser.ArgumentContext arg : args.argument()) {
-            // TODO, we might want keyword args like end and sep -- they're in the tree!
+            // print the separator after first one
+            if (!first) {
+                System.out.print(sep);
+            } else {
+                first = false;
+            }
+            
+            // print the argument itself
             TaoValue value = visit(arg.expression());
-            System.out.println(value);
+            System.out.print(value);
+                
         }
+        
+        // print the ending
+        System.out.print(end);
     }
 }
 

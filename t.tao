@@ -1,4 +1,9 @@
+
+while
+
+w + + + *4;
+
 def main():
     x = 100
-    print(x)
+    print("x =", x, sep="_")
 
