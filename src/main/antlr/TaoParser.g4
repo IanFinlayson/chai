@@ -5,7 +5,7 @@ options {
 }
 
 // the program is a list of toplevel constructs (or blank lines)
-program: (toplevel | NEWLINE)*;
+program: (toplevel | NEWLINE)* EOF;
 
 // things that can exist outside of anything
 toplevel: functiondef

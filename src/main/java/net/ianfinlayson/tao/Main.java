@@ -15,7 +15,7 @@ class TaoErrorListener extends BaseErrorListener {
     @Override
     public void syntaxError(Recognizer<?, ?> recognizer, Object offendingSymbol, int line, int column, String message, RecognitionException e) {
         System.out.println(filename + ":" + line + ":" + column + " " + message);
-        System.exit(1);
+        System.exit(0);
     }
 }
 
@@ -38,10 +38,10 @@ public class Main {
         CommonTokenStream tokens = new CommonTokenStream(lexer);
         TaoParser parser = new TaoParser(tokens);
 
+        // setup our error listener, that prints it and then bails
+        TaoErrorListener el = new TaoErrorListener(args[0]);
         lexer.removeErrorListener(ConsoleErrorListener.INSTANCE);
         parser.removeErrorListener(ConsoleErrorListener.INSTANCE);
-
-        TaoErrorListener el = new TaoErrorListener(args[0]);
         lexer.addErrorListener(el);
         parser.addErrorListener(el);
 
