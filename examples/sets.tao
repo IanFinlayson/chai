@@ -1,9 +1,0 @@
-    
-def getItems() {String}:
-    return {"Eggs", "Pancakes", "Coffee"}
-
-def main():
-    let foodstuffs = getItems()
-    for food in foodstuffs:
-        print(food)
-

@@ -1,8 +1,0 @@
-
-def main():
-    let evens = [x for x in [0 .. 100] if x % 2 == 0]
-    print(evens)
-
-    let squares  = [x ** 2 for x in [1 .. 10]]
-    print(squares)
-

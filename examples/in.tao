@@ -1,6 +1,0 @@
-def main():
-    if 5 in [3, 5, 2]:
-        print("yep")
-    if 4 not in [3, 5, 2]:
-        print("nope")
-
