@@ -62,6 +62,8 @@ public class TaoExecutor extends TaoParserBaseVisitor<TaoValue> {
 
 	@Override
     public TaoValue visitAssignStatement(TaoParser.AssignStatementContext ctx) {
+        // TODO make sure that the value exists already first
+
         // get the thing we are assigning
         TaoValue val = visit(ctx.expression());
 
@@ -341,13 +343,41 @@ public class TaoExecutor extends TaoParserBaseVisitor<TaoValue> {
     
     // standard library functions appear below
     private void libraryPrint(TaoParser.ArglistContext args) {
-        // TODO get the end and sep from kw args, if there
         String end = "\n";
         String sep = " ";
         boolean first = true;
+        
+        // we put the things to print in a list so we need only go through args once
+        ArrayList<TaoValue> toprint = new ArrayList<>();
 
         // for each argument that we are given
         for (TaoParser.ArgumentContext arg : args.argument()) {
+            // if it's a keyword argument
+            if (arg.ASSIGN() != null) {
+                String kwname = arg.IDNAME().getText();
+                TaoValue kwval = visit(arg.expression());
+
+                if (kwname.equals("end")) {
+                    if (kwval.getType() != TaoType.STRING) {
+                        throw new TypeMismatchException("'end' argument must be a String");
+                    } else {
+                        end = kwval.toString();
+                    }
+                } else if (kwname.equals("sep")) {
+                    if (kwval.getType() != TaoType.STRING) {
+                        throw new TypeMismatchException("'sep' argument must be a String");
+                    } else {
+                        sep = kwval.toString();
+                    }
+                }
+            } else {
+                // add to our printing list
+                toprint.add(visit(arg.expression()));
+            }
+        }
+
+        // now actually print the things
+        for (TaoValue val : toprint) {
             // print the separator after first one
             if (!first) {
                 System.out.print(sep);
@@ -355,10 +385,7 @@ public class TaoExecutor extends TaoParserBaseVisitor<TaoValue> {
                 first = false;
             }
             
-            // print the argument itself
-            TaoValue value = visit(arg.expression());
-            System.out.print(value);
-                
+            System.out.print(val);
         }
         
         // print the ending

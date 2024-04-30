@@ -1,3 +1,4 @@
 .gradle/
 src/generated/
 build/
+*.swp

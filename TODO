@@ -1,10 +1,5 @@
-Why no errors?????????!?!!?!?!?!?!
-
-
-
 Immediate:
     - get more of the tree-walk interpreter done
-    - move it to gradle build system
     - make test suite with diffs and all
 
 Things to add into language:
