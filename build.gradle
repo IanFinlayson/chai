@@ -6,7 +6,7 @@ plugins {
 
 group = 'net.ianfinlayson'
 version = '0.1.0'
-mainClassName = 'net.ianfinlayson.tao.Main'
+mainClassName = 'net.ianfinlayson.chai.Main'
 
 repositories {
     mavenCentral()
@@ -22,7 +22,7 @@ generateGrammarSource {
     maxHeapSize = "64m"
     arguments += [ "-visitor", 
                    "-long-messages",
-                   "-package", "net.ianfinlayson.tao" ]
+                   "-package", "net.ianfinlayson.chai" ]
     outputDirectory = file("${projectDir}/src/generated/java")
 }
 
@@ -43,6 +43,6 @@ sourceSets {
 
 // make it runnable
 application {
-    mainClassName = 'net.ianfinlayson.tao.Main'
+    mainClassName = 'net.ianfinlayson.chai.Main'
 }
 
