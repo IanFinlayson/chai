@@ -4,5 +4,7 @@ def main():
     # TODO make this print WITH " marks...
     var x = ["hey", "there"]
     var y = ["my", "dude", "!"]
+    var z = "hey there my dude!"
     print(x + y)
+    print(z)
     

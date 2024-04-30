@@ -48,10 +48,10 @@ public class ChaiValue {
             // array concatenation
             ArrayList<ChaiValue> combined = new ArrayList<>();
 
-            for (ChaiValue v : toArray()) {
+            for (ChaiValue v : toList()) {
                 combined.add(v);
             }
-            for (ChaiValue v : other.toArray()) {
+            for (ChaiValue v : other.toList()) {
                 combined.add(v);
             }
             return new ChaiValue(combined);
@@ -60,7 +60,7 @@ public class ChaiValue {
             return new ChaiValue(toInt() + other.toInt());
         } else if (numberType() && other.numberType()) {
             // float math
-            return new ChaiValue(toReal() + other.toReal());
+            return new ChaiValue(toFloat() + other.toFloat());
         } else {
             throw new RuntimeException("Illegal types in + operation");
         }
@@ -72,7 +72,7 @@ public class ChaiValue {
             return new ChaiValue(toInt() - other.toInt());
         } else if (numberType() && other.numberType()) {
             // float math
-            return new ChaiValue(toReal() - other.toReal());
+            return new ChaiValue(toFloat() - other.toFloat());
         } else {
             throw new RuntimeException("Illegal types in - operation");
         }
@@ -94,7 +94,7 @@ public class ChaiValue {
         else if (type == ChaiType.LIST && other.type == ChaiType.INT) {
             ArrayList<ChaiValue> result = new ArrayList<>();
             
-            ArrayList<ChaiValue> from = toArray();
+            ArrayList<ChaiValue> from = toList();
             for (int i = 0; i < other.toInt(); i++) {
                 for (int j = 0; j < from.size(); j++) {
                     result.add(from.get(j));
@@ -111,7 +111,7 @@ public class ChaiValue {
             return new ChaiValue(toInt() * other.toInt());
         } else if (numberType() && other.numberType()) {
             // float math
-            return new ChaiValue(toReal() * other.toReal());
+            return new ChaiValue(toFloat() * other.toFloat());
         } else {
             throw new RuntimeException("Illegal types in * operation");
         }
@@ -120,15 +120,17 @@ public class ChaiValue {
     public ChaiValue divide(ChaiValue other) {
         if (numberType() && other.numberType()) {
             // float math
-            return new ChaiValue(toReal() / other.toReal());
+            return new ChaiValue(toFloat() / other.toFloat());
         } else {
             throw new RuntimeException("Illegal types in / operation");
         }
     }
 
-    @Override
+    // we need to print "" around an strings that may be in this list/set/dict
+    // the argument is this basically -- are we in a nested structure that
+    // will require that should we get down to a stirng?
     @SuppressWarnings("unchecked")
-    public String toString() {
+    public String toString(boolean printQuotes) {
         switch (type) {
             case INT:
                 return ((Integer) value).toString();
@@ -137,12 +139,36 @@ public class ChaiValue {
             case BOOL:
                 return ((Boolean) value).toString();
             case STRING:
-                return ((String) value).toString();
+                if (printQuotes) {
+                    return "\"" + ((String) value) + "\"";
+                } else {
+                    return ((String) value);
+                }
+
             case LIST:
-                return ((ArrayList<ChaiValue>) value).toString();
+                String result = "[";
+                boolean first = true;
+                
+                for (ChaiValue val : ((ArrayList<ChaiValue>) value)) {
+                    if (first) {
+                        first = false;
+                    } else {
+                        result += ", ";
+                    }
+
+                    result += val.toString(true);
+                }
+
+                return result + "]";
         }
 
         throw new RuntimeException("Unhandled type in swtich/case");
+    }
+    
+    @Override
+    public String toString() {
+        // by default we do not print nested quotations on strings
+        return toString(false);
     }
 
     public int toInt() {
@@ -162,7 +188,7 @@ public class ChaiValue {
         throw new RuntimeException("Unhandled type in swtich/case");
     }
 
-    public double toReal() {
+    public double toFloat() {
         switch (type) {
             case INT:
                 return ((Integer) value).doubleValue();
@@ -197,7 +223,7 @@ public class ChaiValue {
     }
 
     @SuppressWarnings("unchecked")
-    public ArrayList<ChaiValue> toArray() {
+    public ArrayList<ChaiValue> toList() {
         if (type == ChaiType.LIST) {
             return (ArrayList<ChaiValue>) value;
         }

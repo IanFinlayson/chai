@@ -107,61 +107,67 @@ public class ChaiExecutor extends ChaiParserBaseVisitor<ChaiValue> {
 
 	@Override
     public ChaiValue visitModassignStatement(ChaiParser.ModassignStatementContext ctx) {
+        // TODO
         return visitChildren(ctx);
     }
 
 	@Override
     public ChaiValue visitAssertStatement(ChaiParser.AssertStatementContext ctx) {
+        // TODO
         return visitChildren(ctx);
     }
 
 	@Override
     public ChaiValue visitReturnStatement(ChaiParser.ReturnStatementContext ctx) {
-        return visitChildren(ctx);
-    }
-
-	@Override
-    public ChaiValue visitIfstatement(ChaiParser.IfstatementContext ctx) {
+        // TODO
         return visitChildren(ctx);
     }
 
 	@Override
     public ChaiValue visitContinueStatement(ChaiParser.ContinueStatementContext ctx) {
+        // TODO
         return visitChildren(ctx);
     }
 
 	@Override
     public ChaiValue visitBreakStatement(ChaiParser.BreakStatementContext ctx) {
+        // TODO
         return visitChildren(ctx);
     }
 
 	@Override
     public ChaiValue visitForStatement(ChaiParser.ForStatementContext ctx) {
+        // TODO
         return visitChildren(ctx);
     }
 
 	@Override
     public ChaiValue visitWhileStatement(ChaiParser.WhileStatementContext ctx) {
+        // TODO
         return visitChildren(ctx);
     }
 
 	@Override
     public ChaiValue visitModassign(ChaiParser.ModassignContext ctx) {
+        // TODO
         return visitChildren(ctx);
     }
 
 	@Override
     public ChaiValue visitIfstmt(ChaiParser.IfstmtContext ctx) {
+        // TODO
         return visitChildren(ctx);
     }
 
 	@Override
     public ChaiValue visitElifclause(ChaiParser.ElifclauseContext ctx) {
+        // TODO
         return visitChildren(ctx);
     }
 
 	@Override
     public ChaiValue visitElseclause(ChaiParser.ElseclauseContext ctx) {
+        // TODO
         return visitChildren(ctx);
     }
 
@@ -182,61 +188,73 @@ public class ChaiExecutor extends ChaiParserBaseVisitor<ChaiValue> {
 
 	@Override
     public ChaiValue visitShiftExpression(ChaiParser.ShiftExpressionContext ctx) {
+        // TODO
         return visitChildren(ctx);
     }
 
 	@Override
     public ChaiValue visitBitorExpression(ChaiParser.BitorExpressionContext ctx) {
+        // TODO
         return visitChildren(ctx);
     }
 
 	@Override
     public ChaiValue visitNotExpression(ChaiParser.NotExpressionContext ctx) {
+        // TODO
         return visitChildren(ctx);
     }
 
 	@Override
     public ChaiValue visitBitxorExpression(ChaiParser.BitxorExpressionContext ctx) {
+        // TODO
         return visitChildren(ctx);
     }
 
 	@Override
     public ChaiValue visitBitandExpression(ChaiParser.BitandExpressionContext ctx) {
+        // TODO
         return visitChildren(ctx);
     }
 
 	@Override
     public ChaiValue visitCompareExpression(ChaiParser.CompareExpressionContext ctx) {
+        // TODO
         return visitChildren(ctx);
     }
 
 	@Override
     public ChaiValue visitNotinExpression(ChaiParser.NotinExpressionContext ctx) {
+        // TODO
         return visitChildren(ctx);
     }
 
 	@Override
     public ChaiValue visitOrExpression(ChaiParser.OrExpressionContext ctx) {
+        // TODO
         return visitChildren(ctx);
     }
 
 	@Override
     public ChaiValue visitPowerExpression(ChaiParser.PowerExpressionContext ctx) {
+        // TODO
         return visitChildren(ctx);
     }
 
 	@Override
     public ChaiValue visitInExpression(ChaiParser.InExpressionContext ctx) {
+        // TODO
         return visitChildren(ctx);
     }
 
 	@Override
     public ChaiValue visitAndExpression(ChaiParser.AndExpressionContext ctx) {
+        // TODO
         return visitChildren(ctx);
     }
 
 	@Override
     public ChaiValue visitIfelseExpression(ChaiParser.IfelseExpressionContext ctx) {
+        // TODO
         return visitChildren(ctx);
     }
 
@@ -266,21 +284,43 @@ public class ChaiExecutor extends ChaiParserBaseVisitor<ChaiValue> {
 
 	@Override
     public ChaiValue visitConsExpression(ChaiParser.ConsExpressionContext ctx) {
+        // TODO
         return visitChildren(ctx);
     }
 
 	@Override
     public ChaiValue visitUnaryExpression(ChaiParser.UnaryExpressionContext ctx) {
-        return visitChildren(ctx);
-    }
+        ChaiValue val = visit(ctx.expression());
 
-	@Override
-    public ChaiValue visitTermExpression(ChaiParser.TermExpressionContext ctx) {
+        switch (ctx.op.getType()) {
+            case ChaiLexer.PLUS:
+                if (val.getType() != ChaiType.INT && val.getType() != ChaiType.FLOAT) {
+                    throw new TypeMismatchException("Invlaid type to unary + operator");
+                } else {
+                    return val;
+                }
+            case ChaiLexer.MINUS:
+                if (val.getType() == ChaiType.INT) {
+                    return new ChaiValue(-val.toInt());
+                } else if (val.getType() == ChaiType.FLOAT) {
+                    return new ChaiValue(-val.toFloat());
+                } else {
+                    throw new TypeMismatchException("Invlaid type to unary - operator");
+                }
+            case ChaiLexer.COMPLEMENT:
+                if (val.getType() != ChaiType.INT) {
+                    throw new TypeMismatchException("Invlaid type to unary ~ operator");
+                } else {
+                    return new ChaiValue(~val.toInt());
+                }
+        }
+           
         return visitChildren(ctx);
     }
 
 	@Override
     public ChaiValue visitListcompTerm(ChaiParser.ListcompTermContext ctx) {
+        // TODO
         return visitChildren(ctx);
     }
 
@@ -297,16 +337,13 @@ public class ChaiExecutor extends ChaiParserBaseVisitor<ChaiValue> {
 
 	@Override
     public ChaiValue visitListRangeTerm(ChaiParser.ListRangeTermContext ctx) {
+        // TODO
         return visitChildren(ctx);
     }
 
 	@Override
     public ChaiValue visitListIndexTerm(ChaiParser.ListIndexTermContext ctx) {
-        return visitChildren(ctx);
-    }
-
-	@Override
-    public ChaiValue visitParensTerm(ChaiParser.ParensTermContext ctx) {
+        // TODO
         return visitChildren(ctx);
     }
 
@@ -324,31 +361,31 @@ public class ChaiExecutor extends ChaiParserBaseVisitor<ChaiValue> {
 
 	@Override
     public ChaiValue visitTupleLiteralTerm(ChaiParser.TupleLiteralTermContext ctx) {
+        // TODO
         return visitChildren(ctx);
     }
 
 	@Override
     public ChaiValue visitDicLiteralTerm(ChaiParser.DicLiteralTermContext ctx) {
+        // TODO
         return visitChildren(ctx);
     }
 
 	@Override
     public ChaiValue visitListSliceTerm(ChaiParser.ListSliceTermContext ctx) {
+        // TODO
         return visitChildren(ctx);
     }
 
 	@Override
     public ChaiValue visitSetLiteralTerm(ChaiParser.SetLiteralTermContext ctx) {
-        return visitChildren(ctx);
-    }
-
-	@Override
-    public ChaiValue visitSimpleLiteralTerm(ChaiParser.SimpleLiteralTermContext ctx) {
+        // TODO
         return visitChildren(ctx);
     }
 
 	@Override
     public ChaiValue visitDictentry(ChaiParser.DictentryContext ctx) {
+        // TODO
         return visitChildren(ctx);
     }
 

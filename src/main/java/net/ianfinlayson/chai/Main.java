@@ -49,9 +49,8 @@ public class Main {
         ParseTree tree = parser.program();
         if (tree == null) {
             System.out.println("Couldn't parse at all!");
+            return;
         }
-
-        System.out.println("Done parsing!");
 
         // create the visitor for running (eventually we'll make a type checker one too)
         ChaiExecutor executor = new ChaiExecutor();
