@@ -207,8 +207,12 @@ public class ChaiExecutor extends ChaiParserBaseVisitor<ChaiValue> {
 
 	@Override
     public ChaiValue visitNotExpression(ChaiParser.NotExpressionContext ctx) {
-        // TODO
-        return visitChildren(ctx);
+        ChaiValue expr = visit(ctx.expression());
+        if (expr.getType() != ChaiType.BOOL) {
+            throw new TypeMismatchException("Operands to 'not' must have boolean type");
+        }
+        
+        return new ChaiValue(!expr.toBool());
     }
 
 	@Override
@@ -243,7 +247,6 @@ public class ChaiExecutor extends ChaiParserBaseVisitor<ChaiValue> {
             case ChaiLexer.NOTEQUALS:
                 return new ChaiValue(!lhs.equals(rhs));
         }
-        
         throw new RuntimeException("This should not happen, no comparison op found");
     }
 
@@ -255,14 +258,34 @@ public class ChaiExecutor extends ChaiParserBaseVisitor<ChaiValue> {
 
 	@Override
     public ChaiValue visitOrExpression(ChaiParser.OrExpressionContext ctx) {
-        // TODO
-        return visitChildren(ctx);
+        // evaluate left hand side
+        ChaiValue lhs = visit(ctx.expression(0));
+        if (lhs.getType() != ChaiType.BOOL) {
+            throw new TypeMismatchException("Operands to 'or' must have boolean type");
+        }
+        
+        // we do short-circuit eval
+        if (lhs.toBool() == true) {
+            return new ChaiValue(true);
+        }
+        
+        // evaluate right hand side
+        ChaiValue rhs = visit(ctx.expression(1));
+        if (rhs.getType() != ChaiType.BOOL) {
+            throw new TypeMismatchException("Operands to 'or' must have boolean type");
+        }
+        if (rhs.toBool() == true) {
+            return new ChaiValue(true);
+        }
+
+        return new ChaiValue(false);
     }
 
 	@Override
     public ChaiValue visitPowerExpression(ChaiParser.PowerExpressionContext ctx) {
-        // TODO
-        return visitChildren(ctx);
+        ChaiValue lhs = visit(ctx.expression(0));
+        ChaiValue rhs = visit(ctx.expression(1));
+        return lhs.pow(rhs);
     }
 
 	@Override
@@ -273,8 +296,27 @@ public class ChaiExecutor extends ChaiParserBaseVisitor<ChaiValue> {
 
 	@Override
     public ChaiValue visitAndExpression(ChaiParser.AndExpressionContext ctx) {
-        // TODO
-        return visitChildren(ctx);
+        // evaluate left hand side
+        ChaiValue lhs = visit(ctx.expression(0));
+        if (lhs.getType() != ChaiType.BOOL) {
+            throw new TypeMismatchException("Operands to 'and' must have boolean type");
+        }
+        
+        // we do short-circuit eval
+        if (lhs.toBool() == false) {
+            return new ChaiValue(false);
+        }
+        
+        // evaluate right hand side
+        ChaiValue rhs = visit(ctx.expression(1));
+        if (rhs.getType() != ChaiType.BOOL) {
+            throw new TypeMismatchException("Operands to 'and' must have boolean type");
+        }
+        if (rhs.toBool() == false) {
+            return new ChaiValue(false);
+        }
+        
+        return new ChaiValue(true);
     }
 
 	@Override

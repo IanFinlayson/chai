@@ -179,6 +179,16 @@ public class ChaiValue {
         }
 
     }
+    
+    public ChaiValue pow(ChaiValue other) {
+        // TODO should we do integer ones separately?  actually we should consider bignum anyway...
+        if (numberType() && other.numberType()) {
+            return new ChaiValue(Math.pow(toFloat(), other.toFloat()));
+        } else {
+            throw new RuntimeException("Illegal types in ** operation");
+        }
+
+    }
 
     // we need to print "" around an strings that may be in this list/set/dict
     // the argument is this basically -- are we in a nested structure that
