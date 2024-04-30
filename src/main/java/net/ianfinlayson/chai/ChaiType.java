@@ -8,6 +8,6 @@ public enum ChaiType {
     FLOAT,
     BOOL,
     STRING,
-    ARRAY
+    LIST
 }
 

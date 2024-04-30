@@ -34,8 +34,8 @@ public class ChaiExecutor extends ChaiParserBaseVisitor<ChaiValue> {
         if (globals.get(name) != null) {
             return globals.get(name);
         }
-
-        else throw new RuntimeException("Could not load variable " + name);
+        
+        return null;
     }
 
     // put a var -- again into the top function if there is one, or global
@@ -55,15 +55,8 @@ public class ChaiExecutor extends ChaiParserBaseVisitor<ChaiValue> {
         return null;
     }
 
-
-
-
-
-
 	@Override
     public ChaiValue visitAssignStatement(ChaiParser.AssignStatementContext ctx) {
-        // TODO make sure that the value exists already first
-
         // get the thing we are assigning
         ChaiValue val = visit(ctx.expression());
 
@@ -72,7 +65,14 @@ public class ChaiExecutor extends ChaiParserBaseVisitor<ChaiValue> {
         
         // if it's just an id, do that
         if (lhs instanceof ChaiParser.JustIDContext) {
-            putVar(((ChaiParser.JustIDContext) lhs).IDNAME().getText(), val);
+            String name = ((ChaiParser.JustIDContext) lhs).IDNAME().getText();
+
+            // ensure it exists first
+            if (loadVar(name) == null) {
+                throw new RuntimeException("Variable '" + name + "' assigned without being declared");
+            } else {
+                putVar(name, val);
+            }
         }
         
         // TODO also handle (possibly multiple) list/set/dict assignments!
@@ -80,18 +80,30 @@ public class ChaiExecutor extends ChaiParserBaseVisitor<ChaiValue> {
         return null;
     }
     
-
-
-
-
-
-
-
-
 	@Override
     public ChaiValue visitVarStatement(ChaiParser.VarStatementContext ctx) {
-        return visitChildren(ctx);
+        // TODO add the type information from this!
+        // TODO also make variables actually constant!
+
+        // get the parts out
+        boolean constant = ctx.LET() != null;
+        String name = ctx.IDNAME().getText();
+        ChaiValue val = visit(ctx.expression());
+
+        // make sure this variable does not already exist
+        if (loadVar(name) != null) {
+            throw new RuntimeException("Variable '" + name + "' already exists");
+        }
+
+        // add this as a variable
+        putVar(name, val);
+        return null;
     }
+
+
+
+
+
 
 	@Override
     public ChaiValue visitModassignStatement(ChaiParser.ModassignStatementContext ctx) {
@@ -230,7 +242,15 @@ public class ChaiExecutor extends ChaiParserBaseVisitor<ChaiValue> {
 
 	@Override
     public ChaiValue visitPlusMinusExpression(ChaiParser.PlusMinusExpressionContext ctx) {
-        return visitChildren(ctx);
+        ChaiValue lhs = visit(ctx.expression(0));
+        ChaiValue rhs = visit(ctx.expression(1));
+        
+        if (ctx.op.getType() == ChaiLexer.PLUS) {
+            return lhs.plus(rhs);
+        } else {
+            // TODO subtraction
+            return null;
+        }
     }
 
 	@Override
@@ -261,7 +281,12 @@ public class ChaiExecutor extends ChaiParserBaseVisitor<ChaiValue> {
 	@Override
     public ChaiValue visitIdTerm(ChaiParser.IdTermContext ctx) {
         String name = ctx.IDNAME().getText();
-        return loadVar(name);
+        ChaiValue val = loadVar(name);
+        if (val == null) {
+            throw new RuntimeException("Could not load variable " + name);
+        } else {
+            return val;
+        }
     }
 
 	@Override
@@ -281,7 +306,14 @@ public class ChaiExecutor extends ChaiParserBaseVisitor<ChaiValue> {
 
 	@Override
     public ChaiValue visitListLiteralTerm(ChaiParser.ListLiteralTermContext ctx) {
-        return visitChildren(ctx);
+        // this represents a list literal like [1, 2, 3] etc.
+        ArrayList<ChaiValue> list = new ArrayList<>();
+
+        for (ChaiParser.ExpressionContext expr : ctx.expression()) {
+            list.add(visit(expr));
+        }
+        
+        return new ChaiValue(list);
     }
 
 	@Override

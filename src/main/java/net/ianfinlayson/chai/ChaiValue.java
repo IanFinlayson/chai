@@ -27,12 +27,43 @@ public class ChaiValue {
     }
 
     public ChaiValue(ArrayList<ChaiValue> array) {
-        type = ChaiType.ARRAY;
+        type = ChaiType.LIST;
         value = array;
     }
 
     public ChaiType getType() {
         return type;
+    }
+
+    // used to simplify logic of math functions
+    private boolean numberType() {
+        return type == ChaiType.INT || type == ChaiType.FLOAT;
+    }
+
+    public ChaiValue plus(ChaiValue other) {
+        if (type == ChaiType.STRING && other.type == ChaiType.STRING) {
+            // string concatenation
+            return new ChaiValue(toString() + other.toString());
+        } else if (type == ChaiType.LIST && other.type == ChaiType.LIST) {
+            // array concatenation
+            ArrayList<ChaiValue> combined = new ArrayList<>();
+
+            for (ChaiValue v : toArray()) {
+                combined.add(v);
+            }
+            for (ChaiValue v : other.toArray()) {
+                combined.add(v);
+            }
+            return new ChaiValue(combined);
+        } else if (type == ChaiType.INT && other.type == ChaiType.INT) {
+            // integer math
+            return new ChaiValue(toInt() + other.toInt());
+        } else if (numberType() && other.numberType()) {
+            // float math
+            return new ChaiValue(toReal() + other.toReal());
+        } else {
+            throw new RuntimeException("Illegal types in + operation");
+        }
     }
 
     @Override
@@ -47,11 +78,11 @@ public class ChaiValue {
                 return ((Boolean) value).toString();
             case STRING:
                 return ((String) value).toString();
-            case ARRAY:
+            case LIST:
                 return ((ArrayList<ChaiValue>) value).toString();
         }
 
-        throw new RuntimeException("Unhandled type ni swtich/case");
+        throw new RuntimeException("Unhandled type in swtich/case");
     }
 
     public int toInt() {
@@ -64,11 +95,11 @@ public class ChaiValue {
                 throw new TypeMismatchException("Cannot convert boolean to integer");
             case STRING:
                 throw new TypeMismatchException("Cannot convert string to integer");
-            case ARRAY:
+            case LIST:
                 throw new TypeMismatchException("Cannot convert array to integer");
         }
 
-        throw new RuntimeException("Unhandled type ni swtich/case");
+        throw new RuntimeException("Unhandled type in swtich/case");
     }
 
     public double toReal() {
@@ -81,11 +112,11 @@ public class ChaiValue {
                 throw new TypeMismatchException("Cannot convert boolean to float");
             case STRING:
                 throw new TypeMismatchException("Cannot convert string to float");
-            case ARRAY:
+            case LIST:
                 throw new TypeMismatchException("Cannot convert array to float");
         }
 
-        throw new RuntimeException("Unhandled type ni swtich/case");
+        throw new RuntimeException("Unhandled type in swtich/case");
     }
 
     public boolean toBool() {
@@ -98,22 +129,20 @@ public class ChaiValue {
                 return ((Boolean) value).booleanValue();
             case STRING:
                 throw new TypeMismatchException("Cannot convert string to boolean");
-            case ARRAY:
+            case LIST:
                 throw new TypeMismatchException("Cannot convert array to boolean");
         }
 
-        throw new RuntimeException("Unhandled type ni swtich/case");
+        throw new RuntimeException("Unhandled type in swtich/case");
     }
 
     @SuppressWarnings("unchecked")
     public ArrayList<ChaiValue> toArray() {
-        if (type == ChaiType.ARRAY) {
+        if (type == ChaiType.LIST) {
             return (ArrayList<ChaiValue>) value;
-        } else {
-            ArrayList<ChaiValue> stuff = new ArrayList<>();
-            stuff.add(this);
-            return stuff;
         }
+       
+        throw new TypeMismatchException("Cannot convert type to array");
     }
 }
 

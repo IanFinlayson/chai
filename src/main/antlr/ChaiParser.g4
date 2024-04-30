@@ -68,7 +68,7 @@ statements: (statement | NEWLINE)+;
 // any valid Chai statement
 statement: functioncall                                     # funcallStatement
          | lvalue ASSIGN expression                         # assignStatement
-         | (VAR | LET) IDNAME type? (ASSIGN expression)?    # varStatement
+         | (VAR | LET) IDNAME type? ASSIGN expression       # varStatement
          | modassign                                        # modassignStatement
          | ASSERT expression                                # assertStatement
          | RETURN expression?                               # returnStatement

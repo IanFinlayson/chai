@@ -1,10 +1,9 @@
 
 
 def main():
-    x = 100
-    print(3, 4, 5, sep=" <--> ", end = "PPPP")
-    print("x", "=", x)
-    print("x", "=", x, sep="_")
-    print("x", "=", x, end=" MROW ")
-    print(5)
+    # TODO make this print WITH " marks...
+    var x = ["hey", "there"]
+    var y = ["my", "dude", "!"]
+    print(x + y)
+    
 
