@@ -105,11 +105,6 @@ public class ChaiExecutor extends ChaiParserBaseVisitor<ChaiValue> {
 
 
 
-	@Override
-    public ChaiValue visitModassignStatement(ChaiParser.ModassignStatementContext ctx) {
-        // TODO
-        return visitChildren(ctx);
-    }
 
 	@Override
     public ChaiValue visitAssertStatement(ChaiParser.AssertStatementContext ctx) {
@@ -143,8 +138,20 @@ public class ChaiExecutor extends ChaiParserBaseVisitor<ChaiValue> {
 
 	@Override
     public ChaiValue visitWhileStatement(ChaiParser.WhileStatementContext ctx) {
-        // TODO
-        return visitChildren(ctx);
+        ChaiParser.ExpressionContext expr = ctx.expression();
+        ChaiParser.StatementsContext stmt = ctx.statements();
+        
+        ChaiValue condition = visit(expr);
+        if (condition.getType() != ChaiType.BOOL) {
+            throw new TypeMismatchException("Type of while condition must be boolean");
+        }
+
+        while(condition.toBool() == true) {
+            visit(stmt);
+            condition = visit(expr);
+        }
+
+        return null;
     }
 
 	@Override
@@ -218,8 +225,26 @@ public class ChaiExecutor extends ChaiParserBaseVisitor<ChaiValue> {
 
 	@Override
     public ChaiValue visitCompareExpression(ChaiParser.CompareExpressionContext ctx) {
-        // TODO
-        return visitChildren(ctx);
+        ChaiValue lhs = visit(ctx.expression(0));
+        ChaiValue rhs = visit(ctx.expression(1));
+        
+        // we break it down to just less and equals
+        switch (ctx.op.getType()) {
+            case ChaiLexer.LESS:
+                return new ChaiValue(lhs.less(rhs));
+            case ChaiLexer.GREATER:
+                return new ChaiValue(rhs.less(lhs));
+            case ChaiLexer.LESSEQ:
+                return new ChaiValue(!rhs.less(lhs));
+            case ChaiLexer.GREATEREQ:
+                return new ChaiValue(!lhs.less(rhs));
+            case ChaiLexer.EQUALS:
+                return new ChaiValue(lhs.equals(rhs));
+            case ChaiLexer.NOTEQUALS:
+                return new ChaiValue(!lhs.equals(rhs));
+        }
+        
+        throw new RuntimeException("This should not happen, no comparison op found");
     }
 
 	@Override

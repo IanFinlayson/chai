@@ -77,7 +77,7 @@ public class ChaiValue {
             throw new RuntimeException("Illegal types in - operation");
         }
     }
-    
+
     public ChaiValue times(ChaiValue other) {
         // "hi " * 3 gives us "hi hi hi "
         if (type == ChaiType.STRING && other.type == ChaiType.INT) {
@@ -89,11 +89,11 @@ public class ChaiValue {
         } else if (type == ChaiType.INT && other.type == ChaiType.STRING) {
             return other.times(this);
         }
-        
+
         // [1,2] * 2 gives us [1,2,1,2]
         else if (type == ChaiType.LIST && other.type == ChaiType.INT) {
             ArrayList<ChaiValue> result = new ArrayList<>();
-            
+
             ArrayList<ChaiValue> from = toList();
             for (int i = 0; i < other.toInt(); i++) {
                 for (int j = 0; j < from.size(); j++) {
@@ -104,7 +104,7 @@ public class ChaiValue {
         } else if (type == ChaiType.INT && other.type == ChaiType.LIST) {
             return other.times(this);
         }
-        
+
         // otherwise do number stuff
         else if (type == ChaiType.INT && other.type == ChaiType.INT) {
             // integer math
@@ -116,7 +116,7 @@ public class ChaiValue {
             throw new RuntimeException("Illegal types in * operation");
         }
     }
-    
+
     public ChaiValue divide(ChaiValue other) {
         if (numberType() && other.numberType()) {
             // float math
@@ -124,6 +124,60 @@ public class ChaiValue {
         } else {
             throw new RuntimeException("Illegal types in / operation");
         }
+    }
+
+    public boolean equals(ChaiValue other) {
+        if (type == ChaiType.INT && other.type == ChaiType.INT)
+            return toInt() == other.toInt();
+        
+        else if (numberType() && other.numberType())
+            return toFloat() == other.toFloat();
+            
+        else if (type == ChaiType.BOOL && other.type == ChaiType.BOOL)
+            return toBool() == other.toBool();
+
+        else if (type == ChaiType.STRING && other.type == ChaiType.STRING)
+            return toString() == other.toString();
+
+        else if (type == ChaiType.LIST && other.type == ChaiType.LIST) {
+            ArrayList<ChaiValue> lhs = (ArrayList<ChaiValue>) value;
+            ArrayList<ChaiValue> rhs = (ArrayList<ChaiValue>) other.value;
+
+            if (lhs.size() != rhs.size()) {
+                return false;
+            }
+
+            for (int i = 0; i < lhs.size(); i++) {
+                if (!lhs.get(i).equals(rhs.get(i))) {
+                    return false;
+                }
+            }
+            
+            return true;
+        } else {
+            throw new TypeMismatchException("Invalid operands to comparison operator.");
+        }
+    }
+
+    public boolean less(ChaiValue other) {
+        if (type == ChaiType.INT && other.type == ChaiType.INT)
+            return toInt() < other.toInt();
+        
+        else if (numberType() && other.numberType())
+            return toFloat() < other.toFloat();
+            
+        else if (type == ChaiType.STRING && other.type == ChaiType.STRING) {
+            return toString().compareTo(other.toString()) < 0;
+        }
+        
+        // TODO, python allows for these comparions with lists
+        // it goes element by element and when one is less, it returns
+        // should Chai also support this??
+        
+        else {
+            throw new TypeMismatchException("Invalid operands to comparison operator.");
+        }
+
     }
 
     // we need to print "" around an strings that may be in this list/set/dict
@@ -148,7 +202,7 @@ public class ChaiValue {
             case LIST:
                 String result = "[";
                 boolean first = true;
-                
+
                 for (ChaiValue val : ((ArrayList<ChaiValue>) value)) {
                     if (first) {
                         first = false;
@@ -164,7 +218,7 @@ public class ChaiValue {
 
         throw new RuntimeException("Unhandled type in swtich/case");
     }
-    
+
     @Override
     public String toString() {
         // by default we do not print nested quotations on strings
@@ -227,7 +281,7 @@ public class ChaiValue {
         if (type == ChaiType.LIST) {
             return (ArrayList<ChaiValue>) value;
         }
-       
+
         throw new TypeMismatchException("Cannot convert type to array");
     }
 }
