@@ -66,6 +66,66 @@ public class ChaiValue {
         }
     }
 
+    public ChaiValue minus(ChaiValue other) {
+        if (type == ChaiType.INT && other.type == ChaiType.INT) {
+            // integer math
+            return new ChaiValue(toInt() - other.toInt());
+        } else if (numberType() && other.numberType()) {
+            // float math
+            return new ChaiValue(toReal() - other.toReal());
+        } else {
+            throw new RuntimeException("Illegal types in - operation");
+        }
+    }
+    
+    public ChaiValue times(ChaiValue other) {
+        // "hi " * 3 gives us "hi hi hi "
+        if (type == ChaiType.STRING && other.type == ChaiType.INT) {
+            String result = "";
+            for (int i = 0; i < other.toInt(); i++) {
+                result += toString();
+            }
+            return new ChaiValue(result);
+        } else if (type == ChaiType.INT && other.type == ChaiType.STRING) {
+            return other.times(this);
+        }
+        
+        // [1,2] * 2 gives us [1,2,1,2]
+        else if (type == ChaiType.LIST && other.type == ChaiType.INT) {
+            ArrayList<ChaiValue> result = new ArrayList<>();
+            
+            ArrayList<ChaiValue> from = toArray();
+            for (int i = 0; i < other.toInt(); i++) {
+                for (int j = 0; j < from.size(); j++) {
+                    result.add(from.get(j));
+                }
+            }
+            return new ChaiValue(result);
+        } else if (type == ChaiType.INT && other.type == ChaiType.LIST) {
+            return other.times(this);
+        }
+        
+        // otherwise do number stuff
+        else if (type == ChaiType.INT && other.type == ChaiType.INT) {
+            // integer math
+            return new ChaiValue(toInt() * other.toInt());
+        } else if (numberType() && other.numberType()) {
+            // float math
+            return new ChaiValue(toReal() * other.toReal());
+        } else {
+            throw new RuntimeException("Illegal types in * operation");
+        }
+    }
+    
+    public ChaiValue divide(ChaiValue other) {
+        if (numberType() && other.numberType()) {
+            // float math
+            return new ChaiValue(toReal() / other.toReal());
+        } else {
+            throw new RuntimeException("Illegal types in / operation");
+        }
+    }
+
     @Override
     @SuppressWarnings("unchecked")
     public String toString() {

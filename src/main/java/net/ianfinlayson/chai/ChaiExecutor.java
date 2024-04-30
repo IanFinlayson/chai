@@ -248,14 +248,20 @@ public class ChaiExecutor extends ChaiParserBaseVisitor<ChaiValue> {
         if (ctx.op.getType() == ChaiLexer.PLUS) {
             return lhs.plus(rhs);
         } else {
-            // TODO subtraction
-            return null;
+            return lhs.minus(rhs);
         }
     }
 
 	@Override
     public ChaiValue visitTimesdivExpression(ChaiParser.TimesdivExpressionContext ctx) {
-        return visitChildren(ctx);
+        ChaiValue lhs = visit(ctx.expression(0));
+        ChaiValue rhs = visit(ctx.expression(1));
+        
+        if (ctx.op.getType() == ChaiLexer.TIMES) {
+            return lhs.times(rhs);
+        } else {
+            return lhs.divide(rhs);
+        }
     }
 
 	@Override

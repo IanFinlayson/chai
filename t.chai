@@ -6,4 +6,3 @@ def main():
     var y = ["my", "dude", "!"]
     print(x + y)
     
-
