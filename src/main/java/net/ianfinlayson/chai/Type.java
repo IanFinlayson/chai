@@ -3,7 +3,7 @@ package net.ianfinlayson.chai;
 // an enum containing the 
 // set of possible Chai types
 
-public enum ChaiType {
+public enum Type {
     INT,
     FLOAT,
     BOOL,

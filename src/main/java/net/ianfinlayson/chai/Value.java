@@ -2,146 +2,146 @@ package net.ianfinlayson.chai;
 
 import java.util.ArrayList;
 
-public class ChaiValue {
-    private ChaiType type;
+public class Value {
+    private Type type;
     private Object value;
 
-    public ChaiValue(int intVal) {
-        type = ChaiType.INT;
+    public Value(int intVal) {
+        type = Type.INT;
         value = Integer.valueOf(intVal);
     }
 
-    public ChaiValue(double floatVal) {
-        type = ChaiType.FLOAT;
+    public Value(double floatVal) {
+        type = Type.FLOAT;
         value = Double.valueOf(floatVal);
     }
 
-    public ChaiValue(boolean boolVal) {
-        type = ChaiType.BOOL;
+    public Value(boolean boolVal) {
+        type = Type.BOOL;
         value = Boolean.valueOf(boolVal);
     }
 
-    public ChaiValue(String stringVal) {
-        type = ChaiType.STRING;
+    public Value(String stringVal) {
+        type = Type.STRING;
         value = stringVal;
     }
 
-    public ChaiValue(ArrayList<ChaiValue> array) {
-        type = ChaiType.LIST;
+    public Value(ArrayList<Value> array) {
+        type = Type.LIST;
         value = array;
     }
 
-    public ChaiType getType() {
+    public Type getType() {
         return type;
     }
 
     // used to simplify logic of math functions
     private boolean numberType() {
-        return type == ChaiType.INT || type == ChaiType.FLOAT;
+        return type == Type.INT || type == Type.FLOAT;
     }
 
-    public ChaiValue plus(ChaiValue other) {
-        if (type == ChaiType.STRING && other.type == ChaiType.STRING) {
+    public Value plus(Value other) {
+        if (type == Type.STRING && other.type == Type.STRING) {
             // string concatenation
-            return new ChaiValue(toString() + other.toString());
-        } else if (type == ChaiType.LIST && other.type == ChaiType.LIST) {
+            return new Value(toString() + other.toString());
+        } else if (type == Type.LIST && other.type == Type.LIST) {
             // array concatenation
-            ArrayList<ChaiValue> combined = new ArrayList<>();
+            ArrayList<Value> combined = new ArrayList<>();
 
-            for (ChaiValue v : toList()) {
+            for (Value v : toList()) {
                 combined.add(v);
             }
-            for (ChaiValue v : other.toList()) {
+            for (Value v : other.toList()) {
                 combined.add(v);
             }
-            return new ChaiValue(combined);
-        } else if (type == ChaiType.INT && other.type == ChaiType.INT) {
+            return new Value(combined);
+        } else if (type == Type.INT && other.type == Type.INT) {
             // integer math
-            return new ChaiValue(toInt() + other.toInt());
+            return new Value(toInt() + other.toInt());
         } else if (numberType() && other.numberType()) {
             // float math
-            return new ChaiValue(toFloat() + other.toFloat());
+            return new Value(toFloat() + other.toFloat());
         } else {
             throw new RuntimeException("Illegal types in + operation");
         }
     }
 
-    public ChaiValue minus(ChaiValue other) {
-        if (type == ChaiType.INT && other.type == ChaiType.INT) {
+    public Value minus(Value other) {
+        if (type == Type.INT && other.type == Type.INT) {
             // integer math
-            return new ChaiValue(toInt() - other.toInt());
+            return new Value(toInt() - other.toInt());
         } else if (numberType() && other.numberType()) {
             // float math
-            return new ChaiValue(toFloat() - other.toFloat());
+            return new Value(toFloat() - other.toFloat());
         } else {
             throw new RuntimeException("Illegal types in - operation");
         }
     }
 
-    public ChaiValue times(ChaiValue other) {
+    public Value times(Value other) {
         // "hi " * 3 gives us "hi hi hi "
-        if (type == ChaiType.STRING && other.type == ChaiType.INT) {
+        if (type == Type.STRING && other.type == Type.INT) {
             String result = "";
             for (int i = 0; i < other.toInt(); i++) {
                 result += toString();
             }
-            return new ChaiValue(result);
-        } else if (type == ChaiType.INT && other.type == ChaiType.STRING) {
+            return new Value(result);
+        } else if (type == Type.INT && other.type == Type.STRING) {
             return other.times(this);
         }
 
         // [1,2] * 2 gives us [1,2,1,2]
-        else if (type == ChaiType.LIST && other.type == ChaiType.INT) {
-            ArrayList<ChaiValue> result = new ArrayList<>();
+        else if (type == Type.LIST && other.type == Type.INT) {
+            ArrayList<Value> result = new ArrayList<>();
 
-            ArrayList<ChaiValue> from = toList();
+            ArrayList<Value> from = toList();
             for (int i = 0; i < other.toInt(); i++) {
                 for (int j = 0; j < from.size(); j++) {
                     result.add(from.get(j));
                 }
             }
-            return new ChaiValue(result);
-        } else if (type == ChaiType.INT && other.type == ChaiType.LIST) {
+            return new Value(result);
+        } else if (type == Type.INT && other.type == Type.LIST) {
             return other.times(this);
         }
 
         // otherwise do number stuff
-        else if (type == ChaiType.INT && other.type == ChaiType.INT) {
+        else if (type == Type.INT && other.type == Type.INT) {
             // integer math
-            return new ChaiValue(toInt() * other.toInt());
+            return new Value(toInt() * other.toInt());
         } else if (numberType() && other.numberType()) {
             // float math
-            return new ChaiValue(toFloat() * other.toFloat());
+            return new Value(toFloat() * other.toFloat());
         } else {
             throw new RuntimeException("Illegal types in * operation");
         }
     }
 
-    public ChaiValue divide(ChaiValue other) {
+    public Value divide(Value other) {
         if (numberType() && other.numberType()) {
             // float math
-            return new ChaiValue(toFloat() / other.toFloat());
+            return new Value(toFloat() / other.toFloat());
         } else {
             throw new RuntimeException("Illegal types in / operation");
         }
     }
 
-    public boolean equals(ChaiValue other) {
-        if (type == ChaiType.INT && other.type == ChaiType.INT)
+    public boolean equals(Value other) {
+        if (type == Type.INT && other.type == Type.INT)
             return toInt() == other.toInt();
         
         else if (numberType() && other.numberType())
             return toFloat() == other.toFloat();
             
-        else if (type == ChaiType.BOOL && other.type == ChaiType.BOOL)
+        else if (type == Type.BOOL && other.type == Type.BOOL)
             return toBool() == other.toBool();
 
-        else if (type == ChaiType.STRING && other.type == ChaiType.STRING)
+        else if (type == Type.STRING && other.type == Type.STRING)
             return toString() == other.toString();
 
-        else if (type == ChaiType.LIST && other.type == ChaiType.LIST) {
-            ArrayList<ChaiValue> lhs = (ArrayList<ChaiValue>) value;
-            ArrayList<ChaiValue> rhs = (ArrayList<ChaiValue>) other.value;
+        else if (type == Type.LIST && other.type == Type.LIST) {
+            ArrayList<Value> lhs = (ArrayList<Value>) value;
+            ArrayList<Value> rhs = (ArrayList<Value>) other.value;
 
             if (lhs.size() != rhs.size()) {
                 return false;
@@ -159,14 +159,14 @@ public class ChaiValue {
         }
     }
 
-    public boolean less(ChaiValue other) {
-        if (type == ChaiType.INT && other.type == ChaiType.INT)
+    public boolean less(Value other) {
+        if (type == Type.INT && other.type == Type.INT)
             return toInt() < other.toInt();
         
         else if (numberType() && other.numberType())
             return toFloat() < other.toFloat();
             
-        else if (type == ChaiType.STRING && other.type == ChaiType.STRING) {
+        else if (type == Type.STRING && other.type == Type.STRING) {
             return toString().compareTo(other.toString()) < 0;
         }
         
@@ -180,10 +180,10 @@ public class ChaiValue {
 
     }
     
-    public ChaiValue pow(ChaiValue other) {
+    public Value pow(Value other) {
         // TODO should we do integer ones separately?  actually we should consider bignum anyway...
         if (numberType() && other.numberType()) {
-            return new ChaiValue(Math.pow(toFloat(), other.toFloat()));
+            return new Value(Math.pow(toFloat(), other.toFloat()));
         } else {
             throw new RuntimeException("Illegal types in ** operation");
         }
@@ -213,7 +213,7 @@ public class ChaiValue {
                 String result = "[";
                 boolean first = true;
 
-                for (ChaiValue val : ((ArrayList<ChaiValue>) value)) {
+                for (Value val : ((ArrayList<Value>) value)) {
                     if (first) {
                         first = false;
                     } else {
@@ -287,9 +287,9 @@ public class ChaiValue {
     }
 
     @SuppressWarnings("unchecked")
-    public ArrayList<ChaiValue> toList() {
-        if (type == ChaiType.LIST) {
-            return (ArrayList<ChaiValue>) value;
+    public ArrayList<Value> toList() {
+        if (type == Type.LIST) {
+            return (ArrayList<Value>) value;
         }
 
         throw new TypeMismatchException("Cannot convert type to array");

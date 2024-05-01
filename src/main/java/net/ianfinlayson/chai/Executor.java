@@ -7,10 +7,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
-public class ChaiExecutor extends ChaiParserBaseVisitor<ChaiValue> {
+public class Executor extends ChaiParserBaseVisitor<Value> {
     private Scanner input = new Scanner(System.in);
-    private Stack<HashMap<String, ChaiValue>> stack = new Stack<>();
-    private HashMap<String, ChaiValue> globals = new HashMap<>();
+    private Stack<HashMap<String, Value>> stack = new Stack<>();
+    private HashMap<String, Value> globals = new HashMap<>();
 
     // this maps function name to the list of stmts comprising it
     private HashMap<String, ChaiParser.FunctiondefContext> functions = new HashMap<>();
@@ -24,7 +24,7 @@ public class ChaiExecutor extends ChaiParserBaseVisitor<ChaiValue> {
     }
 
     // load a variable -- we check the top function first, then globals
-    private ChaiValue loadVar(String name) {
+    private Value loadVar(String name) {
         if (!stack.empty()) {
             if (stack.peek().get(name) != null) {
                 return stack.peek().get(name);
@@ -39,7 +39,7 @@ public class ChaiExecutor extends ChaiParserBaseVisitor<ChaiValue> {
     }
 
     // put a var -- again into the top function if there is one, or global
-    private void putVar(String name, ChaiValue val) {
+    private void putVar(String name, Value val) {
         if (!stack.empty()) {
             stack.peek().put(name, val);
         } else {
@@ -48,7 +48,7 @@ public class ChaiExecutor extends ChaiParserBaseVisitor<ChaiValue> {
     }
 
 	@Override
-    public ChaiValue visitFunctiondef(ChaiParser.FunctiondefContext ctx) {
+    public Value visitFunctiondef(ChaiParser.FunctiondefContext ctx) {
         // simply put the function into the function table
         String name = ctx.IDNAME().getText();
         functions.put(name, ctx);
@@ -56,9 +56,9 @@ public class ChaiExecutor extends ChaiParserBaseVisitor<ChaiValue> {
     }
 
 	@Override
-    public ChaiValue visitAssignStatement(ChaiParser.AssignStatementContext ctx) {
+    public Value visitAssignStatement(ChaiParser.AssignStatementContext ctx) {
         // get the thing we are assigning
-        ChaiValue val = visit(ctx.expression());
+        Value val = visit(ctx.expression());
 
         // get the lvalue we are writing into
         ChaiParser.LvalueContext lhs = ctx.lvalue();
@@ -81,14 +81,14 @@ public class ChaiExecutor extends ChaiParserBaseVisitor<ChaiValue> {
     }
     
 	@Override
-    public ChaiValue visitVarStatement(ChaiParser.VarStatementContext ctx) {
+    public Value visitVarStatement(ChaiParser.VarStatementContext ctx) {
         // TODO add the type information from this!
         // TODO also make variables actually constant!
 
         // get the parts out
         boolean constant = ctx.LET() != null;
         String name = ctx.IDNAME().getText();
-        ChaiValue val = visit(ctx.expression());
+        Value val = visit(ctx.expression());
 
         // make sure this variable does not already exist
         if (loadVar(name) != null) {
@@ -107,42 +107,42 @@ public class ChaiExecutor extends ChaiParserBaseVisitor<ChaiValue> {
 
 
 	@Override
-    public ChaiValue visitAssertStatement(ChaiParser.AssertStatementContext ctx) {
+    public Value visitAssertStatement(ChaiParser.AssertStatementContext ctx) {
         // TODO
         return visitChildren(ctx);
     }
 
 	@Override
-    public ChaiValue visitReturnStatement(ChaiParser.ReturnStatementContext ctx) {
+    public Value visitReturnStatement(ChaiParser.ReturnStatementContext ctx) {
         // TODO
         return visitChildren(ctx);
     }
 
 	@Override
-    public ChaiValue visitContinueStatement(ChaiParser.ContinueStatementContext ctx) {
+    public Value visitContinueStatement(ChaiParser.ContinueStatementContext ctx) {
         // TODO
         return visitChildren(ctx);
     }
 
 	@Override
-    public ChaiValue visitBreakStatement(ChaiParser.BreakStatementContext ctx) {
+    public Value visitBreakStatement(ChaiParser.BreakStatementContext ctx) {
         // TODO
         return visitChildren(ctx);
     }
 
 	@Override
-    public ChaiValue visitForStatement(ChaiParser.ForStatementContext ctx) {
+    public Value visitForStatement(ChaiParser.ForStatementContext ctx) {
         // TODO
         return visitChildren(ctx);
     }
 
 	@Override
-    public ChaiValue visitWhileStatement(ChaiParser.WhileStatementContext ctx) {
+    public Value visitWhileStatement(ChaiParser.WhileStatementContext ctx) {
         ChaiParser.ExpressionContext expr = ctx.expression();
         ChaiParser.StatementsContext stmt = ctx.statements();
         
-        ChaiValue condition = visit(expr);
-        if (condition.getType() != ChaiType.BOOL) {
+        Value condition = visit(expr);
+        if (condition.getType() != Type.BOOL) {
             throw new TypeMismatchException("Type of while condition must be boolean");
         }
 
@@ -155,31 +155,31 @@ public class ChaiExecutor extends ChaiParserBaseVisitor<ChaiValue> {
     }
 
 	@Override
-    public ChaiValue visitModassign(ChaiParser.ModassignContext ctx) {
+    public Value visitModassign(ChaiParser.ModassignContext ctx) {
         // TODO
         return visitChildren(ctx);
     }
 
 	@Override
-    public ChaiValue visitIfstmt(ChaiParser.IfstmtContext ctx) {
+    public Value visitIfstmt(ChaiParser.IfstmtContext ctx) {
         // TODO
         return visitChildren(ctx);
     }
 
 	@Override
-    public ChaiValue visitElifclause(ChaiParser.ElifclauseContext ctx) {
+    public Value visitElifclause(ChaiParser.ElifclauseContext ctx) {
         // TODO
         return visitChildren(ctx);
     }
 
 	@Override
-    public ChaiValue visitElseclause(ChaiParser.ElseclauseContext ctx) {
+    public Value visitElseclause(ChaiParser.ElseclauseContext ctx) {
         // TODO
         return visitChildren(ctx);
     }
 
 	@Override
-    public ChaiValue visitFunctioncall(ChaiParser.FunctioncallContext ctx) {
+    public Value visitFunctioncall(ChaiParser.FunctioncallContext ctx) {
         // grab the name and look up the function
         String name = ctx.IDNAME().getText();
         
@@ -194,141 +194,141 @@ public class ChaiExecutor extends ChaiParserBaseVisitor<ChaiValue> {
     }
 
 	@Override
-    public ChaiValue visitShiftExpression(ChaiParser.ShiftExpressionContext ctx) {
+    public Value visitShiftExpression(ChaiParser.ShiftExpressionContext ctx) {
         // TODO
         return visitChildren(ctx);
     }
 
 	@Override
-    public ChaiValue visitBitorExpression(ChaiParser.BitorExpressionContext ctx) {
+    public Value visitBitorExpression(ChaiParser.BitorExpressionContext ctx) {
         // TODO
         return visitChildren(ctx);
     }
 
 	@Override
-    public ChaiValue visitNotExpression(ChaiParser.NotExpressionContext ctx) {
-        ChaiValue expr = visit(ctx.expression());
-        if (expr.getType() != ChaiType.BOOL) {
+    public Value visitNotExpression(ChaiParser.NotExpressionContext ctx) {
+        Value expr = visit(ctx.expression());
+        if (expr.getType() != Type.BOOL) {
             throw new TypeMismatchException("Operands to 'not' must have boolean type");
         }
         
-        return new ChaiValue(!expr.toBool());
+        return new Value(!expr.toBool());
     }
 
 	@Override
-    public ChaiValue visitBitxorExpression(ChaiParser.BitxorExpressionContext ctx) {
+    public Value visitBitxorExpression(ChaiParser.BitxorExpressionContext ctx) {
         // TODO
         return visitChildren(ctx);
     }
 
 	@Override
-    public ChaiValue visitBitandExpression(ChaiParser.BitandExpressionContext ctx) {
+    public Value visitBitandExpression(ChaiParser.BitandExpressionContext ctx) {
         // TODO
         return visitChildren(ctx);
     }
 
 	@Override
-    public ChaiValue visitCompareExpression(ChaiParser.CompareExpressionContext ctx) {
-        ChaiValue lhs = visit(ctx.expression(0));
-        ChaiValue rhs = visit(ctx.expression(1));
+    public Value visitCompareExpression(ChaiParser.CompareExpressionContext ctx) {
+        Value lhs = visit(ctx.expression(0));
+        Value rhs = visit(ctx.expression(1));
         
         // we break it down to just less and equals
         switch (ctx.op.getType()) {
             case ChaiLexer.LESS:
-                return new ChaiValue(lhs.less(rhs));
+                return new Value(lhs.less(rhs));
             case ChaiLexer.GREATER:
-                return new ChaiValue(rhs.less(lhs));
+                return new Value(rhs.less(lhs));
             case ChaiLexer.LESSEQ:
-                return new ChaiValue(!rhs.less(lhs));
+                return new Value(!rhs.less(lhs));
             case ChaiLexer.GREATEREQ:
-                return new ChaiValue(!lhs.less(rhs));
+                return new Value(!lhs.less(rhs));
             case ChaiLexer.EQUALS:
-                return new ChaiValue(lhs.equals(rhs));
+                return new Value(lhs.equals(rhs));
             case ChaiLexer.NOTEQUALS:
-                return new ChaiValue(!lhs.equals(rhs));
+                return new Value(!lhs.equals(rhs));
         }
         throw new RuntimeException("This should not happen, no comparison op found");
     }
 
 	@Override
-    public ChaiValue visitNotinExpression(ChaiParser.NotinExpressionContext ctx) {
+    public Value visitNotinExpression(ChaiParser.NotinExpressionContext ctx) {
         // TODO
         return visitChildren(ctx);
     }
 
 	@Override
-    public ChaiValue visitOrExpression(ChaiParser.OrExpressionContext ctx) {
+    public Value visitOrExpression(ChaiParser.OrExpressionContext ctx) {
         // evaluate left hand side
-        ChaiValue lhs = visit(ctx.expression(0));
-        if (lhs.getType() != ChaiType.BOOL) {
+        Value lhs = visit(ctx.expression(0));
+        if (lhs.getType() != Type.BOOL) {
             throw new TypeMismatchException("Operands to 'or' must have boolean type");
         }
         
         // we do short-circuit eval
         if (lhs.toBool() == true) {
-            return new ChaiValue(true);
+            return new Value(true);
         }
         
         // evaluate right hand side
-        ChaiValue rhs = visit(ctx.expression(1));
-        if (rhs.getType() != ChaiType.BOOL) {
+        Value rhs = visit(ctx.expression(1));
+        if (rhs.getType() != Type.BOOL) {
             throw new TypeMismatchException("Operands to 'or' must have boolean type");
         }
         if (rhs.toBool() == true) {
-            return new ChaiValue(true);
+            return new Value(true);
         }
 
-        return new ChaiValue(false);
+        return new Value(false);
     }
 
 	@Override
-    public ChaiValue visitPowerExpression(ChaiParser.PowerExpressionContext ctx) {
-        ChaiValue lhs = visit(ctx.expression(0));
-        ChaiValue rhs = visit(ctx.expression(1));
+    public Value visitPowerExpression(ChaiParser.PowerExpressionContext ctx) {
+        Value lhs = visit(ctx.expression(0));
+        Value rhs = visit(ctx.expression(1));
         return lhs.pow(rhs);
     }
 
 	@Override
-    public ChaiValue visitInExpression(ChaiParser.InExpressionContext ctx) {
+    public Value visitInExpression(ChaiParser.InExpressionContext ctx) {
         // TODO
         return visitChildren(ctx);
     }
 
 	@Override
-    public ChaiValue visitAndExpression(ChaiParser.AndExpressionContext ctx) {
+    public Value visitAndExpression(ChaiParser.AndExpressionContext ctx) {
         // evaluate left hand side
-        ChaiValue lhs = visit(ctx.expression(0));
-        if (lhs.getType() != ChaiType.BOOL) {
+        Value lhs = visit(ctx.expression(0));
+        if (lhs.getType() != Type.BOOL) {
             throw new TypeMismatchException("Operands to 'and' must have boolean type");
         }
         
         // we do short-circuit eval
         if (lhs.toBool() == false) {
-            return new ChaiValue(false);
+            return new Value(false);
         }
         
         // evaluate right hand side
-        ChaiValue rhs = visit(ctx.expression(1));
-        if (rhs.getType() != ChaiType.BOOL) {
+        Value rhs = visit(ctx.expression(1));
+        if (rhs.getType() != Type.BOOL) {
             throw new TypeMismatchException("Operands to 'and' must have boolean type");
         }
         if (rhs.toBool() == false) {
-            return new ChaiValue(false);
+            return new Value(false);
         }
         
-        return new ChaiValue(true);
+        return new Value(true);
     }
 
 	@Override
-    public ChaiValue visitIfelseExpression(ChaiParser.IfelseExpressionContext ctx) {
+    public Value visitIfelseExpression(ChaiParser.IfelseExpressionContext ctx) {
         // TODO
         return visitChildren(ctx);
     }
 
 	@Override
-    public ChaiValue visitPlusMinusExpression(ChaiParser.PlusMinusExpressionContext ctx) {
-        ChaiValue lhs = visit(ctx.expression(0));
-        ChaiValue rhs = visit(ctx.expression(1));
+    public Value visitPlusMinusExpression(ChaiParser.PlusMinusExpressionContext ctx) {
+        Value lhs = visit(ctx.expression(0));
+        Value rhs = visit(ctx.expression(1));
         
         if (ctx.op.getType() == ChaiLexer.PLUS) {
             return lhs.plus(rhs);
@@ -338,9 +338,9 @@ public class ChaiExecutor extends ChaiParserBaseVisitor<ChaiValue> {
     }
 
 	@Override
-    public ChaiValue visitTimesdivExpression(ChaiParser.TimesdivExpressionContext ctx) {
-        ChaiValue lhs = visit(ctx.expression(0));
-        ChaiValue rhs = visit(ctx.expression(1));
+    public Value visitTimesdivExpression(ChaiParser.TimesdivExpressionContext ctx) {
+        Value lhs = visit(ctx.expression(0));
+        Value rhs = visit(ctx.expression(1));
         
         if (ctx.op.getType() == ChaiLexer.TIMES) {
             return lhs.times(rhs);
@@ -350,35 +350,35 @@ public class ChaiExecutor extends ChaiParserBaseVisitor<ChaiValue> {
     }
 
 	@Override
-    public ChaiValue visitConsExpression(ChaiParser.ConsExpressionContext ctx) {
+    public Value visitConsExpression(ChaiParser.ConsExpressionContext ctx) {
         // TODO
         return visitChildren(ctx);
     }
 
 	@Override
-    public ChaiValue visitUnaryExpression(ChaiParser.UnaryExpressionContext ctx) {
-        ChaiValue val = visit(ctx.expression());
+    public Value visitUnaryExpression(ChaiParser.UnaryExpressionContext ctx) {
+        Value val = visit(ctx.expression());
 
         switch (ctx.op.getType()) {
             case ChaiLexer.PLUS:
-                if (val.getType() != ChaiType.INT && val.getType() != ChaiType.FLOAT) {
+                if (val.getType() != Type.INT && val.getType() != Type.FLOAT) {
                     throw new TypeMismatchException("Invlaid type to unary + operator");
                 } else {
                     return val;
                 }
             case ChaiLexer.MINUS:
-                if (val.getType() == ChaiType.INT) {
-                    return new ChaiValue(-val.toInt());
-                } else if (val.getType() == ChaiType.FLOAT) {
-                    return new ChaiValue(-val.toFloat());
+                if (val.getType() == Type.INT) {
+                    return new Value(-val.toInt());
+                } else if (val.getType() == Type.FLOAT) {
+                    return new Value(-val.toFloat());
                 } else {
                     throw new TypeMismatchException("Invlaid type to unary - operator");
                 }
             case ChaiLexer.COMPLEMENT:
-                if (val.getType() != ChaiType.INT) {
+                if (val.getType() != Type.INT) {
                     throw new TypeMismatchException("Invlaid type to unary ~ operator");
                 } else {
-                    return new ChaiValue(~val.toInt());
+                    return new Value(~val.toInt());
                 }
         }
            
@@ -386,15 +386,15 @@ public class ChaiExecutor extends ChaiParserBaseVisitor<ChaiValue> {
     }
 
 	@Override
-    public ChaiValue visitListcompTerm(ChaiParser.ListcompTermContext ctx) {
+    public Value visitListcompTerm(ChaiParser.ListcompTermContext ctx) {
         // TODO
         return visitChildren(ctx);
     }
 
 	@Override
-    public ChaiValue visitIdTerm(ChaiParser.IdTermContext ctx) {
+    public Value visitIdTerm(ChaiParser.IdTermContext ctx) {
         String name = ctx.IDNAME().getText();
-        ChaiValue val = loadVar(name);
+        Value val = loadVar(name);
         if (val == null) {
             throw new RuntimeException("Could not load variable " + name);
         } else {
@@ -403,84 +403,84 @@ public class ChaiExecutor extends ChaiParserBaseVisitor<ChaiValue> {
     }
 
 	@Override
-    public ChaiValue visitListRangeTerm(ChaiParser.ListRangeTermContext ctx) {
+    public Value visitListRangeTerm(ChaiParser.ListRangeTermContext ctx) {
         // TODO
         return visitChildren(ctx);
     }
 
 	@Override
-    public ChaiValue visitListIndexTerm(ChaiParser.ListIndexTermContext ctx) {
+    public Value visitListIndexTerm(ChaiParser.ListIndexTermContext ctx) {
         // TODO
         return visitChildren(ctx);
     }
 
 	@Override
-    public ChaiValue visitListLiteralTerm(ChaiParser.ListLiteralTermContext ctx) {
+    public Value visitListLiteralTerm(ChaiParser.ListLiteralTermContext ctx) {
         // this represents a list literal like [1, 2, 3] etc.
-        ArrayList<ChaiValue> list = new ArrayList<>();
+        ArrayList<Value> list = new ArrayList<>();
 
         for (ChaiParser.ExpressionContext expr : ctx.expression()) {
             list.add(visit(expr));
         }
         
-        return new ChaiValue(list);
+        return new Value(list);
     }
 
 	@Override
-    public ChaiValue visitTupleLiteralTerm(ChaiParser.TupleLiteralTermContext ctx) {
+    public Value visitTupleLiteralTerm(ChaiParser.TupleLiteralTermContext ctx) {
         // TODO
         return visitChildren(ctx);
     }
 
 	@Override
-    public ChaiValue visitDicLiteralTerm(ChaiParser.DicLiteralTermContext ctx) {
+    public Value visitDicLiteralTerm(ChaiParser.DicLiteralTermContext ctx) {
         // TODO
         return visitChildren(ctx);
     }
 
 	@Override
-    public ChaiValue visitListSliceTerm(ChaiParser.ListSliceTermContext ctx) {
+    public Value visitListSliceTerm(ChaiParser.ListSliceTermContext ctx) {
         // TODO
         return visitChildren(ctx);
     }
 
 	@Override
-    public ChaiValue visitSetLiteralTerm(ChaiParser.SetLiteralTermContext ctx) {
+    public Value visitSetLiteralTerm(ChaiParser.SetLiteralTermContext ctx) {
         // TODO
         return visitChildren(ctx);
     }
 
 	@Override
-    public ChaiValue visitDictentry(ChaiParser.DictentryContext ctx) {
+    public Value visitDictentry(ChaiParser.DictentryContext ctx) {
         // TODO
         return visitChildren(ctx);
     }
 
 	@Override
-    public ChaiValue visitIntLiteral(ChaiParser.IntLiteralContext ctx) {
-        return new ChaiValue(Integer.parseInt(ctx.INTVAL().getText()));
+    public Value visitIntLiteral(ChaiParser.IntLiteralContext ctx) {
+        return new Value(Integer.parseInt(ctx.INTVAL().getText()));
     }
 
 	@Override
-    public ChaiValue visitFloatLiteral(ChaiParser.FloatLiteralContext ctx) {
-        return new ChaiValue(Double.parseDouble(ctx.FLOATVAL().getText()));
+    public Value visitFloatLiteral(ChaiParser.FloatLiteralContext ctx) {
+        return new Value(Double.parseDouble(ctx.FLOATVAL().getText()));
     }
 
 	@Override
-    public ChaiValue visitStringLiteral(ChaiParser.StringLiteralContext ctx) {
+    public Value visitStringLiteral(ChaiParser.StringLiteralContext ctx) {
         // get it, but ditch the quotation marks
         String whole = ctx.STRINGVAL().getText();
-        return new ChaiValue(whole.substring(1, whole.length() - 1));
+        return new Value(whole.substring(1, whole.length() - 1));
     }
 
 	@Override
-    public ChaiValue visitTrueLiteral(ChaiParser.TrueLiteralContext ctx) {
-        return new ChaiValue(true);
+    public Value visitTrueLiteral(ChaiParser.TrueLiteralContext ctx) {
+        return new Value(true);
     }
 
 	@Override
-    public ChaiValue visitFalseLiteral(ChaiParser.FalseLiteralContext ctx) {
-        return new ChaiValue(false);
+    public Value visitFalseLiteral(ChaiParser.FalseLiteralContext ctx) {
+        return new Value(false);
     }
     
     // standard library functions appear below
@@ -490,23 +490,23 @@ public class ChaiExecutor extends ChaiParserBaseVisitor<ChaiValue> {
         boolean first = true;
         
         // we put the things to print in a list so we need only go through args once
-        ArrayList<ChaiValue> toprint = new ArrayList<>();
+        ArrayList<Value> toprint = new ArrayList<>();
 
         // for each argument that we are given
         for (ChaiParser.ArgumentContext arg : args.argument()) {
             // if it's a keyword argument
             if (arg.ASSIGN() != null) {
                 String kwname = arg.IDNAME().getText();
-                ChaiValue kwval = visit(arg.expression());
+                Value kwval = visit(arg.expression());
 
                 if (kwname.equals("end")) {
-                    if (kwval.getType() != ChaiType.STRING) {
+                    if (kwval.getType() != Type.STRING) {
                         throw new TypeMismatchException("'end' argument must be a String");
                     } else {
                         end = kwval.toString();
                     }
                 } else if (kwname.equals("sep")) {
-                    if (kwval.getType() != ChaiType.STRING) {
+                    if (kwval.getType() != Type.STRING) {
                         throw new TypeMismatchException("'sep' argument must be a String");
                     } else {
                         sep = kwval.toString();
@@ -519,7 +519,7 @@ public class ChaiExecutor extends ChaiParserBaseVisitor<ChaiValue> {
         }
 
         // now actually print the things
-        for (ChaiValue val : toprint) {
+        for (Value val : toprint) {
             // print the separator after first one
             if (!first) {
                 System.out.print(sep);

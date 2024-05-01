@@ -53,7 +53,7 @@ public class Main {
         }
 
         // create the visitor for running (eventually we'll make a type checker one too)
-        ChaiExecutor executor = new ChaiExecutor();
+        Executor executor = new Executor();
 
         try {
             executor.visit(tree);
