@@ -1,12 +1,12 @@
-- variables being set to stuff
+- /, %
+- + -
+- unary operators
+- powers
+- complex expressions with all of these
+
 - if, elif, else statements
 - while loops
 - break and continue statements
-- powers
-- *, /, %
-- + -
-- unary operators
-- complex expressions with all of these
 - boolean expressions of multiple complexities
 - literals: int, float, string, lists
 
