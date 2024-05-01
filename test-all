@@ -11,6 +11,7 @@ do
     then
         echo "Test fails for $t"
         failure="1"
+        sdiff $basename.check $basename.out
     fi
     rm -f $basename.check
 done

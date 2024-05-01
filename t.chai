@@ -1,11 +1,4 @@
 
 def main():
-    var x = 10
-    while x >= 0:
-        if x == 7:
-            print("We found SEVEN!")
-        elif x % 2 == 0:
-            print("x is even")
-        else:
-            print("x is odd")
-        x = x - 1
+    print("hey\nthere")
+    

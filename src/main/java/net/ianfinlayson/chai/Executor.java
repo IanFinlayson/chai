@@ -535,6 +535,12 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
         // we put the things to print in a list so we need only go through args once
         ArrayList<Value> toprint = new ArrayList<>();
 
+        // if there are no arguments, just print a \n and return!
+        if (args == null || args.argument() == null) {
+            System.out.print("\n");
+            return;
+        }
+
         // for each argument that we are given
         for (ChaiParser.ArgumentContext arg : args.argument()) {
             // if it's a keyword argument
