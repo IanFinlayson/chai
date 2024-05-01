@@ -141,17 +141,17 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
 
 	@Override
     public Value visitWhileStatement(ChaiParser.WhileStatementContext ctx) {
-        ChaiParser.ExpressionContext expr = ctx.expression();
-        ChaiParser.StatementsContext stmt = ctx.statements();
-        
-        Value condition = visit(expr);
+        // evaluate the condition
+        Value condition = visit(ctx.expression());
         if (condition.getType() != Type.BOOL) {
             throw new TypeMismatchException("Type of while condition must be boolean");
         }
 
-        while(condition.toBool() == true) {
+        // while it's true
+        while (condition.toBool() == true) {
             try {
-                visit(stmt);
+                // visit the statments
+                visit(ctx.statements());
             } catch (ContinueException e) {
                 // do nothing, we will fall down to checking the condition again
             } catch (BreakException e) {
@@ -159,7 +159,8 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
                 break;
             }
 
-            condition = visit(expr);
+            // re-eval condition
+            condition = visit(ctx.expression());
         }
 
         return null;
@@ -171,23 +172,48 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
         return visitChildren(ctx);
     }
 
+
+
+
 	@Override
     public Value visitIfstmt(ChaiParser.IfstmtContext ctx) {
-        // TODO
-        return visitChildren(ctx);
+        // evaluate the initial expression
+        Value condition = visit(ctx.expression());
+        if (condition.getType() != Type.BOOL) {
+            throw new TypeMismatchException("Type of while condition must be boolean");
+        }
+
+        // if it's true, do this stmt and bail
+        if (condition.toBool() == true) {
+            visit(ctx.statements());
+            return null;
+        }
+        
+        // now we go through any elif clauses there might be here
+        for (ChaiParser.ElifclauseContext elif : ctx.elifclause()) {
+            // check this one's condition
+            condition = visit(elif.expression());
+            if (condition.getType() != Type.BOOL) {
+                throw new TypeMismatchException("Type of while condition must be boolean");
+            }
+            
+            // if it's true, do THIS stmt and bail
+            if (condition.toBool() == true) {
+                visit(elif.statements());
+                return null;
+            }
+        }
+
+        // now we check if there is an else, and if so, do that
+        if (ctx.elseclause() != null) {
+            visit(ctx.elseclause().statements());
+        }
+        
+        return null;
     }
 
-	@Override
-    public Value visitElifclause(ChaiParser.ElifclauseContext ctx) {
-        // TODO
-        return visitChildren(ctx);
-    }
 
-	@Override
-    public Value visitElseclause(ChaiParser.ElseclauseContext ctx) {
-        // TODO
-        return visitChildren(ctx);
-    }
+
 
 	@Override
     public Value visitFunctioncall(ChaiParser.FunctioncallContext ctx) {
@@ -355,8 +381,10 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
         
         if (ctx.op.getType() == ChaiLexer.TIMES) {
             return lhs.times(rhs);
-        } else {
+        } else if (ctx.op.getType() == ChaiLexer.DIVIDE) {
             return lhs.divide(rhs);
+        } else {
+            return lhs.modulo(rhs);
         }
     }
 

@@ -125,6 +125,18 @@ public class Value {
             throw new RuntimeException("Illegal types in / operation");
         }
     }
+    
+    public Value modulo(Value other) {
+        if (type == Type.INT && other.type == Type.INT) {
+            // integer math
+            return new Value(toInt() % other.toInt());
+        } else if (numberType() && other.numberType()) {
+            // float math
+            return new Value(toFloat() % other.toFloat());
+        } else {
+            throw new RuntimeException("Illegal types in % operation");
+        }
+    }
 
     public boolean equals(Value other) {
         if (type == Type.INT && other.type == Type.INT)
