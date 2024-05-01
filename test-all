@@ -1,0 +1,22 @@
+#!/bin/bash
+
+tests=$(ls tests/*.chai)
+failure="0"
+
+for t in $tests
+do
+    basename="${t%.*}"
+    gradle --quiet run --args="$t" > $basename.check
+    if ! cmp -s $basename.check $basename.out
+    then
+        echo "Test fails for $t"
+        failure="1"
+    fi
+    rm -f $basename.check
+done
+
+if [ $failure = "0" ]
+then
+    echo "All tests passed successfully"
+fi
+
