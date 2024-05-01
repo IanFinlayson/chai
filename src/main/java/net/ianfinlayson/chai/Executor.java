@@ -7,6 +7,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
+// these "exceptions" are used to deal with the corresponding control flow constructs
+// this is a little hacky, but the simplest way to do this during the tree-walking
+class BreakException extends RuntimeException {}
+class ContinueException extends RuntimeException {}
+
 public class Executor extends ChaiParserBaseVisitor<Value> {
     private Scanner input = new Scanner(System.in);
     private Stack<HashMap<String, Value>> stack = new Stack<>();
@@ -120,14 +125,12 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
 
 	@Override
     public Value visitContinueStatement(ChaiParser.ContinueStatementContext ctx) {
-        // TODO
-        return visitChildren(ctx);
+        throw new ContinueException();
     }
 
 	@Override
     public Value visitBreakStatement(ChaiParser.BreakStatementContext ctx) {
-        // TODO
-        return visitChildren(ctx);
+        throw new BreakException();
     }
 
 	@Override
@@ -147,7 +150,15 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
         }
 
         while(condition.toBool() == true) {
-            visit(stmt);
+            try {
+                visit(stmt);
+            } catch (ContinueException e) {
+                // do nothing, we will fall down to checking the condition again
+            } catch (BreakException e) {
+                // this was easy
+                break;
+            }
+
             condition = visit(expr);
         }
 
@@ -412,6 +423,10 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
     public Value visitListIndexTerm(ChaiParser.ListIndexTermContext ctx) {
         // TODO
         return visitChildren(ctx);
+    }
+	
+	@Override public Value visitParensTerm(ChaiParser.ParensTermContext ctx) {
+        return visit(ctx.expression());
     }
 
 	@Override

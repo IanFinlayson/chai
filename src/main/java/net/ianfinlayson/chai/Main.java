@@ -52,6 +52,11 @@ public class Main {
             return;
         }
 
+        // print the tree to a text file for debugging porpoises
+        try (PrintWriter dbgfile = new PrintWriter("parsetree.txt")) {
+            dbgfile.println(tree.toStringTree(parser));
+        } catch (FileNotFoundException e) {}
+
         // create the visitor for running (eventually we'll make a type checker one too)
         Executor executor = new Executor();
 

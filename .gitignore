@@ -2,3 +2,4 @@
 src/generated/
 build/
 *.swp
+parsetree.txt
