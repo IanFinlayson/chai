@@ -1,0 +1,7 @@
+def main():
+    var n = 0
+    while n <= 10:
+        print("2 to the", n, "=", 2 ** n)
+        n = n + 1
+    print(2 ** 3 ** 2) # testing that right-associativity!
+

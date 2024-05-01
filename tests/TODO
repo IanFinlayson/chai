@@ -1,10 +1,5 @@
-- unary operators
-- powers
-- complex expressions with all of these
-
 - if, elif, else statements
 - while loops
 - break and continue statements
 - boolean expressions of multiple complexities
-- literals: int, float, string, lists
 

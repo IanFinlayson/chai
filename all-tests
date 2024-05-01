@@ -3,21 +3,27 @@
 tests=$(ls tests/*.chai)
 failure="0"
 
+echo "Beginning tests..."
 for t in $tests
 do
     basename="${t%.*}"
+    echo -n "$basename ... "
     gradle --quiet run --args="$t" > $basename.check
     if ! cmp -s $basename.check $basename.out
     then
-        echo "Test fails for $t"
-        failure="1"
+        echo "FAILS!"
+        failure=$(($failure + 1))
         sdiff $basename.check $basename.out
+    else
+        echo "passes."
     fi
     rm -f $basename.check
 done
 
 if [ $failure = "0" ]
 then
-    echo "All tests passed successfully"
+    echo "All tests passed successfully."
+else
+    echo "$failure tests have failed."
 fi
 
