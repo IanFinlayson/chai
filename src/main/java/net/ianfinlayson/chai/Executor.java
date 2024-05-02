@@ -575,10 +575,29 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
         }
     }
 
-	@Override
+    @Override
     public Value visitListRangeTerm(ChaiParser.ListRangeTermContext ctx) {
-        // TODO
-        return visitChildren(ctx);
+        Value lhs = visit(ctx.expression(0));
+        Value rhs = visit(ctx.expression(1));
+        
+        if (lhs.getType() != Type.INT || rhs.getType() != Type.INT) {
+            throw new TypeMismatchException("Can only use integers for ranges");
+        }
+        
+        ArrayList<Value> range = new ArrayList<>();
+        int a = lhs.toInt(), b = rhs.toInt();
+        if (a > b) {
+            for (int i = a; i >= b; i--) {
+                range.add(new Value(i));
+            }
+
+        } else {
+            for (int i = a; i <= b; i++) {
+                range.add(new Value(i));
+            }
+        }
+
+        return new Value(range);
     }
 
 	@Override

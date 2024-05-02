@@ -161,10 +161,10 @@ term: IDNAME                                                        # idTerm
 
     // a list literal like [3, 4, 5]
     | LBRACK (expression (COMMA expression)*)? RBRACK               # listLiteralTerm
-          
+    
     // a list range
     | LBRACK expression ELIPSIS expression RBRACK                   # listRangeTerm
-    
+          
     // a list comprehension
     | LBRACK expression FOR IDNAME IN expression (IF expression)? RBRACK    # listcompTerm
 
