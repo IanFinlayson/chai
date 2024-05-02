@@ -168,19 +168,31 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
 
 	@Override
     public Value visitModassign(ChaiParser.ModassignContext ctx) {
-        // TODO
-        return visitChildren(ctx);
+        // TODO how to do this without needing to repeat the lvalue assign
+        // code -- must extract that into its own function
+        switch (ctx.op.getType()) {
+            case ChaiLexer.PLUSASSIGN:
+            case ChaiLexer.MINUSASSIGN:
+            case ChaiLexer.TIMESASSIGN:
+            case ChaiLexer.DIVASSIGN:
+            case ChaiLexer.MODASSIGN:
+            case ChaiLexer.LSHIFTASSIGN:
+            case ChaiLexer.RSHIFTASSIGN:
+            case ChaiLexer.BITANDASSIGN:
+            case ChaiLexer.BITORASSIGN:
+            case ChaiLexer.BITXORASSIGN:
+                break;
+        }
+        
+        return null;
     }
-
-
-
 
 	@Override
     public Value visitIfstmt(ChaiParser.IfstmtContext ctx) {
         // evaluate the initial expression
         Value condition = visit(ctx.expression());
         if (condition.getType() != Type.BOOL) {
-            throw new TypeMismatchException("Type of while condition must be boolean");
+            throw new TypeMismatchException("Type of if condition must be boolean");
         }
 
         // if it's true, do this stmt and bail
@@ -194,7 +206,7 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
             // check this one's condition
             condition = visit(elif.expression());
             if (condition.getType() != Type.BOOL) {
-                throw new TypeMismatchException("Type of while condition must be boolean");
+                throw new TypeMismatchException("Type of elif condition must be boolean");
             }
             
             // if it's true, do THIS stmt and bail
@@ -232,14 +244,30 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
 
 	@Override
     public Value visitShiftExpression(ChaiParser.ShiftExpressionContext ctx) {
-        // TODO
-        return visitChildren(ctx);
+        Value lhs = visit(ctx.expression(0));
+        Value rhs = visit(ctx.expression(1));
+
+        if (lhs.getType() != Type.INT || rhs.getType() != Type.INT) {
+            throw new TypeMismatchException("Invalid types to << operator");
+        } else {
+            if (ctx.op.getType() == ChaiLexer.LSHIFT) {
+                return new Value(lhs.toInt() << rhs.toInt());
+            } else {
+                return new Value(lhs.toInt() >> rhs.toInt());
+            }
+        }
     }
 
 	@Override
     public Value visitBitorExpression(ChaiParser.BitorExpressionContext ctx) {
-        // TODO
-        return visitChildren(ctx);
+        Value lhs = visit(ctx.expression(0));
+        Value rhs = visit(ctx.expression(1));
+
+        if (lhs.getType() != Type.INT || rhs.getType() != Type.INT) {
+            throw new TypeMismatchException("Invalid types to << operator");
+        } else {
+            return new Value(lhs.toInt() | rhs.toInt());
+        }
     }
 
 	@Override
@@ -254,14 +282,26 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
 
 	@Override
     public Value visitBitxorExpression(ChaiParser.BitxorExpressionContext ctx) {
-        // TODO
-        return visitChildren(ctx);
+        Value lhs = visit(ctx.expression(0));
+        Value rhs = visit(ctx.expression(1));
+
+        if (lhs.getType() != Type.INT || rhs.getType() != Type.INT) {
+            throw new TypeMismatchException("Invalid types to << operator");
+        } else {
+            return new Value(lhs.toInt() ^ rhs.toInt());
+        }
     }
 
 	@Override
     public Value visitBitandExpression(ChaiParser.BitandExpressionContext ctx) {
-        // TODO
-        return visitChildren(ctx);
+        Value lhs = visit(ctx.expression(0));
+        Value rhs = visit(ctx.expression(1));
+
+        if (lhs.getType() != Type.INT || rhs.getType() != Type.INT) {
+            throw new TypeMismatchException("Invalid types to << operator");
+        } else {
+            return new Value(lhs.toInt() & rhs.toInt());
+        }
     }
 
 	@Override
@@ -289,6 +329,12 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
 
 	@Override
     public Value visitNotinExpression(ChaiParser.NotinExpressionContext ctx) {
+        // TODO
+        return visitChildren(ctx);
+    }
+	
+	@Override
+    public Value visitInExpression(ChaiParser.InExpressionContext ctx) {
         // TODO
         return visitChildren(ctx);
     }
@@ -326,12 +372,6 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
     }
 
 	@Override
-    public Value visitInExpression(ChaiParser.InExpressionContext ctx) {
-        // TODO
-        return visitChildren(ctx);
-    }
-
-	@Override
     public Value visitAndExpression(ChaiParser.AndExpressionContext ctx) {
         // evaluate left hand side
         Value lhs = visit(ctx.expression(0));
@@ -358,8 +398,18 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
 
 	@Override
     public Value visitIfelseExpression(ChaiParser.IfelseExpressionContext ctx) {
-        // TODO
-        return visitChildren(ctx);
+        // evaluate the condition, which is the middle expression
+        Value condition = visit(ctx.expression(1));
+        if (condition.getType() != Type.BOOL) {
+            throw new TypeMismatchException("Type of if condition must be boolean");
+        }
+
+        // if true, evaluate first, else third
+        if (condition.toBool() == true) {
+            return visit(ctx.expression(0));
+        } else {
+            return visit(ctx.expression(2));
+        }
     }
 
 	@Override
@@ -390,8 +440,21 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
 
 	@Override
     public Value visitConsExpression(ChaiParser.ConsExpressionContext ctx) {
-        // TODO
-        return visitChildren(ctx);
+        Value lhs = visit(ctx.expression(0));
+        Value rhs = visit(ctx.expression(1));
+
+        if (rhs.getType() != Type.LIST) {
+            throw new TypeMismatchException("Cannot cons to anything but a list");
+        }
+        
+        ArrayList<Value> result = new ArrayList<>();
+        result.add(lhs);
+
+        for (Value v : rhs.toList()) {
+            result.add(v);
+        }
+
+        return new Value(result);
     }
 
 	@Override
@@ -449,8 +512,21 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
 
 	@Override
     public Value visitListIndexTerm(ChaiParser.ListIndexTermContext ctx) {
-        // TODO
-        return visitChildren(ctx);
+        Value index = visit(ctx.expression());
+        Value list = visit(ctx.term());
+
+        if (index.getType() != Type.INT || list.getType() != Type.LIST) {
+            throw new TypeMismatchException("Cannot perform index using supplied types");
+        }
+
+        ArrayList<Value> vals = list.toList();
+        int num = index.toInt();
+
+        if (num >= vals.size()) {
+            throw new RuntimeException("List index out of range");
+        }
+
+        return vals.get(num);
     }
 	
 	@Override public Value visitParensTerm(ChaiParser.ParensTermContext ctx) {

@@ -124,7 +124,7 @@ argument: expression
 // any valid Chai expression
 expression: <assoc=right> expression POWER expression               # powerExpression
           | op=(COMPLEMENT | PLUS | MINUS) expression               # unaryExpression
-          | expression CONS expression                              # consExpression
+          | <assoc=right> expression CONS expression                # consExpression
           | expression op=(TIMES | DIVIDE | MODULUS) expression     # timesdivExpression
           | expression op=(PLUS | MINUS) expression                 # plusMinusExpression
           | expression op=(LSHIFT | RSHIFT) expression              # shiftExpression
