@@ -59,15 +59,9 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
         functions.put(name, ctx);
         return null;
     }
-
-	@Override
-    public Value visitAssignStatement(ChaiParser.AssignStatementContext ctx) {
-        // get the thing we are assigning
-        Value val = visit(ctx.expression());
-
-        // get the lvalue we are writing into
-        ChaiParser.LvalueContext lhs = ctx.lvalue();
-        
+    
+    // assign a chai value into an l-value
+    private void doAssign(ChaiParser.LvalueContext lhs, Value val) {
         // if it's just an id, do that
         if (lhs instanceof ChaiParser.JustIDContext) {
             String name = ((ChaiParser.JustIDContext) lhs).IDNAME().getText();
@@ -78,10 +72,62 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
             } else {
                 putVar(name, val);
             }
-        }
-        
-        // TODO also handle (possibly multiple) list/set/dict assignments!
+        } else {
+            // it's a list/set/dict assignment, and is possibly nested
 
+            // loop until the lvalue is just an id, collecting the values
+            // used as indices in a list
+            ArrayList<Value> indices = new ArrayList<>();
+            while (!(lhs instanceof ChaiParser.JustIDContext)) {
+                ChaiParser.NestedLvalueContext n = (ChaiParser.NestedLvalueContext) lhs;
+                
+                indices.add(visit(n.expression()));
+                lhs = n.lvalue();
+            }
+            
+            String name = ((ChaiParser.JustIDContext) lhs).IDNAME().getText();
+
+            // apply all but FIRST one
+            Value destination = loadVar(name);
+            for (int i = indices.size() - 1; i > 0; i--) {
+                switch (destination.getType()) {
+                    // TODO when we have dicts and sets, we'll need to add those
+                    case LIST:
+                        ArrayList<Value> list = destination.toList();
+                        Value index = indices.get(i);
+                        if (index.getType() != Type.INT) throw new TypeMismatchException("Cannot index list with non-integer");
+                        destination = list.get(index.toInt());
+                        break;
+                    default:
+                        throw new TypeMismatchException("Cannot index scalar value");
+                }
+            }
+            
+            // do the actual set now
+            switch (destination.getType()) {
+                // TODO when we have dicts and sets, we'll need to add those
+                case LIST:
+                    ArrayList<Value> list = destination.toList();
+                    Value index = indices.get(0);
+                    if (index.getType() != Type.INT) throw new TypeMismatchException("Cannot index list with non-integer");
+                    list.set(index.toInt(), val);
+                    break;
+                default:
+                    throw new TypeMismatchException("Cannot index scalar value");
+            }
+        }
+    }
+
+	@Override
+    public Value visitAssignStatement(ChaiParser.AssignStatementContext ctx) {
+        // get the thing we are assigning
+        Value val = visit(ctx.expression());
+
+        // get the lvalue we are writing into
+        ChaiParser.LvalueContext lhs = ctx.lvalue();
+        
+        // do the assign
+        doAssign(lhs, val);
         return null;
     }
     
@@ -168,8 +214,8 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
 
 	@Override
     public Value visitModassign(ChaiParser.ModassignContext ctx) {
-        // TODO how to do this without needing to repeat the lvalue assign
-        // code -- must extract that into its own function
+        // TODO, how to do these cleanly?
+
         switch (ctx.op.getType()) {
             case ChaiLexer.PLUSASSIGN:
             case ChaiLexer.MINUSASSIGN:
@@ -327,16 +373,41 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
         throw new RuntimeException("This should not happen, no comparison op found");
     }
 
+    // so as to not have this in both the following methods
+    private boolean inCollection(Value target, Value collection) {
+        // TODO add dicts sets and tuples when we get them
+        switch (collection.getType()) {
+            case STRING:
+                if (target.getType() != Type.STRING) {
+                    throw new TypeMismatchException("Only strings can be in strings");
+                }
+                String needle = target.toString();
+                String haystack = collection.toString();
+                return haystack.indexOf(needle) != -1;
+            case LIST:
+                for (Value v : collection.toList()) {
+                    if (v.equals(target)) {
+                        return true;
+                    }
+                }
+                return false;
+            default:
+                throw new TypeMismatchException("Cannot use in on non-collection type");
+        }
+    }
+
 	@Override
     public Value visitNotinExpression(ChaiParser.NotinExpressionContext ctx) {
-        // TODO
-        return visitChildren(ctx);
+        Value lhs = visit(ctx.expression(0));
+        Value rhs = visit(ctx.expression(1));
+        return new Value(!inCollection(lhs, rhs));
     }
 	
 	@Override
     public Value visitInExpression(ChaiParser.InExpressionContext ctx) {
-        // TODO
-        return visitChildren(ctx);
+        Value lhs = visit(ctx.expression(0));
+        Value rhs = visit(ctx.expression(1));
+        return new Value(inCollection(lhs, rhs));
     }
 
 	@Override

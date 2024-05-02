@@ -1,0 +1,25 @@
+def main():
+    let message = "Hello there kimosabe!"
+    print("kim" in message)
+    print("bob" in message)
+    print("bob" not in message)
+    print("kim" not in message)
+
+    var nums = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    print(7 in nums)
+    print(17 in nums)
+    print(17 not in nums)
+    print(7 not in nums)
+    
+    var stuff = [True, True, True]
+    print(True in stuff)
+    print(False in stuff)
+    print(False not in stuff)
+    print(True not in stuff)
+    
+    var yeh = ["a", "aa", "aaa", "aaaa", "b"]
+    print("aaa" in yeh)
+    print("bb" in yeh)
+    print("bb" not in yeh)
+    print("aaa" not in yeh)
+

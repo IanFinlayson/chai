@@ -31,6 +31,10 @@ public class Value {
         value = array;
     }
 
+    public Object getRaw() {
+        return value;
+    }
+
     public Type getType() {
         return type;
     }
@@ -138,6 +142,7 @@ public class Value {
         }
     }
 
+    @SuppressWarnings("unchecked")
     public boolean equals(Value other) {
         if (type == Type.INT && other.type == Type.INT)
             return toInt() == other.toInt();
@@ -149,7 +154,7 @@ public class Value {
             return toBool() == other.toBool();
 
         else if (type == Type.STRING && other.type == Type.STRING)
-            return toString() == other.toString();
+            return toString().equals(other.toString());
 
         else if (type == Type.LIST && other.type == Type.LIST) {
             ArrayList<Value> lhs = (ArrayList<Value>) value;
@@ -213,7 +218,11 @@ public class Value {
             case FLOAT:
                 return ((Double) value).toString();
             case BOOL:
-                return ((Boolean) value).toString();
+                if ((Boolean) value) {
+                    return "True";
+                } else {
+                    return "False";
+                }
             case STRING:
                 if (printQuotes) {
                     return "\"" + ((String) value) + "\"";
