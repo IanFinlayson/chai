@@ -97,8 +97,9 @@ INTVAL:     [0-9]+;
 FLOATVAL:   [0-9]*'.'[0-9]+;
 
 /* thank you antlr book */
-STRINGVAL: '"' (ESC|.)*? '"';
-fragment ESC: '\\"' | '\\\\';
+STRINGVAL: '"' ( ~[\\"\r\n] | ESC)* '"';
+fragment ESC: '\\' [tn"\\];
+
 
 /* comments */
 COMMENT: '#'~[\n\r]* -> channel(HIDDEN);

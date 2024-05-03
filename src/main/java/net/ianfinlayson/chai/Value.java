@@ -21,7 +21,19 @@ public class Value {
         value = Boolean.valueOf(boolVal);
     }
 
+    private void pstring(String s) {
+        for (int i = 0; i < s.length(); i++) {
+            System.out.println(s.charAt(i));
+        }
+        System.out.println("\n");
+    }
+
     public Value(String stringVal) {
+        // replace the escape sequences! this was annoying!
+        stringVal = stringVal.replaceAll("\\\\n", "\n");
+        stringVal = stringVal.replaceAll("\\\\t", "\t");
+        stringVal = stringVal.replaceAll("\\\\\"", "\"");
+        
         type = Type.STRING;
         value = stringVal;
     }
