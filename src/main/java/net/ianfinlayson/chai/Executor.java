@@ -67,6 +67,19 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
             globals.put(name, val);
         }
     }
+    
+    private void nixVar(String name) {
+        if (!stack.empty()) {
+            if (stack.peek().get(name) != null) {
+                stack.peek().remove(name);
+                return;
+            }
+        }
+
+        if (globals.get(name) != null) {
+            globals.remove(name);
+        }
+    }
 
 	@Override
     public Value visitFunctiondef(ChaiParser.FunctiondefContext ctx) {
@@ -195,8 +208,25 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
 
 	@Override
     public Value visitForStatement(ChaiParser.ForStatementContext ctx) {
-        // TODO
-        return visitChildren(ctx);
+        String inductionVar = ctx.IDNAME().getText();
+        Value collection = visit(ctx.expression());
+
+        // make sure the var doesn't already exist
+        if (loadVar(inductionVar) != null) {
+            throw new RuntimeException("Induction variable exists in outer scope");
+        }
+
+        Iterator it = new Iterator(collection);
+        while (!it.done()) {
+            // assign the var, run the stmts
+            putVar(inductionVar, it.next());
+            visit(ctx.statements());
+        }
+        
+        // remove the variable from the scope
+        nixVar(inductionVar);
+    
+        return null;
     }
 
 	@Override

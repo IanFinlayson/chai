@@ -1,0 +1,18 @@
+def main():
+    for i in [1 .. 10]:
+        print(i, "** 2 =", i ** 2)
+
+    for letter in "booyah!":
+        print(letter)
+        
+    for a in "abc":
+        for b in "xyz":
+            print(a, b)
+
+    let nums = [3, 17, 41]
+    for i in nums:
+        for j in nums:
+            for k in nums:
+                print(i * j * k)
+
+

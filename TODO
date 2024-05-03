@@ -1,5 +1,4 @@
 Immediate:
-    - printing strings with \n does not work!
     - come up with consistent erroring scheme, with line numbers
     - add error test cases, ensuring errors are produced for bad code
 
