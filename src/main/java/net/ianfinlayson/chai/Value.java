@@ -144,17 +144,21 @@ public class Value {
 
     @SuppressWarnings("unchecked")
     public boolean equals(Value other) {
-        if (type == Type.INT && other.type == Type.INT)
+        if (type == Type.INT && other.type == Type.INT) {
             return toInt() == other.toInt();
+        }
         
-        else if (numberType() && other.numberType())
+        else if (numberType() && other.numberType()) {
             return toFloat() == other.toFloat();
+        }
             
-        else if (type == Type.BOOL && other.type == Type.BOOL)
+        else if (type == Type.BOOL && other.type == Type.BOOL) {
             return toBool() == other.toBool();
+        }
 
-        else if (type == Type.STRING && other.type == Type.STRING)
+        else if (type == Type.STRING && other.type == Type.STRING) {
             return toString().equals(other.toString());
+        }
 
         else if (type == Type.LIST && other.type == Type.LIST) {
             ArrayList<Value> lhs = (ArrayList<Value>) value;
@@ -171,8 +175,9 @@ public class Value {
             }
             
             return true;
-        } else {
-            throw new TypeMismatchException("Invalid operands to comparison operator.");
+        }
+        else {
+            throw new RuntimeException("Invalid operands to comparison operator.");
         }
     }
 
@@ -192,19 +197,14 @@ public class Value {
         // should Chai also support this??
         
         else {
-            throw new TypeMismatchException("Invalid operands to comparison operator.");
+            throw new RuntimeException("Invalid operands to comparison operator.");
         }
 
     }
     
     public Value pow(Value other) {
         // TODO should we do integer ones separately?  actually we should consider bignum anyway...
-        if (numberType() && other.numberType()) {
-            return new Value(Math.pow(toFloat(), other.toFloat()));
-        } else {
-            throw new RuntimeException("Illegal types in ** operation");
-        }
-
+        return new Value(Math.pow(toFloat(), other.toFloat()));
     }
 
     // we need to print "" around an strings that may be in this list/set/dict
@@ -263,14 +263,12 @@ public class Value {
             case FLOAT:
                 return ((Double) value).intValue();
             case BOOL:
-                throw new TypeMismatchException("Cannot convert boolean to integer");
             case STRING:
-                throw new TypeMismatchException("Cannot convert string to integer");
             case LIST:
-                throw new TypeMismatchException("Cannot convert array to integer");
+            default:
+                throw new RuntimeException("type error slipped past type checker");
         }
 
-        throw new RuntimeException("Unhandled type in swtich/case");
     }
 
     public double toFloat() {
@@ -280,31 +278,26 @@ public class Value {
             case FLOAT:
                 return ((Double) value).doubleValue();
             case BOOL:
-                throw new TypeMismatchException("Cannot convert boolean to float");
             case STRING:
-                throw new TypeMismatchException("Cannot convert string to float");
             case LIST:
-                throw new TypeMismatchException("Cannot convert array to float");
+            default:
+                throw new RuntimeException("type error slipped past type checker");
         }
 
-        throw new RuntimeException("Unhandled type in swtich/case");
     }
 
     public boolean toBool() {
         switch (type) {
-            case INT:
-                throw new TypeMismatchException("Cannot convert integer to boolean");
-            case FLOAT:
-                throw new TypeMismatchException("Cannot convert float to boolean");
             case BOOL:
                 return ((Boolean) value).booleanValue();
+            case INT:
+            case FLOAT:
             case STRING:
-                throw new TypeMismatchException("Cannot convert string to boolean");
             case LIST:
-                throw new TypeMismatchException("Cannot convert array to boolean");
+            default:
+                throw new RuntimeException("type error slipped past type checker");
         }
 
-        throw new RuntimeException("Unhandled type in swtich/case");
     }
 
     @SuppressWarnings("unchecked")
@@ -313,7 +306,7 @@ public class Value {
             return (ArrayList<Value>) value;
         }
 
-        throw new TypeMismatchException("Cannot convert type to array");
+        throw new RuntimeException("type error slipped past type checker");
     }
 }
 

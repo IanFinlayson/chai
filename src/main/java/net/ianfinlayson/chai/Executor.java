@@ -11,6 +11,18 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 // this is a little hacky, but the simplest way to do this during the tree-walking
 class BreakException extends RuntimeException {}
 class ContinueException extends RuntimeException {}
+class FunctionReturn extends RuntimeException {
+    private Value val;
+    
+    public FunctionReturn(Value val) {
+        this.val = val;
+    }
+    
+    public Value getVal() {
+        return val;
+    }
+}
+
 
 public class Executor extends ChaiParserBaseVisitor<Value> {
     private Scanner input = new Scanner(System.in);
@@ -25,7 +37,11 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
         if (functions.get("main") == null) {
             throw new RuntimeException("No main function found");
         }
+        
+        // make a stack frame and call it
+        stack.push(new HashMap<String, Value>());
         visit(functions.get("main").statements());
+        stack.pop();
     }
 
     // load a variable -- we check the top function first, then globals
@@ -95,11 +111,8 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
                     case LIST:
                         ArrayList<Value> list = destination.toList();
                         Value index = indices.get(i);
-                        if (index.getType() != Type.INT) throw new TypeMismatchException("Cannot index list with non-integer");
                         destination = list.get(index.toInt());
                         break;
-                    default:
-                        throw new TypeMismatchException("Cannot index scalar value");
                 }
             }
             
@@ -109,11 +122,8 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
                 case LIST:
                     ArrayList<Value> list = destination.toList();
                     Value index = indices.get(0);
-                    if (index.getType() != Type.INT) throw new TypeMismatchException("Cannot index list with non-integer");
                     list.set(index.toInt(), val);
                     break;
-                default:
-                    throw new TypeMismatchException("Cannot index scalar value");
             }
         }
     }
@@ -165,8 +175,12 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
 
 	@Override
     public Value visitReturnStatement(ChaiParser.ReturnStatementContext ctx) {
-        // TODO
-        return visitChildren(ctx);
+        Value retVal = null;
+        if (ctx.expression() != null) {
+            retVal = visit(ctx.expression());
+        }
+
+        throw new FunctionReturn(retVal);
     }
 
 	@Override
@@ -189,12 +203,9 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
     public Value visitWhileStatement(ChaiParser.WhileStatementContext ctx) {
         // evaluate the condition
         Value condition = visit(ctx.expression());
-        if (condition.getType() != Type.BOOL) {
-            throw new TypeMismatchException("Type of while condition must be boolean");
-        }
 
         // while it's true
-        while (condition.toBool() == true) {
+        while (condition.toBool()) {
             try {
                 // visit the statments
                 visit(ctx.statements());
@@ -237,12 +248,9 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
     public Value visitIfstmt(ChaiParser.IfstmtContext ctx) {
         // evaluate the initial expression
         Value condition = visit(ctx.expression());
-        if (condition.getType() != Type.BOOL) {
-            throw new TypeMismatchException("Type of if condition must be boolean");
-        }
 
         // if it's true, do this stmt and bail
-        if (condition.toBool() == true) {
+        if (condition.toBool()) {
             visit(ctx.statements());
             return null;
         }
@@ -251,12 +259,9 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
         for (ChaiParser.ElifclauseContext elif : ctx.elifclause()) {
             // check this one's condition
             condition = visit(elif.expression());
-            if (condition.getType() != Type.BOOL) {
-                throw new TypeMismatchException("Type of elif condition must be boolean");
-            }
             
             // if it's true, do THIS stmt and bail
-            if (condition.toBool() == true) {
+            if (condition.toBool()) {
                 visit(elif.statements());
                 return null;
             }
@@ -283,9 +288,59 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
             case "print": libraryPrint(ctx.arglist()); return null;
         }
 
+        // search for user-defined function
+        ChaiParser.FunctiondefContext func = functions.get(name);
+        if (func == null) {
+            throw new RuntimeException("Function " + name + " not found");
+        }
 
-        // TODO handle non-built-in functions!
-        throw new RuntimeException("Error function '" + name + "' not found");
+        // this function makes a new symbol table for locals
+        HashMap<String, Value> scope = new HashMap<>();
+
+        // next we need to evaluate expressions in args into formals
+
+        // if one side has args and the other not, that's a problem
+        if (ctx.arglist() == null && func.paramlist() != null) {
+            throw new RuntimeException("Function " + name + " expects arguments, but none given");
+        } else if (ctx.arglist() != null && func.paramlist() == null) {
+            throw new RuntimeException("Function " + name + " does not expects arguments, but was given some");
+        }
+
+        // TODO pass the args (including keyword ones!)
+        // if both sides have args, do the thing
+//       if (ctx.args() != null && func.formals() != null) {
+//           List<ChaiParser.ExpressionContext> exprs = ctx.args().expression();
+//           List<TerminalNode> args = func.formals().IDNAME();
+//
+//           // check for arity mismatch
+//           if (exprs.size() != args.size()) {
+//               throw new RuntimeException("Error: Function " + name + " expects " + args.size()
+//                       + " parameters, but was given " + exprs.size() + ".");
+//           }
+//
+//           // go through each argument
+//           for (int i = 0; i < exprs.size(); i++) {
+//               // just evaluate each one and put it in
+//               String vname = args.get(i).getText();
+//               Value value = visit(exprs.get(i));
+//               scope.put(vname, value);
+//           }
+//       }
+        
+        // add this scope to the stack
+        stack.push(scope);
+
+        // now run the stmts for it, until a return
+        Value returnVal = null;
+        try {
+            visit(func.statements());
+        } catch (FunctionReturn ret) {
+            returnVal = ret.getVal();
+        }
+
+        // finally pop off this scope and return
+        stack.pop();
+        return returnVal;
     }
 
 	@Override
@@ -293,14 +348,10 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
         Value lhs = visit(ctx.expression(0));
         Value rhs = visit(ctx.expression(1));
 
-        if (lhs.getType() != Type.INT || rhs.getType() != Type.INT) {
-            throw new TypeMismatchException("Invalid types to << operator");
+        if (ctx.op.getType() == ChaiLexer.LSHIFT) {
+            return new Value(lhs.toInt() << rhs.toInt());
         } else {
-            if (ctx.op.getType() == ChaiLexer.LSHIFT) {
-                return new Value(lhs.toInt() << rhs.toInt());
-            } else {
-                return new Value(lhs.toInt() >> rhs.toInt());
-            }
+            return new Value(lhs.toInt() >> rhs.toInt());
         }
     }
 
@@ -308,21 +359,12 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
     public Value visitBitorExpression(ChaiParser.BitorExpressionContext ctx) {
         Value lhs = visit(ctx.expression(0));
         Value rhs = visit(ctx.expression(1));
-
-        if (lhs.getType() != Type.INT || rhs.getType() != Type.INT) {
-            throw new TypeMismatchException("Invalid types to << operator");
-        } else {
-            return new Value(lhs.toInt() | rhs.toInt());
-        }
+        return new Value(lhs.toInt() | rhs.toInt());
     }
 
 	@Override
     public Value visitNotExpression(ChaiParser.NotExpressionContext ctx) {
         Value expr = visit(ctx.expression());
-        if (expr.getType() != Type.BOOL) {
-            throw new TypeMismatchException("Operands to 'not' must have boolean type");
-        }
-        
         return new Value(!expr.toBool());
     }
 
@@ -330,24 +372,14 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
     public Value visitBitxorExpression(ChaiParser.BitxorExpressionContext ctx) {
         Value lhs = visit(ctx.expression(0));
         Value rhs = visit(ctx.expression(1));
-
-        if (lhs.getType() != Type.INT || rhs.getType() != Type.INT) {
-            throw new TypeMismatchException("Invalid types to << operator");
-        } else {
-            return new Value(lhs.toInt() ^ rhs.toInt());
-        }
+        return new Value(lhs.toInt() ^ rhs.toInt());
     }
 
 	@Override
     public Value visitBitandExpression(ChaiParser.BitandExpressionContext ctx) {
         Value lhs = visit(ctx.expression(0));
         Value rhs = visit(ctx.expression(1));
-
-        if (lhs.getType() != Type.INT || rhs.getType() != Type.INT) {
-            throw new TypeMismatchException("Invalid types to << operator");
-        } else {
-            return new Value(lhs.toInt() & rhs.toInt());
-        }
+        return new Value(lhs.toInt() & rhs.toInt());
     }
 
 	@Override
@@ -378,9 +410,6 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
         // TODO add dicts sets and tuples when we get them
         switch (collection.getType()) {
             case STRING:
-                if (target.getType() != Type.STRING) {
-                    throw new TypeMismatchException("Only strings can be in strings");
-                }
                 String needle = target.toString();
                 String haystack = collection.toString();
                 return haystack.indexOf(needle) != -1;
@@ -391,9 +420,9 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
                     }
                 }
                 return false;
-            default:
-                throw new TypeMismatchException("Cannot use in on non-collection type");
         }
+    
+        throw new RuntimeException("invalid type passed to inCollection");
     }
 
 	@Override
@@ -412,23 +441,15 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
 
 	@Override
     public Value visitOrExpression(ChaiParser.OrExpressionContext ctx) {
-        // evaluate left hand side
+        // evaluate left hand side (we do short-circuit)
         Value lhs = visit(ctx.expression(0));
-        if (lhs.getType() != Type.BOOL) {
-            throw new TypeMismatchException("Operands to 'or' must have boolean type");
-        }
-        
-        // we do short-circuit eval
-        if (lhs.toBool() == true) {
+        if (lhs.toBool()) {
             return new Value(true);
         }
         
         // evaluate right hand side
         Value rhs = visit(ctx.expression(1));
-        if (rhs.getType() != Type.BOOL) {
-            throw new TypeMismatchException("Operands to 'or' must have boolean type");
-        }
-        if (rhs.toBool() == true) {
+        if (rhs.toBool()) {
             return new Value(true);
         }
 
@@ -444,23 +465,15 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
 
 	@Override
     public Value visitAndExpression(ChaiParser.AndExpressionContext ctx) {
-        // evaluate left hand side
+        // evaluate left hand side (short-circuit style)
         Value lhs = visit(ctx.expression(0));
-        if (lhs.getType() != Type.BOOL) {
-            throw new TypeMismatchException("Operands to 'and' must have boolean type");
-        }
-        
-        // we do short-circuit eval
-        if (lhs.toBool() == false) {
+        if (!lhs.toBool()) {
             return new Value(false);
         }
         
         // evaluate right hand side
         Value rhs = visit(ctx.expression(1));
-        if (rhs.getType() != Type.BOOL) {
-            throw new TypeMismatchException("Operands to 'and' must have boolean type");
-        }
-        if (rhs.toBool() == false) {
+        if (!rhs.toBool()) {
             return new Value(false);
         }
         
@@ -471,12 +484,9 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
     public Value visitIfelseExpression(ChaiParser.IfelseExpressionContext ctx) {
         // evaluate the condition, which is the middle expression
         Value condition = visit(ctx.expression(1));
-        if (condition.getType() != Type.BOOL) {
-            throw new TypeMismatchException("Type of if condition must be boolean");
-        }
 
         // if true, evaluate first, else third
-        if (condition.toBool() == true) {
+        if (condition.toBool()) {
             return visit(ctx.expression(0));
         } else {
             return visit(ctx.expression(2));
@@ -514,10 +524,6 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
         Value lhs = visit(ctx.expression(0));
         Value rhs = visit(ctx.expression(1));
 
-        if (rhs.getType() != Type.LIST) {
-            throw new TypeMismatchException("Cannot cons to anything but a list");
-        }
-        
         ArrayList<Value> result = new ArrayList<>();
         result.add(lhs);
 
@@ -534,25 +540,15 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
 
         switch (ctx.op.getType()) {
             case ChaiLexer.PLUS:
-                if (val.getType() != Type.INT && val.getType() != Type.FLOAT) {
-                    throw new TypeMismatchException("Invlaid type to unary + operator");
-                } else {
-                    return val;
-                }
+                return val;
             case ChaiLexer.MINUS:
                 if (val.getType() == Type.INT) {
                     return new Value(-val.toInt());
                 } else if (val.getType() == Type.FLOAT) {
                     return new Value(-val.toFloat());
-                } else {
-                    throw new TypeMismatchException("Invlaid type to unary - operator");
                 }
             case ChaiLexer.COMPLEMENT:
-                if (val.getType() != Type.INT) {
-                    throw new TypeMismatchException("Invlaid type to unary ~ operator");
-                } else {
-                    return new Value(~val.toInt());
-                }
+                return new Value(~val.toInt());
         }
            
         return visitChildren(ctx);
@@ -580,10 +576,6 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
         Value lhs = visit(ctx.expression(0));
         Value rhs = visit(ctx.expression(1));
         
-        if (lhs.getType() != Type.INT || rhs.getType() != Type.INT) {
-            throw new TypeMismatchException("Can only use integers for ranges");
-        }
-        
         ArrayList<Value> range = new ArrayList<>();
         int a = lhs.toInt(), b = rhs.toInt();
         if (a > b) {
@@ -605,13 +597,8 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
         Value index = visit(ctx.expression());
         Value list = visit(ctx.term());
 
-        if (index.getType() != Type.INT || list.getType() != Type.LIST) {
-            throw new TypeMismatchException("Cannot perform index using supplied types");
-        }
-
         ArrayList<Value> vals = list.toList();
         int num = index.toInt();
-
         if (num >= vals.size()) {
             throw new RuntimeException("List index out of range");
         }
@@ -716,13 +703,13 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
 
                 if (kwname.equals("end")) {
                     if (kwval.getType() != Type.STRING) {
-                        throw new TypeMismatchException("'end' argument must be a String");
+                        throw new RuntimeException("'end' argument must be a String");
                     } else {
                         end = kwval.toString();
                     }
                 } else if (kwname.equals("sep")) {
                     if (kwval.getType() != Type.STRING) {
-                        throw new TypeMismatchException("'sep' argument must be a String");
+                        throw new RuntimeException("'sep' argument must be a String");
                     } else {
                         sep = kwval.toString();
                     }
