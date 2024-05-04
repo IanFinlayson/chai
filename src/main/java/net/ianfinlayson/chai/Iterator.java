@@ -18,6 +18,7 @@ public class Iterator {
     }
 
     public boolean done() {
+        // TODO add dict and set to this
         switch (source.getType()) {
             case STRING:
                 String sval = source.toString();
