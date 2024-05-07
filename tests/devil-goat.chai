@@ -3,6 +3,7 @@ def devilOrGoat(gradYear Int) String:
     return "Goat" if gradYear % 2 == 0 else "Devil"
 
 def main():
-    print(devilOrGoat(2024))
+    for year in [2020 .. 2030]:
+        print(devilOrGoat(year))
 
 

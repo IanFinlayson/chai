@@ -3,13 +3,14 @@ def collatz(number Int) Int:
     while number != 1:
         print(number)
         if number % 2 == 0:
-            number /= 2
+            number = number / 2
         else:
             number = number * 3 + 1
-        steps += 1
+        steps = steps + 1
+    return steps
 
 def main():
-    let number = input("Starting number: ")
+    let number = 7
     let steps = collatz(number)
     print("Done in ", steps, " steps.")
 

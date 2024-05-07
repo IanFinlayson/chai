@@ -1,5 +1,8 @@
 def makeWindow(title = "", width = 1024, height = 768, full = False):
-    pass
+    print("title is '", title, "'", sep="")
+    print("width is", width)
+    print("height is", height)
+    print("full is", full, end="\n\n")
 
 
 def main():
