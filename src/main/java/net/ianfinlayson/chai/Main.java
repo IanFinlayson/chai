@@ -28,9 +28,11 @@ public class Main {
         }
 
         // set up streams
+        CharStream stream = null;
         ChaiLexer lexer = null;
         try {
-            lexer = new ChaiLexer(CharStreams.fromFileName(args[0]));
+            stream = CharStreams.fromFileName(args[0]);
+            lexer = new ChaiLexer(stream);
         } catch (Exception e) {
             System.out.println("Could not open '" + args[0] + "' for reading.");
             return;
@@ -58,7 +60,7 @@ public class Main {
         } catch (FileNotFoundException e) {}
 
         // create the visitor for running (eventually we'll make a type checker one too)
-        Executor executor = new Executor();
+        Executor executor = new Executor(stream);
 
         try {
             executor.visit(tree);

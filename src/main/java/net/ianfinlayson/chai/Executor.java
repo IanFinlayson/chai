@@ -6,11 +6,27 @@ import java.util.Stack;
 import java.util.ArrayList;
 import java.util.HashMap;
 import org.antlr.v4.runtime.tree.TerminalNode;
+import org.antlr.v4.runtime.misc.Interval;
+import org.antlr.v4.runtime.CharStream;
+
 
 // these "exceptions" are used to deal with the corresponding control flow constructs
 // this is a little hacky, but the simplest way to do this during the tree-walking
 class BreakException extends RuntimeException {}
+
 class ContinueException extends RuntimeException {}
+
+class AssertException extends RuntimeException {
+    private String reason;
+    public AssertException(String reason) {
+        this.reason = reason;
+    }
+
+    public String getReason() {
+        return reason;
+    }
+}
+
 class FunctionReturn extends RuntimeException {
     private Value val;
     
@@ -38,6 +54,13 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
     private Scanner input = new Scanner(System.in);
     private Stack<HashMap<String, Variable>> stack = new Stack<>();
     private HashMap<String, Variable> globals = new HashMap<>();
+    private CharStream stream;
+
+    // we keep a reference to the char stream for reporting the text that produces
+    // errors and assertion failures
+    public Executor(CharStream stream) {
+        this.stream = stream;
+    }
 
     // this maps function name to the list of stmts comprising it
     private HashMap<String, ChaiParser.FunctiondefContext> functions = new HashMap<>();
@@ -50,7 +73,11 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
         
         // make a stack frame and call it
         stack.push(new HashMap<String, Variable>());
-        visit(functions.get("main").statements());
+        try {
+            visit(functions.get("main").statements());
+        } catch (AssertException e) {
+            System.out.println("Asserton failed: " + e.getReason());
+        }
         stack.pop();
     }
 
@@ -202,16 +229,17 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
         return null;
     }
 
-
-
-
-
-
-
 	@Override
     public Value visitAssertStatement(ChaiParser.AssertStatementContext ctx) {
-        // TODO
-        return visitChildren(ctx);
+        Value val = visit(ctx.expression());
+        if (!val.toBool()) {
+            int a = ctx.expression().start.getStartIndex();
+            int b = ctx.expression().stop.getStopIndex();
+            Interval interval = new Interval(a,b);
+            throw new AssertException(stream.getText(interval));
+        }
+
+        return null;
     }
 
 	@Override
