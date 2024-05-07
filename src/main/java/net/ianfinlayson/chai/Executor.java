@@ -27,6 +27,11 @@ class FunctionReturn extends RuntimeException {
 class Variable {
     public Value value;
     public boolean constant;
+    
+    public Variable(Value value) {
+        this.value = value;
+        this.constant = false;
+    }
 }
 
 public class Executor extends ChaiParserBaseVisitor<Value> {
@@ -83,9 +88,8 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
         }
 
         // keep track of the constant information and val
-        Variable v = new Variable();
+        Variable v = new Variable(val);
         v.constant = constant;
-        v.value = val;
 
         // actually write it into correct scope
         if (!stack.empty()) {
@@ -329,8 +333,104 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
         return null;
     }
 
+    // assign parameters for a function
+    // this takes into account keyword style parameters and default values
+    private void assignArgs(ChaiParser.ArglistContext args, ChaiParser.ParamlistContext formals, HashMap<String, Variable> scope) {
 
+        // step 1: go through args looking for named ones, and assign those into formals w/ same name
+        // if name does not exist, that's an error
+        if (args != null) {
+            for (ChaiParser.ArgumentContext arg : args.argument()) {
+                if (arg.IDNAME() != null) {
+                    // get the value for it
+                    Value val = visit(arg.expression());
 
+                    // loop through formals looking for one with matching name
+                    String formalName = "";
+                    boolean done = false;
+                    for (ChaiParser.ParamContext param : formals.param()) {
+                        if (param instanceof ChaiParser.DefaultParamContext) {
+                            formalName = ((ChaiParser.DefaultParamContext) (param)).IDNAME().getText();
+                        } else if (param instanceof ChaiParser.NamedParamContext) {
+                            formalName = ((ChaiParser.NamedParamContext) (param)).IDNAME().getText();
+                        } else throw new RuntimeException("Unhandled formal type");
+
+                        if (formalName.equals(arg.IDNAME().getText())) {
+                            // assign it
+                            scope.put(formalName, new Variable(val));
+                            done = true;
+                            break;
+                        }
+                    }
+                    if (!done) {
+                        throw new RuntimeException("Parameter named '" + arg.IDNAME().getText() + "' does not exist.");
+                    }
+                }
+            }
+        }
+
+        // step 2: go through args looking for unnamed ones, and assign positionally to unassigned formals
+        // if we have no unassigned formal, that's an error
+        if (args != null) {
+            for (ChaiParser.ArgumentContext arg : args.argument()) {
+                if (arg.IDNAME() == null) {
+                    // get the value for it
+                    Value val = visit(arg.expression());
+
+                    // find the first un-assigned parameter
+                    String formalName = "";
+                    for (ChaiParser.ParamContext param : formals.param()) {
+                        if (param instanceof ChaiParser.DefaultParamContext) {
+                            formalName = ((ChaiParser.DefaultParamContext) (param)).IDNAME().getText();
+                        } else if (param instanceof ChaiParser.NamedParamContext) {
+                            formalName = ((ChaiParser.NamedParamContext) (param)).IDNAME().getText();
+                        } else throw new RuntimeException("Unhandled formal type");
+
+                        if (scope.get(formalName) == null) {
+                            break;
+                        }
+                    }
+
+                    if (formalName.equals("")) {
+                        throw new RuntimeException("Too many parameters given");
+                    }
+
+                    // do the assignment
+                    scope.put(formalName, new Variable(val));
+                }
+            }
+        }
+
+        // step 3: go through formals and assign un-assigned ones their default params
+        for (ChaiParser.ParamContext param : formals.param()) {
+            String formalName = "";
+            if (param instanceof ChaiParser.DefaultParamContext) {
+                formalName = ((ChaiParser.DefaultParamContext) (param)).IDNAME().getText();
+                // if not already assigned
+                if (scope.get(formalName) == null) {
+                    // TODO should we eva this not in the current scope??
+                    // won't matter most of the time, but could have some edge cases
+                    Value val = visit(((ChaiParser.DefaultParamContext) (param)).term());
+                    scope.put(formalName, new Variable(val));
+                }
+            } 
+        }
+
+        // step 4: look for unassigned params.  For now this is an error, later we will make them
+        // curried functions!
+        String formalName = "";
+        for (ChaiParser.ParamContext param : formals.param()) {
+            if (param instanceof ChaiParser.DefaultParamContext) {
+                formalName = ((ChaiParser.DefaultParamContext) (param)).IDNAME().getText();
+            } else if (param instanceof ChaiParser.NamedParamContext) {
+                formalName = ((ChaiParser.NamedParamContext) (param)).IDNAME().getText();
+            } else throw new RuntimeException("Unhandled formal type");
+            
+            if (scope.get(formalName) == null) {
+                throw new RuntimeException("Unassigned parameter '" + formalName + "' in function call");
+            }
+        }
+    }
 
 	@Override
     public Value visitFunctioncall(ChaiParser.FunctioncallContext ctx) {
@@ -351,36 +451,11 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
         // this function makes a new symbol table for locals
         HashMap<String, Variable> scope = new HashMap<>();
 
-        // next we need to evaluate expressions in args into formals
-
-        // if one side has args and the other not, that's a problem
-        if (ctx.arglist() == null && func.paramlist() != null) {
-            throw new RuntimeException("Function " + name + " expects arguments, but none given");
-        } else if (ctx.arglist() != null && func.paramlist() == null) {
-            throw new RuntimeException("Function " + name + " does not expects arguments, but was given some");
+        // next we need to evaluate expressions in args into formals, if there are formals
+        if (func.paramlist() != null) {
+            assignArgs(ctx.arglist(), func.paramlist(), scope);
         }
 
-        // TODO pass the args (including keyword ones!)
-        // if both sides have args, do the thing
-//       if (ctx.args() != null && func.formals() != null) {
-//           List<ChaiParser.ExpressionContext> exprs = ctx.args().expression();
-//           List<TerminalNode> args = func.formals().IDNAME();
-//
-//           // check for arity mismatch
-//           if (exprs.size() != args.size()) {
-//               throw new RuntimeException("Error: Function " + name + " expects " + args.size()
-//                       + " parameters, but was given " + exprs.size() + ".");
-//           }
-//
-//           // go through each argument
-//           for (int i = 0; i < exprs.size(); i++) {
-//               // just evaluate each one and put it in
-//               String vname = args.get(i).getText();
-//               Value value = visit(exprs.get(i));
-//               scope.put(vname, value);
-//           }
-//       }
-        
         // add this scope to the stack
         stack.push(scope);
 
