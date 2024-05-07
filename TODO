@@ -1,4 +1,11 @@
 Immediate:
+    - add a // operator
+    - bitwise mod assigns
+    - list comprehensions
+    - list slices
+    - tuples
+    - dicts
+    - sets
     - come up with consistent erroring scheme, with line numbers
     - add error test cases, ensuring errors are produced for bad code
 

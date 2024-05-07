@@ -309,16 +309,51 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
         return null;
     }
 
+    // get the current value of an L-value, for modassign purposes
+    private Value readLvalue(ChaiParser.LvalueContext lvalue) {
+        if (lvalue instanceof ChaiParser.NestedLvalueContext) {
+            Value collection = readLvalue(((ChaiParser.NestedLvalueContext) lvalue).lvalue());
+            Value index = visit(((ChaiParser.NestedLvalueContext) lvalue).expression());
+
+            // TODO we'll also need to add tuples, dicts and sets
+            if (collection.getType() == Type.LIST) {
+                ArrayList<Value> vals = collection.toList();
+                int num = index.toInt();
+                if (num >= vals.size()) {
+                    throw new RuntimeException("List index out of range");
+                }
+
+                return vals.get(num);
+            } else throw new RuntimeException("Unhandled indexable type");
+
+        } else if (lvalue instanceof ChaiParser.JustIDContext) {
+            return loadVar(((ChaiParser.JustIDContext) lvalue).IDNAME().getText());
+        } else throw new RuntimeException("Unhadnlded l-value case");
+    }
+
 	@Override
     public Value visitModassign(ChaiParser.ModassignContext ctx) {
-        // TODO, how to do these cleanly?
+        // get the current value of the lvalue we need to modify, and thing to modify in
+        Value current = readLvalue(ctx.lvalue());
+        Value change = visit(ctx.expression());
 
         switch (ctx.op.getType()) {
             case ChaiLexer.PLUSASSIGN:
+                doAssign(ctx.lvalue(), current.plus(change));
+                break;
             case ChaiLexer.MINUSASSIGN:
+                doAssign(ctx.lvalue(), current.minus(change));
+                break;
             case ChaiLexer.TIMESASSIGN:
+                doAssign(ctx.lvalue(), current.times(change));
+                break;
             case ChaiLexer.DIVASSIGN:
+                doAssign(ctx.lvalue(), current.divide(change));
+                break;
             case ChaiLexer.MODASSIGN:
+                doAssign(ctx.lvalue(), current.modulo(change));
+                break;
+            // TODO the bitwise ones!
             case ChaiLexer.LSHIFTASSIGN:
             case ChaiLexer.RSHIFTASSIGN:
             case ChaiLexer.BITANDASSIGN:
@@ -436,8 +471,7 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
                 formalName = ((ChaiParser.DefaultParamContext) (param)).IDNAME().getText();
                 // if not already assigned
                 if (scope.get(formalName) == null) {
-                    // TODO should we eva this not in the current scope??
-                    // won't matter most of the time, but could have some edge cases
+                    // eval the default param and stick it into the scope
                     Value val = visit(((ChaiParser.DefaultParamContext) (param)).term());
                     scope.put(formalName, new Variable(val));
                 }
