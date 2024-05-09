@@ -1,5 +1,7 @@
 Immediate:
+    - re-factor operators
     - add a // operator
+    - make ** do int math
     - bitwise mod assigns
     - list comprehensions
     - list slices

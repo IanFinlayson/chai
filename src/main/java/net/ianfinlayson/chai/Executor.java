@@ -29,11 +29,11 @@ class AssertException extends RuntimeException {
 
 class FunctionReturn extends RuntimeException {
     private Value val;
-    
+
     public FunctionReturn(Value val) {
         this.val = val;
     }
-    
+
     public Value getVal() {
         return val;
     }
@@ -43,7 +43,7 @@ class FunctionReturn extends RuntimeException {
 class Variable {
     public Value value;
     public boolean constant;
-    
+
     public Variable(Value value) {
         this.value = value;
         this.constant = false;
@@ -70,7 +70,7 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
         if (functions.get("main") == null) {
             throw new RuntimeException("No main function found");
         }
-        
+
         // make a stack frame and call it
         stack.push(new HashMap<String, Variable>());
         try {
@@ -92,7 +92,7 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
         if (globals.get(name) != null) {
             return globals.get(name).value;
         }
-        
+
         return null;
     }
 
@@ -125,7 +125,7 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
             globals.put(name, v);
         }
     }
-    
+
     private void nixVar(String name) {
         if (!stack.empty()) {
             if (stack.peek().get(name) != null) {
@@ -146,7 +146,7 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
         functions.put(name, ctx);
         return null;
     }
-    
+
     // assign a chai value into an l-value
     private void doAssign(ChaiParser.LvalueContext lhs, Value val) {
         // if it's just an id, do that
@@ -167,11 +167,11 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
             ArrayList<Value> indices = new ArrayList<>();
             while (!(lhs instanceof ChaiParser.JustIDContext)) {
                 ChaiParser.NestedLvalueContext n = (ChaiParser.NestedLvalueContext) lhs;
-                
+
                 indices.add(visit(n.expression()));
                 lhs = n.lvalue();
             }
-            
+
             String name = ((ChaiParser.JustIDContext) lhs).IDNAME().getText();
 
             // apply all but FIRST one
@@ -186,7 +186,7 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
                         break;
                 }
             }
-            
+
             // do the actual set now
             switch (destination.getType()) {
                 // TODO when we have dicts and sets, we'll need to add those
@@ -206,12 +206,12 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
 
         // get the lvalue we are writing into
         ChaiParser.LvalueContext lhs = ctx.lvalue();
-        
+
         // do the assign
         doAssign(lhs, val);
         return null;
     }
-    
+
 	@Override
     public Value visitVarStatement(ChaiParser.VarStatementContext ctx) {
         // get the parts out
@@ -278,10 +278,10 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
             putVar(inductionVar, it.next(), false);
             visit(ctx.statements());
         }
-        
+
         // remove the variable from the scope
         nixVar(inductionVar);
-    
+
         return null;
     }
 
@@ -339,19 +339,19 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
 
         switch (ctx.op.getType()) {
             case ChaiLexer.PLUSASSIGN:
-                doAssign(ctx.lvalue(), current.plus(change));
+                doAssign(ctx.lvalue(), Operators.plus(current, change));
                 break;
             case ChaiLexer.MINUSASSIGN:
-                doAssign(ctx.lvalue(), current.minus(change));
+                doAssign(ctx.lvalue(), Operators.minus(current, change));
                 break;
             case ChaiLexer.TIMESASSIGN:
-                doAssign(ctx.lvalue(), current.times(change));
+                doAssign(ctx.lvalue(), Operators.times(current, change));
                 break;
             case ChaiLexer.DIVASSIGN:
-                doAssign(ctx.lvalue(), current.divide(change));
+                doAssign(ctx.lvalue(), Operators.divide(current, change));
                 break;
             case ChaiLexer.MODASSIGN:
-                doAssign(ctx.lvalue(), current.modulo(change));
+                doAssign(ctx.lvalue(), Operators.modulo(current, change));
                 break;
             // TODO the bitwise ones!
             case ChaiLexer.LSHIFTASSIGN:
@@ -361,7 +361,7 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
             case ChaiLexer.BITXORASSIGN:
                 break;
         }
-        
+
         return null;
     }
 
@@ -375,12 +375,12 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
             visit(ctx.statements());
             return null;
         }
-        
+
         // now we go through any elif clauses there might be here
         for (ChaiParser.ElifclauseContext elif : ctx.elifclause()) {
             // check this one's condition
             condition = visit(elif.expression());
-            
+
             // if it's true, do THIS stmt and bail
             if (condition.toBool()) {
                 visit(elif.statements());
@@ -392,7 +392,7 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
         if (ctx.elseclause() != null) {
             visit(ctx.elseclause().statements());
         }
-        
+
         return null;
     }
 
@@ -475,7 +475,7 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
                     Value val = visit(((ChaiParser.DefaultParamContext) (param)).term());
                     scope.put(formalName, new Variable(val));
                 }
-            } 
+            }
         }
 
         // step 4: look for unassigned params.  For now this is an error, later we will make them
@@ -487,7 +487,7 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
             } else if (param instanceof ChaiParser.NamedParamContext) {
                 formalName = ((ChaiParser.NamedParamContext) (param)).IDNAME().getText();
             } else throw new RuntimeException("Unhandled formal type");
-            
+
             if (scope.get(formalName) == null) {
                 throw new RuntimeException("Unassigned parameter '" + formalName + "' in function call");
             }
@@ -498,7 +498,7 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
     public Value visitFunctioncall(ChaiParser.FunctioncallContext ctx) {
         // grab the name and look up the function
         String name = ctx.IDNAME().getText();
-        
+
         // here we just check for our library functions
         switch (name) {
             case "print": libraryPrint(ctx.arglist()); return null;
@@ -577,21 +577,21 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
     public Value visitCompareExpression(ChaiParser.CompareExpressionContext ctx) {
         Value lhs = visit(ctx.expression(0));
         Value rhs = visit(ctx.expression(1));
-        
+
         // we break it down to just less and equals
         switch (ctx.op.getType()) {
             case ChaiLexer.LESS:
-                return new Value(lhs.less(rhs));
+                return new Value(Operators.less(lhs, rhs));
             case ChaiLexer.GREATER:
-                return new Value(rhs.less(lhs));
+                return new Value(Operators.less(rhs, lhs));
             case ChaiLexer.LESSEQ:
-                return new Value(!rhs.less(lhs));
+                return new Value(!Operators.less(rhs, lhs));
             case ChaiLexer.GREATEREQ:
-                return new Value(!lhs.less(rhs));
+                return new Value(!Operators.less(lhs, rhs));
             case ChaiLexer.EQUALS:
-                return new Value(lhs.equals(rhs));
+                return new Value(Operators.equals(lhs, rhs));
             case ChaiLexer.NOTEQUALS:
-                return new Value(!lhs.equals(rhs));
+                return new Value(!Operators.equals(lhs, rhs));
         }
         throw new RuntimeException("This should not happen, no comparison op found");
     }
@@ -606,13 +606,13 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
                 return haystack.indexOf(needle) != -1;
             case LIST:
                 for (Value v : collection.toList()) {
-                    if (v.equals(target)) {
+                    if (Operators.equals(v, target)) {
                         return true;
                     }
                 }
                 return false;
         }
-    
+
         throw new RuntimeException("invalid type passed to inCollection");
     }
 
@@ -622,7 +622,7 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
         Value rhs = visit(ctx.expression(1));
         return new Value(!inCollection(lhs, rhs));
     }
-	
+
 	@Override
     public Value visitInExpression(ChaiParser.InExpressionContext ctx) {
         Value lhs = visit(ctx.expression(0));
@@ -637,7 +637,7 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
         if (lhs.toBool()) {
             return new Value(true);
         }
-        
+
         // evaluate right hand side
         Value rhs = visit(ctx.expression(1));
         if (rhs.toBool()) {
@@ -651,7 +651,7 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
     public Value visitPowerExpression(ChaiParser.PowerExpressionContext ctx) {
         Value lhs = visit(ctx.expression(0));
         Value rhs = visit(ctx.expression(1));
-        return lhs.pow(rhs);
+        return Operators.pow(lhs, rhs);
     }
 
 	@Override
@@ -661,13 +661,13 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
         if (!lhs.toBool()) {
             return new Value(false);
         }
-        
+
         // evaluate right hand side
         Value rhs = visit(ctx.expression(1));
         if (!rhs.toBool()) {
             return new Value(false);
         }
-        
+
         return new Value(true);
     }
 
@@ -688,11 +688,11 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
     public Value visitPlusMinusExpression(ChaiParser.PlusMinusExpressionContext ctx) {
         Value lhs = visit(ctx.expression(0));
         Value rhs = visit(ctx.expression(1));
-        
+
         if (ctx.op.getType() == ChaiLexer.PLUS) {
-            return lhs.plus(rhs);
+            return Operators.plus(lhs, rhs);
         } else {
-            return lhs.minus(rhs);
+            return Operators.minus(lhs, rhs);
         }
     }
 
@@ -700,13 +700,13 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
     public Value visitTimesdivExpression(ChaiParser.TimesdivExpressionContext ctx) {
         Value lhs = visit(ctx.expression(0));
         Value rhs = visit(ctx.expression(1));
-        
+
         if (ctx.op.getType() == ChaiLexer.TIMES) {
-            return lhs.times(rhs);
+            return Operators.times(lhs, rhs);
         } else if (ctx.op.getType() == ChaiLexer.DIVIDE) {
-            return lhs.divide(rhs);
+            return Operators.divide(lhs, rhs);
         } else {
-            return lhs.modulo(rhs);
+            return Operators.modulo(lhs, rhs);
         }
     }
 
@@ -741,7 +741,7 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
             case ChaiLexer.COMPLEMENT:
                 return new Value(~val.toInt());
         }
-           
+
         return visitChildren(ctx);
     }
 
@@ -766,7 +766,7 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
     public Value visitListRangeTerm(ChaiParser.ListRangeTermContext ctx) {
         Value lhs = visit(ctx.expression(0));
         Value rhs = visit(ctx.expression(1));
-        
+
         ArrayList<Value> range = new ArrayList<>();
         int a = lhs.toInt(), b = rhs.toInt();
         if (a > b) {
@@ -796,7 +796,7 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
 
         return vals.get(num);
     }
-	
+
 	@Override public Value visitParensTerm(ChaiParser.ParensTermContext ctx) {
         return visit(ctx.expression());
     }
@@ -809,7 +809,7 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
         for (ChaiParser.ExpressionContext expr : ctx.expression()) {
             list.add(visit(expr));
         }
-        
+
         return new Value(list);
     }
 
@@ -869,13 +869,13 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
     public Value visitFalseLiteral(ChaiParser.FalseLiteralContext ctx) {
         return new Value(false);
     }
-    
+
     // standard library functions appear below
     private void libraryPrint(ChaiParser.ArglistContext args) {
         String end = "\n";
         String sep = " ";
         boolean first = true;
-        
+
         // we put the things to print in a list so we need only go through args once
         ArrayList<Value> toprint = new ArrayList<>();
 
@@ -919,10 +919,10 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
             } else {
                 first = false;
             }
-            
+
             System.out.print(val);
         }
-        
+
         // print the ending
         System.out.print(end);
     }
