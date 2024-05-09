@@ -188,9 +188,24 @@ public class Operators {
 
     }
 
+    // why does java have no int pow function??
+    private static int intpow(int base, int exponent) {
+        if (exponent == 0) return 1;
+
+        int sub = intpow(base, exponent >> 1);
+        if ((exponent & 1) == 0) {
+            return sub * sub;
+        } else {
+            return sub * sub * base;
+        }
+    }
+
     public static Value pow(Value lhs, Value rhs) {
-        // TODO should we do integer ones separately?  actually we should consider bignum anyway...
-        return new Value(Math.pow(lhs.toFloat(), rhs.toFloat()));
+        if (lhs.getType() == Type.INT && rhs.getType() == Type.INT) {
+            return new Value(intpow(lhs.toInt(), rhs.toInt()));
+        } else {
+            return new Value(Math.pow(lhs.toFloat(), rhs.toFloat()));
+        }
     }
 
     public static Value lshift(Value lhs, Value rhs) {

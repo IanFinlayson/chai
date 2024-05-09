@@ -1,6 +1,4 @@
 Immediate:
-    - add a // operator
-    - make ** do int math
     - list comprehensions
     - list slices
     - tuples
