@@ -88,7 +88,7 @@ lvalue: IDNAME                              # justID
       ;
 
 // an operator assign type statement like `i += 1`
-modassign: lvalue op=(PLUSASSIGN | MINUSASSIGN | TIMESASSIGN | DIVASSIGN | MODASSIGN
+modassign: lvalue op=(PLUSASSIGN | MINUSASSIGN | TIMESASSIGN | DIVASSIGN | MODASSIGN | INTDIVASSIGN
                     | LSHIFTASSIGN | RSHIFTASSIGN | BITANDASSIGN | BITORASSIGN | BITXORASSIGN)
                  expression;
 
@@ -122,25 +122,25 @@ argument: expression
         ;
 
 // any valid Chai expression
-expression: <assoc=right> expression POWER expression               # powerExpression
-          | op=(COMPLEMENT | PLUS | MINUS) expression               # unaryExpression
-          | <assoc=right> expression CONS expression                # consExpression
-          | expression op=(TIMES | DIVIDE | MODULUS) expression     # timesdivExpression
-          | expression op=(PLUS | MINUS) expression                 # plusMinusExpression
-          | expression op=(LSHIFT | RSHIFT) expression              # shiftExpression
-          | expression BITAND expression                            # bitandExpression
-          | expression BITXOR expression                            # bitxorExpression
-          | expression BAR expression                               # bitorExpression
+expression: <assoc=right> expression POWER expression                       # powerExpression
+          | op=(COMPLEMENT | PLUS | MINUS) expression                       # unaryExpression
+          | <assoc=right> expression CONS expression                        # consExpression
+          | expression op=(TIMES | DIVIDE | INTDIV | MODULUS) expression    # timesdivExpression
+          | expression op=(PLUS | MINUS) expression                         # plusMinusExpression
+          | expression op=(LSHIFT | RSHIFT) expression                      # shiftExpression
+          | expression BITAND expression                                    # bitandExpression
+          | expression BITXOR expression                                    # bitxorExpression
+          | expression BAR expression                                       # bitorExpression
           | expression op=(LESS | GREATER | LESSEQ | GREATEREQ | EQUALS | NOTEQUALS) expression     # compareExpression
-          | expression IN expression                                # inExpression
-          | expression NOT IN expression                            # notinExpression
-          | NOT expression                                          # notExpression
-          | expression AND expression                               # andExpression
-          | expression OR expression                                # orExpression
-          | expression IF expression ELSE expression                # ifelseExpression
-          | lambda                                                  # lambdaExpression
-          | functioncall                                            # funcallExpression
-          | term                                                    # termExpression
+          | expression IN expression                                        # inExpression
+          | expression NOT IN expression                                    # notinExpression
+          | NOT expression                                                  # notExpression
+          | expression AND expression                                       # andExpression
+          | expression OR expression                                        # orExpression
+          | expression IF expression ELSE expression                        # ifelseExpression
+          | lambda                                                          # lambdaExpression
+          | functioncall                                                    # funcallExpression
+          | term                                                            # termExpression
           ;
 
 

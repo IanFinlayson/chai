@@ -92,6 +92,11 @@ public class Operators {
         }
     }
 
+    public static Value intdivide(Value lhs, Value rhs) {
+        return new Value(lhs.toInt() / rhs.toInt());
+    }
+
+
     public static Value modulo(Value lhs, Value rhs) {
         if (lhs.getType() == Type.INT && rhs.getType() == Type.INT) {
             // integer math
@@ -102,6 +107,25 @@ public class Operators {
         } else {
             throw new RuntimeException("Illegal types in % operation");
         }
+    }
+    
+    public static boolean in(Value target, Value collection) {
+        // TODO add dicts sets and tuples when we get them
+        switch (collection.getType()) {
+            case STRING:
+                String needle = target.toString();
+                String haystack = collection.toString();
+                return haystack.indexOf(needle) != -1;
+            case LIST:
+                for (Value v : collection.toList()) {
+                    if (Operators.equals(v, target)) {
+                        return true;
+                    }
+                }
+                return false;
+        }
+
+        throw new RuntimeException("invalid type passed to inCollection");
     }
 
     @SuppressWarnings("unchecked")
@@ -169,16 +193,24 @@ public class Operators {
         return new Value(Math.pow(lhs.toFloat(), rhs.toFloat()));
     }
 
+    public static Value lshift(Value lhs, Value rhs) {
+        return new Value(lhs.toInt() << rhs.toInt());
+    }
 
+    public static Value rshift(Value lhs, Value rhs) {
+        return new Value(lhs.toInt() >> rhs.toInt());
+    }
 
+    public static Value bitand(Value lhs, Value rhs) {
+        return new Value(lhs.toInt() & rhs.toInt());
+    }
 
+    public static Value bitor(Value lhs, Value rhs) {
+        return new Value(lhs.toInt() | rhs.toInt());
+    }
 
-
-
-
-
-
-
-
+    public static Value bitxor(Value lhs, Value rhs) {
+        return new Value(lhs.toInt() ^ rhs.toInt());
+    }
 }
 

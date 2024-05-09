@@ -353,12 +353,23 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
             case ChaiLexer.MODASSIGN:
                 doAssign(ctx.lvalue(), Operators.modulo(current, change));
                 break;
-            // TODO the bitwise ones!
+            case ChaiLexer.INTDIVASSIGN:
+                doAssign(ctx.lvalue(), Operators.intdivide(current, change));
+                break;
             case ChaiLexer.LSHIFTASSIGN:
+                doAssign(ctx.lvalue(), Operators.lshift(current, change));
+                break;
             case ChaiLexer.RSHIFTASSIGN:
+                doAssign(ctx.lvalue(), Operators.rshift(current, change));
+                break;
             case ChaiLexer.BITANDASSIGN:
+                doAssign(ctx.lvalue(), Operators.bitand(current, change));
+                break;
             case ChaiLexer.BITORASSIGN:
+                doAssign(ctx.lvalue(), Operators.bitor(current, change));
+                break;
             case ChaiLexer.BITXORASSIGN:
+                doAssign(ctx.lvalue(), Operators.bitxor(current, change));
                 break;
         }
 
@@ -540,9 +551,9 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
         Value rhs = visit(ctx.expression(1));
 
         if (ctx.op.getType() == ChaiLexer.LSHIFT) {
-            return new Value(lhs.toInt() << rhs.toInt());
+            return Operators.lshift(lhs, rhs);
         } else {
-            return new Value(lhs.toInt() >> rhs.toInt());
+            return Operators.rshift(lhs, rhs);
         }
     }
 
@@ -550,7 +561,7 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
     public Value visitBitorExpression(ChaiParser.BitorExpressionContext ctx) {
         Value lhs = visit(ctx.expression(0));
         Value rhs = visit(ctx.expression(1));
-        return new Value(lhs.toInt() | rhs.toInt());
+        return Operators.bitor(lhs, rhs);
     }
 
 	@Override
@@ -563,14 +574,14 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
     public Value visitBitxorExpression(ChaiParser.BitxorExpressionContext ctx) {
         Value lhs = visit(ctx.expression(0));
         Value rhs = visit(ctx.expression(1));
-        return new Value(lhs.toInt() ^ rhs.toInt());
+        return Operators.bitxor(lhs, rhs);
     }
 
 	@Override
     public Value visitBitandExpression(ChaiParser.BitandExpressionContext ctx) {
         Value lhs = visit(ctx.expression(0));
         Value rhs = visit(ctx.expression(1));
-        return new Value(lhs.toInt() & rhs.toInt());
+        return Operators.bitand(lhs, rhs);
     }
 
 	@Override
@@ -596,38 +607,19 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
         throw new RuntimeException("This should not happen, no comparison op found");
     }
 
-    // so as to not have this in both the following methods
-    private boolean inCollection(Value target, Value collection) {
-        // TODO add dicts sets and tuples when we get them
-        switch (collection.getType()) {
-            case STRING:
-                String needle = target.toString();
-                String haystack = collection.toString();
-                return haystack.indexOf(needle) != -1;
-            case LIST:
-                for (Value v : collection.toList()) {
-                    if (Operators.equals(v, target)) {
-                        return true;
-                    }
-                }
-                return false;
-        }
-
-        throw new RuntimeException("invalid type passed to inCollection");
-    }
 
 	@Override
     public Value visitNotinExpression(ChaiParser.NotinExpressionContext ctx) {
         Value lhs = visit(ctx.expression(0));
         Value rhs = visit(ctx.expression(1));
-        return new Value(!inCollection(lhs, rhs));
+        return new Value(!Operators.in(lhs, rhs));
     }
 
 	@Override
     public Value visitInExpression(ChaiParser.InExpressionContext ctx) {
         Value lhs = visit(ctx.expression(0));
         Value rhs = visit(ctx.expression(1));
-        return new Value(inCollection(lhs, rhs));
+        return new Value(Operators.in(lhs, rhs));
     }
 
 	@Override
@@ -705,9 +697,11 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
             return Operators.times(lhs, rhs);
         } else if (ctx.op.getType() == ChaiLexer.DIVIDE) {
             return Operators.divide(lhs, rhs);
-        } else {
+        } else if (ctx.op.getType() == ChaiLexer.INTDIV) {
+            return Operators.intdivide(lhs, rhs);
+        } else if (ctx.op.getType() == ChaiLexer.MODULUS) {
             return Operators.modulo(lhs, rhs);
-        }
+        } else throw new RuntimeException("Unhandled times/div operator");
     }
 
 	@Override

@@ -46,6 +46,7 @@ DIVIDE:     '/';
 TIMES:      '*';
 MODULUS:    '%';
 POWER:      '**';
+INTDIV:     '//';
 
 COMPLEMENT: '~';
 LSHIFT:     '<<';
@@ -80,6 +81,7 @@ TIMESASSIGN:    '*=';
 DIVASSIGN:      '/=';
 MODASSIGN:      '%=';
 POWERASSIGN:    '**=';
+INTDIVASSIGN:   '//=';
 
 LSHIFTASSIGN:   '<<=';
 RSHIFTASSIGN:   '>>=';
