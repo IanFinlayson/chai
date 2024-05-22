@@ -178,22 +178,32 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
             Value destination = loadVar(name);
             for (int i = indices.size() - 1; i > 0; i--) {
                 switch (destination.getType()) {
-                    // TODO when we have dicts and sets, we'll need to add those
+                    // TODO add tuples when we have them
                     case LIST:
                         ArrayList<Value> list = destination.toList();
                         Value index = indices.get(i);
                         destination = list.get(index.toInt());
+                        break;
+                    case DICT:
+                        HashMap<Value, Value> dict = destination.toDict();
+                        index = indices.get(i);
+                        destination = dict.get(index);
                         break;
                 }
             }
 
             // do the actual set now
             switch (destination.getType()) {
-                // TODO when we have dicts and sets, we'll need to add those
+                // TODO add tuples when we have them
                 case LIST:
                     ArrayList<Value> list = destination.toList();
                     Value index = indices.get(0);
                     list.set(index.toInt(), val);
+                    break;
+                case DICT:
+                    HashMap<Value, Value> dict = destination.toDict();
+                    index = indices.get(0);
+                    dict.put(index, val);
                     break;
             }
         }
@@ -315,7 +325,7 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
             Value collection = readLvalue(((ChaiParser.NestedLvalueContext) lvalue).lvalue());
             Value index = visit(((ChaiParser.NestedLvalueContext) lvalue).expression());
 
-            // TODO we'll also need to add tuples, dicts and sets
+            // TODO we'll also need to add tuples
             if (collection.getType() == Type.LIST) {
                 ArrayList<Value> vals = collection.toList();
                 int num = index.toInt();
@@ -324,6 +334,13 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
                 }
 
                 return vals.get(num);
+            } else if (collection.getType() == Type.DICT) {
+                HashMap<Value, Value> dict = collection.toDict();
+                if (dict.get(index) == null) {
+                    throw new RuntimeException("Value not found in dictionary");
+                }
+                
+                return dict.get(index);
             } else throw new RuntimeException("Unhandled indexable type");
 
         } else if (lvalue instanceof ChaiParser.JustIDContext) {

@@ -1,6 +1,0 @@
-def main():
-    sentiments = {"good": 2, "awesome": 4, "bad": -2, "awful": -3}
-    sentiments["great"] = 3
-    print(sentiments["awesome"])
-
-
