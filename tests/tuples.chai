@@ -1,6 +1,6 @@
 # some tuples
 def getInfo() (String, Int, Bool):
-    info = ("Ian", 39, True)
+    let info = ("Ian", 39, True)
     return info
 
 def main():

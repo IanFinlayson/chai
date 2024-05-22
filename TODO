@@ -1,8 +1,6 @@
 Immediate:
     - list comprehensions
     - list slices
-    - tuples
-    - dicts
     - sets
     - match statement
     - enums

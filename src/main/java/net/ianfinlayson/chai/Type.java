@@ -9,6 +9,7 @@ public enum Type {
     BOOL,
     STRING,
     LIST,
-    DICT
+    DICT,
+    TUPLE
 }
 

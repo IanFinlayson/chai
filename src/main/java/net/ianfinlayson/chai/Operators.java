@@ -20,7 +20,7 @@ public class Operators {
             for (Value v : rhs.toList()) {
                 combined.add(v);
             }
-            return new Value(combined);
+            return new Value(combined, false);
         } else if (lhs.getType() == Type.INT && rhs.getType() == Type.INT) {
             // integer math
             return new Value(lhs.toInt() + rhs.toInt());
@@ -66,7 +66,7 @@ public class Operators {
                     result.add(from.get(j));
                 }
             }
-            return new Value(result);
+            return new Value(result, false);
         } else if (lhs.getType() == Type.INT && rhs.getType() == Type.LIST) {
             return times(rhs, lhs);
         }
@@ -117,6 +117,7 @@ public class Operators {
                 String haystack = collection.toString();
                 return haystack.indexOf(needle) != -1;
             case LIST:
+            case TUPLE:
                 for (Value v : collection.toList()) {
                     if (Operators.equals(v, target)) {
                         return true;
@@ -146,7 +147,8 @@ public class Operators {
             return lhs.toString().equals(rhs.toString());
         }
 
-        else if (lhs.getType() == Type.LIST && rhs.getType() == Type.LIST) {
+        else if ((lhs.getType() == Type.LIST && rhs.getType() == Type.LIST) &&
+                 (lhs.getType() == Type.TUPLE && rhs.getType() == Type.TUPLE)) {
             ArrayList<Value> left = lhs.toList();
             ArrayList<Value> right = rhs.toList();
 

@@ -32,8 +32,8 @@ public class Value {
         value = stringVal;
     }
 
-    public Value(ArrayList<Value> array) {
-        type = Type.LIST;
+    public Value(ArrayList<Value> array, boolean tuple) {
+        type = tuple ? Type.TUPLE : Type.LIST;
         value = array;
     }
 
@@ -72,6 +72,7 @@ public class Value {
             case STRING:
                 return toString().equals(otherv.toString());
             case LIST:
+            case TUPLE:
                 return toList().equals(otherv.toList());
             case DICT:
                 return toDict().equals(otherv.toDict());
@@ -126,6 +127,21 @@ public class Value {
                 }
 
                 return result + "]";
+            case TUPLE:
+                result = "(";
+                first = true;
+
+                for (Value val : ((ArrayList<Value>) value)) {
+                    if (first) {
+                        first = false;
+                    } else {
+                        result += ", ";
+                    }
+
+                    result += val.toString(true);
+                }
+
+                return result + ")";
             case DICT:
                 result = "{";
                 first = true;
@@ -200,7 +216,7 @@ public class Value {
 
     @SuppressWarnings("unchecked")
     public ArrayList<Value> toList() {
-        if (type == Type.LIST) {
+        if (type == Type.LIST || type == Type.TUPLE) {
             return (ArrayList<Value>) value;
         }
 

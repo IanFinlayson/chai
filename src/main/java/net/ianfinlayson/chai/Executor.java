@@ -178,8 +178,8 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
             Value destination = loadVar(name);
             for (int i = indices.size() - 1; i > 0; i--) {
                 switch (destination.getType()) {
-                    // TODO add tuples when we have them
                     case LIST:
+                    case TUPLE:
                         ArrayList<Value> list = destination.toList();
                         Value index = indices.get(i);
                         destination = list.get(index.toInt());
@@ -194,8 +194,8 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
 
             // do the actual set now
             switch (destination.getType()) {
-                // TODO add tuples when we have them
                 case LIST:
+                case TUPLE:
                     ArrayList<Value> list = destination.toList();
                     Value index = indices.get(0);
                     list.set(index.toInt(), val);
@@ -325,8 +325,7 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
             Value collection = readLvalue(((ChaiParser.NestedLvalueContext) lvalue).lvalue());
             Value index = visit(((ChaiParser.NestedLvalueContext) lvalue).expression());
 
-            // TODO we'll also need to add tuples
-            if (collection.getType() == Type.LIST) {
+            if ((collection.getType() == Type.LIST) || (collection.getType() == Type.TUPLE)) {
                 ArrayList<Value> vals = collection.toList();
                 int num = index.toInt();
                 if (num >= vals.size()) {
@@ -733,7 +732,7 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
             result.add(v);
         }
 
-        return new Value(result);
+        return new Value(result, false);
     }
 
 	@Override
@@ -791,7 +790,7 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
             }
         }
 
-        return new Value(range);
+        return new Value(range, false);
     }
 
 	@Override
@@ -799,7 +798,7 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
         Value index = visit(ctx.expression());
         Value collection = visit(ctx.term());
 
-        if (collection.getType() == Type.LIST) {
+        if (collection.getType() == Type.LIST || collection.getType() == Type.LIST) {
             ArrayList<Value> vals = collection.toList();
             int num = index.toInt();
             if (num >= vals.size()) {
@@ -815,9 +814,7 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
             } else {
                 return result;
             }
-        }
-        // TODO, add tuples...
-        return null;
+        } else throw new RuntimeException("Illegal type in index operation");
     }
 
 	@Override public Value visitParensTerm(ChaiParser.ParensTermContext ctx) {
@@ -833,13 +830,21 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
             list.add(visit(expr));
         }
 
-        return new Value(list);
+        return new Value(list, false);
     }
 
 	@Override
     public Value visitTupleLiteralTerm(ChaiParser.TupleLiteralTermContext ctx) {
-        // TODO
-        return visitChildren(ctx);
+        // this represents a tuple literal like (1, "hey", True) etc.
+        // these are pretty much identical to lists from this interprerters pov
+        // (type checker only thing that cares about the diff)
+        ArrayList<Value> tuple = new ArrayList<>();
+
+        for (ChaiParser.ExpressionContext expr : ctx.expression()) {
+            tuple.add(visit(expr));
+        }
+
+        return new Value(tuple, true);
     }
 
 	@Override
