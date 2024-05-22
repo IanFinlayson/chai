@@ -1,4 +1,4 @@
 #!/bin/bash
 
-gradle --quiet run --args="$*"
+gradle --quiet --console plain run --args="$*"
 

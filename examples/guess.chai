@@ -1,19 +1,23 @@
 # a simple guess the number program
 def main():
-    min = 1
-    max = 100
-    done = false
+    var min = 1
+    var max = 100
+    var done = False
+
+    # need a way to make it so vars can be declared in a loop!!
+    var guess = 0
+    var answer = ""
 
     # start the loop
     while not done:
         # make a guess
-        guess = (max + min) / 2
-        print("Is your number " + guess + "? ")
+        guess = (max + min) // 2
+        print("Is your number", guess, "?")
         answer = input()
         
         # adjust based on their answer
         if answer == "yes":
-            done = true
+            done = True
         elif answer == "low":
             min = guess + 1
         elif answer == "high":

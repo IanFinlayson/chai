@@ -1,11 +1,13 @@
 Immediate:
     - list comprehensions
     - list slices
+    - for loop through dict (each value is key/val tuple)
     - sets
     - match statement
     - enums
     - come up with consistent erroring scheme, with line numbers
     - add error test cases, ensuring errors are produced for bad code
+    - make it so vars can be declared in a loop w/o being "re-declared"
 
 Re-think ranges:
     Do Haskell stype to allow a step and infinite ranges?

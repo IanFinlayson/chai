@@ -51,7 +51,7 @@ class Variable {
 }
 
 public class Executor extends ChaiParserBaseVisitor<Value> {
-    private Scanner input = new Scanner(System.in);
+    //private Scanner input = new Scanner(System.in);
     private Stack<HashMap<String, Variable>> stack = new Stack<>();
     private HashMap<String, Variable> globals = new HashMap<>();
     private CharStream stream;
@@ -529,6 +529,7 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
         // here we just check for our library functions
         switch (name) {
             case "print": libraryPrint(ctx.arglist()); return null;
+            case "input": return libraryInput(ctx.arglist());
         }
 
         // search for user-defined function
@@ -848,7 +849,7 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
     }
 
 	@Override
-    public Value visitDicLiteralTerm(ChaiParser.DicLiteralTermContext ctx) {
+    public Value visitDictLiteralTerm(ChaiParser.DictLiteralTermContext ctx) {
         // make a dictionary with all of the entries
         HashMap<Value, Value> dict = new HashMap<>();
 
@@ -858,7 +859,11 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
 
         return new Value(dict);
     }
-
+	
+	@Override public Value visitEmptydictLiteralTerm(ChaiParser.EmptydictLiteralTermContext ctx) {
+        return new Value(new HashMap<Value, Value>());
+    }
+	
 	@Override
     public Value visitListSliceTerm(ChaiParser.ListSliceTermContext ctx) {
         // TODO
@@ -899,6 +904,27 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
     }
 
     // standard library functions appear below
+    private Value libraryInput(ChaiParser.ArglistContext args) {
+        String prompt = "";
+
+        if (args != null && args.argument() != null) {
+            if (args.argument().size() != 1) {
+                throw new RuntimeException("input called with incorrect number of arguments");
+            }
+        
+            ChaiParser.ArgumentContext arg = args.argument().get(0);
+            if (arg.ASSIGN() != null) throw new RuntimeException("input has no keyword argument");
+
+            Value p = visit(arg.expression());
+            if (p.getType() != Type.STRING) throw new RuntimeException("Prompt to input must be a string");
+            prompt = p.toString();
+        }
+        
+        System.out.print(prompt);
+        Scanner input = new Scanner(System.in);
+        return new Value(input.nextLine());
+    }
+
     private void libraryPrint(ChaiParser.ArglistContext args) {
         String end = "\n";
         String sep = " ";

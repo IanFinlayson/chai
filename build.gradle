@@ -46,3 +46,8 @@ application {
     mainClassName = 'net.ianfinlayson.chai.Main'
 }
 
+// make it so we can get input (why not the default??)
+run {
+    standardInput = System.in
+}
+
