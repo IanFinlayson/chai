@@ -1,6 +1,7 @@
 package net.ianfinlayson.chai;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class Value {
     private Type type;
@@ -36,12 +37,47 @@ public class Value {
         value = array;
     }
 
+    public Value(HashMap<Value, Value> map) {
+        type = Type.DICT;
+        value = map;
+    }
+
     public Object getRaw() {
         return value;
     }
 
     public Type getType() {
         return type;
+    }
+
+    @Override
+    public int hashCode() {
+        // required to use these as keys for dictionaries
+        // TODO is there a better way to do this....?
+        return toString().hashCode();
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        Value otherv = (Value) other;
+
+        if (this.type != otherv.type) return false;
+        switch (this.type) {
+            case INT:
+                return toInt() == otherv.toInt();
+            case FLOAT:
+                return toFloat() == otherv.toFloat();
+            case BOOL:
+                return toBool() == otherv.toBool();
+            case STRING:
+                return toString().equals(otherv.toString());
+            case LIST:
+                return toList().equals(otherv.toList());
+            case DICT:
+                return toDict().equals(otherv.toDict());
+            default:
+                throw new RuntimeException("Unhandled type in equals");
+        }
     }
 
     // used to simplify logic of math functions
@@ -54,6 +90,9 @@ public class Value {
     // will require that should we get down to a stirng?
     @SuppressWarnings("unchecked")
     public String toString(boolean printQuotes) {
+        String result = "";
+        boolean first = false;
+
         switch (type) {
             case INT:
                 return ((Integer) value).toString();
@@ -73,8 +112,8 @@ public class Value {
                 }
 
             case LIST:
-                String result = "[";
-                boolean first = true;
+                result = "[";
+                first = true;
 
                 for (Value val : ((ArrayList<Value>) value)) {
                     if (first) {
@@ -87,6 +126,23 @@ public class Value {
                 }
 
                 return result + "]";
+            case DICT:
+                result = "{";
+                first = true;
+
+                for (Value key : ((HashMap<Value, Value>) value).keySet()) {
+                    if (first) {
+                        first = false;
+                    } else {
+                        result += ", ";
+                    }
+
+                    result += key.toString(true);
+                    result += ": ";
+                    result += ((HashMap<Value, Value>) value).get(key);
+                }
+
+                return result + "}";
         }
 
         throw new RuntimeException("Unhandled type in swtich/case");
@@ -146,6 +202,15 @@ public class Value {
     public ArrayList<Value> toList() {
         if (type == Type.LIST) {
             return (ArrayList<Value>) value;
+        }
+
+        throw new RuntimeException("type error slipped past type checker");
+    }
+    
+    @SuppressWarnings("unchecked")
+    public HashMap<Value, Value> toDict() {
+        if (type == Type.DICT) {
+            return (HashMap<Value, Value>) value;
         }
 
         throw new RuntimeException("type error slipped past type checker");

@@ -4,6 +4,8 @@ Immediate:
     - tuples
     - dicts
     - sets
+    - match statement
+    - enums
     - come up with consistent erroring scheme, with line numbers
     - add error test cases, ensuring errors are produced for bad code
 

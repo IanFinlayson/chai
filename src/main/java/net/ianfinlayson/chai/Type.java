@@ -8,6 +8,7 @@ public enum Type {
     FLOAT,
     BOOL,
     STRING,
-    LIST
+    LIST,
+    DICT
 }
 

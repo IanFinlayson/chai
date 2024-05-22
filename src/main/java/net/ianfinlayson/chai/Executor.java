@@ -780,15 +780,27 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
 	@Override
     public Value visitListIndexTerm(ChaiParser.ListIndexTermContext ctx) {
         Value index = visit(ctx.expression());
-        Value list = visit(ctx.term());
+        Value collection = visit(ctx.term());
 
-        ArrayList<Value> vals = list.toList();
-        int num = index.toInt();
-        if (num >= vals.size()) {
-            throw new RuntimeException("List index out of range");
+        if (collection.getType() == Type.LIST) {
+            ArrayList<Value> vals = collection.toList();
+            int num = index.toInt();
+            if (num >= vals.size()) {
+                throw new RuntimeException("List index out of range");
+            }
+
+            return vals.get(num);
+        } else if (collection.getType() == Type.DICT) {
+            HashMap<Value, Value> dict = collection.toDict();
+            Value result = dict.get(index);
+            if (result == null) {
+                throw new RuntimeException("Value " + index + " not found in dictionary");
+            } else {
+                return result;
+            }
         }
-
-        return vals.get(num);
+        // TODO, add tuples...
+        return null;
     }
 
 	@Override public Value visitParensTerm(ChaiParser.ParensTermContext ctx) {
@@ -815,8 +827,14 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
 
 	@Override
     public Value visitDicLiteralTerm(ChaiParser.DicLiteralTermContext ctx) {
-        // TODO
-        return visitChildren(ctx);
+        // make a dictionary with all of the entries
+        HashMap<Value, Value> dict = new HashMap<>();
+
+        for (ChaiParser.DictentryContext entry : ctx.dictentry()) {
+            dict.put(visit(entry.expression(0)), visit(entry.expression(1)));
+        }
+
+        return new Value(dict);
     }
 
 	@Override
@@ -827,12 +845,6 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
 
 	@Override
     public Value visitSetLiteralTerm(ChaiParser.SetLiteralTermContext ctx) {
-        // TODO
-        return visitChildren(ctx);
-    }
-
-	@Override
-    public Value visitDictentry(ChaiParser.DictentryContext ctx) {
         // TODO
         return visitChildren(ctx);
     }
