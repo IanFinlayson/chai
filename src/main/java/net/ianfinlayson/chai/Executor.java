@@ -532,6 +532,7 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
         switch (name) {
             case "print": libraryPrint(ctx.arglist()); return null;
             case "input": return libraryInput(ctx.arglist());
+            case "len": return libraryLen(ctx.arglist());
         }
 
         // search for user-defined function
@@ -760,8 +761,49 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
 
 	@Override
     public Value visitListcompTerm(ChaiParser.ListcompTermContext ctx) {
-        // TODO
-        return visitChildren(ctx);
+        // make the list we will be generating
+        ArrayList<Value> list = new ArrayList<>();
+
+        // get the variable and make sure it does not already exist
+        String genVar = ctx.IDNAME().getText();
+        if (loadVar(genVar) != null) {
+            throw new RuntimeException("Induction variable exists in outer scope");
+        }
+
+        // there are 2 or 3 expressions in this
+        // first is the thing we are generating
+        // second is list we pull from
+        // third (if there) is the condition test
+        List<ChaiParser.ExpressionContext> exprs = ctx.expression();
+        
+        // first we get the list of all the starting values
+        ArrayList<Value> starters = visit(exprs.get(1)).toList();
+
+        // next we go through each thing
+        for (Value val : starters) {
+            // make this variable and give it the value
+            putVar(genVar, val, false);
+
+            // check the condition, if it exists
+            if (exprs.size() == 3) {
+                if (!visit(exprs.get(2)).toBool()) {
+                    // skip this one!
+                    nixVar(genVar);
+                    continue;
+                }
+            }
+
+            // evaluate the first expression with this var
+            Value thing = visit(exprs.get(0));
+
+            // add it to the list
+            list.add(thing);
+
+            // remove the variable from the scope
+            nixVar(genVar);
+        }
+
+        return new Value(list, false);
     }
 
 	@Override
@@ -930,6 +972,38 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
         System.out.print(prompt);
         Scanner input = new Scanner(System.in);
         return new Value(input.nextLine());
+    }
+
+    private Value libraryLen(ChaiParser.ArglistContext args) {
+        if (args == null || args.argument() == null || args.argument().size() != 1) {
+            throw new RuntimeException("len takes exactly 1 argument");
+        }
+
+        ChaiParser.ArgumentContext arg = args.argument().get(0);
+        if (arg.ASSIGN() != null) throw new RuntimeException("len has no keyword argument");
+
+        Value collection = visit(arg.expression());
+
+        int size = 0;
+        switch (collection.getType()) {
+            case LIST:
+            case TUPLE:
+                size = collection.toList().size();
+                break;
+            case STRING:
+                size = collection.toString().length();
+                break;
+            case DICT:
+                size = collection.toDict().size();
+                break;
+            case SET:
+                size = collection.toSet().size();
+                break;
+            default:
+                throw new RuntimeException("Cannot take length of scalar"); 
+        }
+
+        return new Value(size);
     }
 
     private void libraryPrint(ChaiParser.ArglistContext args) {

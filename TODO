@@ -1,8 +1,6 @@
 Immediate:
-    - list comprehensions
     - list slices
     - for loop through dict (each value is key/val tuple)
-    - sets
     - match statement
     - enums
     - come up with consistent erroring scheme, with line numbers
@@ -25,8 +23,15 @@ Things to add into language:
     - generators, lazy sequences, yield, how to encode in type system?
         Idea: we use -> for normal function return
               and ->* or maybe >> for yield return types
+
+        ACTUALLY no, the generator is not a thing with the function, but rather
+        the type being produced.  Like a range or list comp can also make a generator
+        so it should be something like *Int or `Float` or something to indicae that the
+        thing being returned is a generaor of a type.
+
     - classes or alternative...
     - libraries
+    - multiple fors in list comprehension (like python)?
 
 Math stuff:
     - use bigints for integers like python?
