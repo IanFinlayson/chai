@@ -1,6 +1,8 @@
 package net.ianfinlayson.chai;
 
 import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.HashSet;
 
 // this class is used to provide iterations on data values
 // such as for looping through data structures in for loops
@@ -8,13 +10,18 @@ import java.util.ArrayList;
 // this may need to be more sophisticated once we get to
 // generators
 
-public class Iterator {
+public class Stepper {
     private Value source;
     int index;
+    private Iterator<Value> set_it; // used only for sets which have no other way
 
-    public Iterator(Value source) {
+    public Stepper(Value source) {
         this.source = source;
         index = 0;
+    
+        if (source.getType() == Type.SET) {
+            set_it = source.toSet().iterator();
+        }
     }
 
     public boolean done() {
@@ -26,6 +33,8 @@ public class Iterator {
             case LIST:
                 ArrayList<Value> lval = source.toList();
                 return index >= lval.size();
+            case SET:
+                return !set_it.hasNext();
         }
 
         throw new RuntimeException("iteration through illegal value");
@@ -43,6 +52,8 @@ public class Iterator {
                 Value v = lval.get(index);
                 index++;
                 return v;
+            case SET:
+                return set_it.next();
         }
 
         throw new RuntimeException("iteration through illegal value");

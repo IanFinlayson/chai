@@ -2,6 +2,7 @@ package net.ianfinlayson.chai;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 
 public class Value {
     private Type type;
@@ -42,6 +43,11 @@ public class Value {
         value = map;
     }
 
+    public Value(HashSet<Value> set) {
+        type = Type.SET;
+        value = set;
+    }
+
     public Object getRaw() {
         return value;
     }
@@ -53,7 +59,7 @@ public class Value {
     @Override
     public int hashCode() {
         // required to use these as keys for dictionaries
-        // TODO is there a better way to do this....?
+        // this seems like it'll work pretty well
         return toString().hashCode();
     }
 
@@ -76,6 +82,8 @@ public class Value {
                 return toList().equals(otherv.toList());
             case DICT:
                 return toDict().equals(otherv.toDict());
+            case SET:
+                return toSet().equals(otherv.toSet());
             default:
                 throw new RuntimeException("Unhandled type in equals");
         }
@@ -159,6 +167,22 @@ public class Value {
                 }
 
                 return result + "}";
+                
+            case SET:
+                result = "{";
+                first = true;
+
+                for (Value val : ((HashSet<Value>) value)) {
+                    if (first) {
+                        first = false;
+                    } else {
+                        result += ", ";
+                    }
+
+                    result += val.toString(true);
+                }
+
+                return result + "}";
         }
 
         throw new RuntimeException("Unhandled type in swtich/case");
@@ -176,9 +200,6 @@ public class Value {
                 return ((Integer) value).intValue();
             case FLOAT:
                 return ((Double) value).intValue();
-            case BOOL:
-            case STRING:
-            case LIST:
             default:
                 throw new RuntimeException("type error slipped past type checker");
         }
@@ -191,9 +212,6 @@ public class Value {
                 return ((Integer) value).doubleValue();
             case FLOAT:
                 return ((Double) value).doubleValue();
-            case BOOL:
-            case STRING:
-            case LIST:
             default:
                 throw new RuntimeException("type error slipped past type checker");
         }
@@ -204,10 +222,6 @@ public class Value {
         switch (type) {
             case BOOL:
                 return ((Boolean) value).booleanValue();
-            case INT:
-            case FLOAT:
-            case STRING:
-            case LIST:
             default:
                 throw new RuntimeException("type error slipped past type checker");
         }
@@ -227,6 +241,15 @@ public class Value {
     public HashMap<Value, Value> toDict() {
         if (type == Type.DICT) {
             return (HashMap<Value, Value>) value;
+        }
+
+        throw new RuntimeException("type error slipped past type checker");
+    }
+    
+    @SuppressWarnings("unchecked")
+    public HashSet<Value> toSet() {
+        if (type == Type.SET) {
+            return (HashSet<Value>) value;
         }
 
         throw new RuntimeException("type error slipped past type checker");

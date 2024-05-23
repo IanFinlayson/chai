@@ -175,7 +175,7 @@ term: IDNAME                                                        # idTerm
     | LBRACE (expression (COMMA expression)*)? RBRACE               # setLiteralTerm
 
     // a dictionary literal
-    | LBRACE (dictentry (COMMA dictentry)*)? RBRACE                 # dictLiteralTerm
+    | LBRACE (dictentry (COMMA dictentry)*) RBRACE                  # dictLiteralTerm
     | LBRACE COLON RBRACE                                           # emptydictLiteralTerm
     
     // a discriminated union

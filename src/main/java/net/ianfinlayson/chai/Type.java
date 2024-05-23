@@ -10,6 +10,7 @@ public enum Type {
     STRING,
     LIST,
     DICT,
-    TUPLE
+    TUPLE,
+    SET
 }
 

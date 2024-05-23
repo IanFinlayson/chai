@@ -110,7 +110,6 @@ public class Operators {
     }
     
     public static boolean in(Value target, Value collection) {
-        // TODO add dicts sets and tuples when we get them
         switch (collection.getType()) {
             case STRING:
                 String needle = target.toString();
@@ -124,6 +123,10 @@ public class Operators {
                     }
                 }
                 return false;
+            case SET:
+                return collection.toSet().contains(target);
+            case DICT:
+                return collection.toDict().get(target) != null;
         }
 
         throw new RuntimeException("invalid type passed to inCollection");

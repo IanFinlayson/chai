@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Stack;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
+
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.antlr.v4.runtime.misc.Interval;
 import org.antlr.v4.runtime.CharStream;
@@ -281,8 +283,8 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
         if (loadVar(inductionVar) != null) {
             throw new RuntimeException("Induction variable exists in outer scope");
         }
-
-        Iterator it = new Iterator(collection);
+        
+        Stepper it = new Stepper(collection);
         while (!it.done()) {
             // assign the var, run the stmts
             putVar(inductionVar, it.next(), false);
@@ -872,8 +874,13 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
 
 	@Override
     public Value visitSetLiteralTerm(ChaiParser.SetLiteralTermContext ctx) {
-        // TODO
-        return visitChildren(ctx);
+        HashSet<Value> set = new HashSet<>();
+
+        for (ChaiParser.ExpressionContext expr : ctx.expression()) {
+            set.add(visit(expr));
+        }
+
+        return new Value(set);
     }
 
 	@Override
