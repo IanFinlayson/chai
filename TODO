@@ -1,11 +1,19 @@
 Immediate:
-    - list slices
     - for loop through dict (each value is key/val tuple)
     - match statement
+    - destructures:
+        - cons
+        - tuple
+        - nested ones
     - enums
     - come up with consistent erroring scheme, with line numbers
     - add error test cases, ensuring errors are produced for bad code
     - make it so vars can be declared in a loop w/o being "re-declared"
+
+Consider the type system more carefully:
+    - What exactly does polymorphism look like?  Haskell style type classes?
+      Java style interaces/classes?  Do the built-in type belong to classes?
+      Swift protocols are cool...
 
 Re-think ranges:
     Do Haskell stype to allow a step and infinite ranges?
@@ -29,13 +37,15 @@ Things to add into language:
         so it should be something like *Int or `Float` or something to indicae that the
         thing being returned is a generaor of a type.
 
+        OR maybe it is a function thing and a range like [1 ..] actually produces
+        a function which returns the next in a series each time you call it.
+
     - classes or alternative...
     - libraries
     - multiple fors in list comprehension (like python)?
 
 Math stuff:
     - use bigints for integers like python?
-    - separately, our ** always gives doubles (as java's math.pow), should we do ints?
 
 Front End improvements:
     - allow line breaks in discriminated unions?
@@ -44,7 +54,6 @@ Front End improvements:
 
 Roadmap:
     - write random code samples for each feature
-    - write a tree-walking interpreter in Java, not
-      efficient but easy to try things out in
+    - write a tree-walking interpreter in Java, not efficient but easy to try things out in
     - write a more efficient compiler/VM backend
 

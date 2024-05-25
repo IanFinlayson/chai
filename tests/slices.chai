@@ -1,0 +1,6 @@
+def main():
+    let nums = [0 .. 100]
+    print(nums[17:24])
+    print(nums[50:])
+    print(nums[:50])
+    print(nums[:])

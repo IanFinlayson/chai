@@ -283,7 +283,7 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
         if (loadVar(inductionVar) != null) {
             throw new RuntimeException("Induction variable exists in outer scope");
         }
-        
+
         Stepper it = new Stepper(collection);
         while (!it.done()) {
             // assign the var, run the stmts
@@ -340,7 +340,7 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
                 if (dict.get(index) == null) {
                     throw new RuntimeException("Value not found in dictionary");
                 }
-                
+
                 return dict.get(index);
             } else throw new RuntimeException("Unhandled indexable type");
 
@@ -775,7 +775,7 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
         // second is list we pull from
         // third (if there) is the condition test
         List<ChaiParser.ExpressionContext> exprs = ctx.expression();
-        
+
         // first we get the list of all the starting values
         ArrayList<Value> starters = visit(exprs.get(1)).toList();
 
@@ -903,15 +903,48 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
 
         return new Value(dict);
     }
-	
+
 	@Override public Value visitEmptydictLiteralTerm(ChaiParser.EmptydictLiteralTermContext ctx) {
         return new Value(new HashMap<Value, Value>());
     }
-	
+
 	@Override
     public Value visitListSliceTerm(ChaiParser.ListSliceTermContext ctx) {
-        // TODO
-        return visitChildren(ctx);
+        // grab the list, if not a list type checker failed
+        ArrayList<Value> list = visit(ctx.term()).toList();
+
+        // grab the expressions, there are 0, 1, or 2
+        List<ChaiParser.ExpressionContext> exprs = ctx.expression();
+
+        // pull out the beginning and ending indices, these are defualts
+        int start = 0;
+        int end = list.size();
+
+        // if both are here, grab both
+        if (exprs.size() == 2) {
+            start = visit(exprs.get(0)).toInt();
+            end = visit(exprs.get(1)).toInt();
+        }
+        // if one is here, we must figure out which...
+        else if (exprs.size() == 1) {
+            // we check if the expr is before or after : so we know which side it is
+            int expr_index = exprs.get(0).start.getStartIndex();
+            int colon_index = + ctx.COLON().getSymbol().getStartIndex();
+
+            if (expr_index < colon_index) {
+                start = visit(exprs.get(0)).toInt();
+            } else {
+                end = visit(exprs.get(0)).toInt();
+            }
+        }
+
+        // build our new list made out of what's in original
+        ArrayList<Value> slice = new ArrayList<>();
+        for (int i = start; i < end; i++) {
+            slice.add(list.get(i));
+        }
+
+        return new Value(slice, false);
     }
 
 	@Override
@@ -960,7 +993,7 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
             if (args.argument().size() != 1) {
                 throw new RuntimeException("input called with incorrect number of arguments");
             }
-        
+
             ChaiParser.ArgumentContext arg = args.argument().get(0);
             if (arg.ASSIGN() != null) throw new RuntimeException("input has no keyword argument");
 
@@ -968,7 +1001,7 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
             if (p.getType() != Type.STRING) throw new RuntimeException("Prompt to input must be a string");
             prompt = p.toString();
         }
-        
+
         System.out.print(prompt);
         Scanner input = new Scanner(System.in);
         return new Value(input.nextLine());
@@ -1000,7 +1033,7 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
                 size = collection.toSet().size();
                 break;
             default:
-                throw new RuntimeException("Cannot take length of scalar"); 
+                throw new RuntimeException("Cannot take length of scalar");
         }
 
         return new Value(size);
