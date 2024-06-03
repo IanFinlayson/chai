@@ -7,10 +7,10 @@ import java.util.ArrayList;
 public class Operators {
 
     public static Value plus(Value lhs, Value rhs) {
-        if (lhs.getType() == Type.STRING && rhs.getType() == Type.STRING) {
+        if (lhs.getKind() == Kind.STRING && rhs.getKind() == Kind.STRING) {
             // string concatenation
             return new Value(lhs.toString() + rhs.toString());
-        } else if (lhs.getType() == Type.LIST && rhs.getType() == Type.LIST) {
+        } else if (lhs.getKind() == Kind.LIST && rhs.getKind() == Kind.LIST) {
             // array concatenation
             ArrayList<Value> combined = new ArrayList<>();
 
@@ -21,7 +21,7 @@ public class Operators {
                 combined.add(v);
             }
             return new Value(combined, false);
-        } else if (lhs.getType() == Type.INT && rhs.getType() == Type.INT) {
+        } else if (lhs.getKind() == Kind.INT && rhs.getKind() == Kind.INT) {
             // integer math
             return new Value(lhs.toInt() + rhs.toInt());
         } else if (lhs.numberType() && rhs.numberType()) {
@@ -33,7 +33,7 @@ public class Operators {
     }
 
     public static Value minus(Value lhs, Value rhs) {
-        if (lhs.getType() == Type.INT && rhs.getType() == Type.INT) {
+        if (lhs.getKind() == Kind.INT && rhs.getKind() == Kind.INT) {
             // integer math
             return new Value(lhs.toInt() - rhs.toInt());
         } else if (lhs.numberType() && rhs.numberType()) {
@@ -46,18 +46,18 @@ public class Operators {
 
     public static Value times(Value lhs, Value rhs) {
         // "hi " * 3 gives us "hi hi hi "
-        if (lhs.getType() == Type.STRING && rhs.getType() == Type.INT) {
+        if (lhs.getKind() == Kind.STRING && rhs.getKind() == Kind.INT) {
             String result = "";
             for (int i = 0; i < rhs.toInt(); i++) {
                 result += lhs.toString();
             }
             return new Value(result);
-        } else if (lhs.getType() == Type.INT && rhs.getType() == Type.STRING) {
+        } else if (lhs.getKind() == Kind.INT && rhs.getKind() == Kind.STRING) {
             return times(rhs, lhs);
         }
 
         // [1,2] * 2 gives us [1,2,1,2]
-        else if (lhs.getType() == Type.LIST && rhs.getType() == Type.INT) {
+        else if (lhs.getKind() == Kind.LIST && rhs.getKind() == Kind.INT) {
             ArrayList<Value> result = new ArrayList<>();
 
             ArrayList<Value> from = lhs.toList();
@@ -67,12 +67,12 @@ public class Operators {
                 }
             }
             return new Value(result, false);
-        } else if (lhs.getType() == Type.INT && rhs.getType() == Type.LIST) {
+        } else if (lhs.getKind() == Kind.INT && rhs.getKind() == Kind.LIST) {
             return times(rhs, lhs);
         }
 
         // otherwise do number stuff
-        else if (lhs.getType() == Type.INT && rhs.getType() == Type.INT) {
+        else if (lhs.getKind() == Kind.INT && rhs.getKind() == Kind.INT) {
             // integer math
             return new Value(lhs.toInt() * rhs.toInt());
         } else if (lhs.numberType() && rhs.numberType()) {
@@ -98,7 +98,7 @@ public class Operators {
 
 
     public static Value modulo(Value lhs, Value rhs) {
-        if (lhs.getType() == Type.INT && rhs.getType() == Type.INT) {
+        if (lhs.getKind() == Kind.INT && rhs.getKind() == Kind.INT) {
             // integer math
             return new Value(lhs.toInt() % rhs.toInt());
         } else if (lhs.numberType() && rhs.numberType()) {
@@ -110,7 +110,7 @@ public class Operators {
     }
     
     public static boolean in(Value target, Value collection) {
-        switch (collection.getType()) {
+        switch (collection.getKind()) {
             case STRING:
                 String needle = target.toString();
                 String haystack = collection.toString();
@@ -134,7 +134,7 @@ public class Operators {
 
     @SuppressWarnings("unchecked")
     public static boolean equals(Value lhs, Value rhs) {
-        if (lhs.getType() == Type.INT && rhs.getType() == Type.INT) {
+        if (lhs.getKind() == Kind.INT && rhs.getKind() == Kind.INT) {
             return lhs.toInt() == rhs.toInt();
         }
 
@@ -142,16 +142,16 @@ public class Operators {
             return lhs.toFloat() == rhs.toFloat();
         }
 
-        else if (lhs.getType() == Type.BOOL && rhs.getType() == Type.BOOL) {
+        else if (lhs.getKind() == Kind.BOOL && rhs.getKind() == Kind.BOOL) {
             return lhs.toBool() == rhs.toBool();
         }
 
-        else if (lhs.getType() == Type.STRING && rhs.getType() == Type.STRING) {
+        else if (lhs.getKind() == Kind.STRING && rhs.getKind() == Kind.STRING) {
             return lhs.toString().equals(rhs.toString());
         }
 
-        else if ((lhs.getType() == Type.LIST && rhs.getType() == Type.LIST) &&
-                 (lhs.getType() == Type.TUPLE && rhs.getType() == Type.TUPLE)) {
+        else if ((lhs.getKind() == Kind.LIST && rhs.getKind() == Kind.LIST) &&
+                 (lhs.getKind() == Kind.TUPLE && rhs.getKind() == Kind.TUPLE)) {
             ArrayList<Value> left = lhs.toList();
             ArrayList<Value> right = rhs.toList();
 
@@ -173,13 +173,13 @@ public class Operators {
     }
 
     public static boolean less(Value lhs, Value rhs) {
-        if (lhs.getType() == Type.INT && rhs.getType() == Type.INT)
+        if (lhs.getKind() == Kind.INT && rhs.getKind() == Kind.INT)
             return lhs.toInt() < rhs.toInt();
 
         else if (lhs.numberType() && rhs.numberType())
             return lhs.toFloat() < rhs.toFloat();
 
-        else if (lhs.getType() == Type.STRING && rhs.getType() == Type.STRING) {
+        else if (lhs.getKind() == Kind.STRING && rhs.getKind() == Kind.STRING) {
             return lhs.toString().compareTo(rhs.toString()) < 0;
         }
 
@@ -206,7 +206,7 @@ public class Operators {
     }
 
     public static Value pow(Value lhs, Value rhs) {
-        if (lhs.getType() == Type.INT && rhs.getType() == Type.INT) {
+        if (lhs.getKind() == Kind.INT && rhs.getKind() == Kind.INT) {
             return new Value(intpow(lhs.toInt(), rhs.toInt()));
         } else {
             return new Value(Math.pow(lhs.toFloat(), rhs.toFloat()));

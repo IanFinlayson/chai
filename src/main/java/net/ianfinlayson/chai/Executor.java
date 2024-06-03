@@ -179,7 +179,7 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
             // apply all but FIRST one
             Value destination = loadVar(name);
             for (int i = indices.size() - 1; i > 0; i--) {
-                switch (destination.getType()) {
+                switch (destination.getKind()) {
                     case LIST:
                     case TUPLE:
                         ArrayList<Value> list = destination.toList();
@@ -195,7 +195,7 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
             }
 
             // do the actual set now
-            switch (destination.getType()) {
+            switch (destination.getKind()) {
                 case LIST:
                 case TUPLE:
                     ArrayList<Value> list = destination.toList();
@@ -327,7 +327,7 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
             Value collection = readLvalue(((ChaiParser.NestedLvalueContext) lvalue).lvalue());
             Value index = visit(((ChaiParser.NestedLvalueContext) lvalue).expression());
 
-            if ((collection.getType() == Type.LIST) || (collection.getType() == Type.TUPLE)) {
+            if ((collection.getKind() == Kind.LIST) || (collection.getKind() == Kind.TUPLE)) {
                 ArrayList<Value> vals = collection.toList();
                 int num = index.toInt();
                 if (num >= vals.size()) {
@@ -335,7 +335,7 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
                 }
 
                 return vals.get(num);
-            } else if (collection.getType() == Type.DICT) {
+            } else if (collection.getKind() == Kind.DICT) {
                 HashMap<Value, Value> dict = collection.toDict();
                 if (dict.get(index) == null) {
                     throw new RuntimeException("Value not found in dictionary");
@@ -747,9 +747,9 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
             case ChaiLexer.PLUS:
                 return val;
             case ChaiLexer.MINUS:
-                if (val.getType() == Type.INT) {
+                if (val.getKind() == Kind.INT) {
                     return new Value(-val.toInt());
-                } else if (val.getType() == Type.FLOAT) {
+                } else if (val.getKind() == Kind.FLOAT) {
                     return new Value(-val.toFloat());
                 }
             case ChaiLexer.COMPLEMENT:
@@ -843,7 +843,7 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
         Value index = visit(ctx.expression());
         Value collection = visit(ctx.term());
 
-        if (collection.getType() == Type.LIST || collection.getType() == Type.LIST) {
+        if (collection.getKind() == Kind.LIST || collection.getKind() == Kind.LIST) {
             ArrayList<Value> vals = collection.toList();
             int num = index.toInt();
             if (num >= vals.size()) {
@@ -851,7 +851,7 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
             }
 
             return vals.get(num);
-        } else if (collection.getType() == Type.DICT) {
+        } else if (collection.getKind() == Kind.DICT) {
             HashMap<Value, Value> dict = collection.toDict();
             Value result = dict.get(index);
             if (result == null) {
@@ -998,7 +998,7 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
             if (arg.ASSIGN() != null) throw new RuntimeException("input has no keyword argument");
 
             Value p = visit(arg.expression());
-            if (p.getType() != Type.STRING) throw new RuntimeException("Prompt to input must be a string");
+            if (p.getKind() != Kind.STRING) throw new RuntimeException("Prompt to input must be a string");
             prompt = p.toString();
         }
 
@@ -1018,7 +1018,7 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
         Value collection = visit(arg.expression());
 
         int size = 0;
-        switch (collection.getType()) {
+        switch (collection.getKind()) {
             case LIST:
             case TUPLE:
                 size = collection.toList().size();
@@ -1061,13 +1061,13 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
                 Value kwval = visit(arg.expression());
 
                 if (kwname.equals("end")) {
-                    if (kwval.getType() != Type.STRING) {
+                    if (kwval.getKind() != Kind.STRING) {
                         throw new RuntimeException("'end' argument must be a String");
                     } else {
                         end = kwval.toString();
                     }
                 } else if (kwname.equals("sep")) {
-                    if (kwval.getType() != Type.STRING) {
+                    if (kwval.getKind() != Kind.STRING) {
                         throw new RuntimeException("'sep' argument must be a String");
                     } else {
                         sep = kwval.toString();

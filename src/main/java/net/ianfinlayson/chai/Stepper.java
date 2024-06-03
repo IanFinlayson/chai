@@ -20,15 +20,15 @@ public class Stepper {
         this.source = source;
         index = 0;
     
-        if (source.getType() == Type.SET) {
+        if (source.getKind() == Kind.SET) {
             set_it = source.toSet().iterator();
-        } else if (source.getType() == Type.DICT) {
+        } else if (source.getKind() == Kind.DICT) {
             set_it = source.toDict().keySet().iterator();
         }
     }
 
     public boolean done() {
-        switch (source.getType()) {
+        switch (source.getKind()) {
             case STRING:
                 String sval = source.toString();
                 return index >= sval.length();
@@ -44,7 +44,7 @@ public class Stepper {
     }
 
     public Value next() {
-        switch (source.getType()) {
+        switch (source.getKind()) {
             case STRING:
                 String sval = source.toString();
                 char letter = sval.charAt(index);

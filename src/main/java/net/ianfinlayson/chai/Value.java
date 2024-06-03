@@ -9,17 +9,17 @@ public class Value {
     private Object value;
 
     public Value(int intVal) {
-        type = Type.INT;
+        type = new Type(Kind.INT);
         value = Integer.valueOf(intVal);
     }
 
     public Value(double floatVal) {
-        type = Type.FLOAT;
+        type = new Type(Kind.FLOAT);
         value = Double.valueOf(floatVal);
     }
 
     public Value(boolean boolVal) {
-        type = Type.BOOL;
+        type = new Type(Kind.BOOL);
         value = Boolean.valueOf(boolVal);
     }
 
@@ -29,22 +29,22 @@ public class Value {
         stringVal = stringVal.replaceAll("\\\\t", "\t");
         stringVal = stringVal.replaceAll("\\\\\"", "\"");
 
-        type = Type.STRING;
+        type = new Type(Kind.STRING);
         value = stringVal;
     }
 
     public Value(ArrayList<Value> array, boolean tuple) {
-        type = tuple ? Type.TUPLE : Type.LIST;
+        type = new Type(tuple ? Kind.TUPLE : Kind.LIST);
         value = array;
     }
 
     public Value(HashMap<Value, Value> map) {
-        type = Type.DICT;
+        type = new Type(Kind.DICT);
         value = map;
     }
 
     public Value(HashSet<Value> set) {
-        type = Type.SET;
+        type = new Type(Kind.SET);
         value = set;
     }
 
@@ -54,6 +54,10 @@ public class Value {
 
     public Type getType() {
         return type;
+    }
+
+    public Kind getKind() {
+        return type.getKind();
     }
 
     @Override
@@ -67,8 +71,8 @@ public class Value {
     public boolean equals(Object other) {
         Value otherv = (Value) other;
 
-        if (this.type != otherv.type) return false;
-        switch (this.type) {
+        if (this.getKind() != otherv.getKind()) return false;
+        switch (this.getKind()) {
             case INT:
                 return toInt() == otherv.toInt();
             case FLOAT:
@@ -91,7 +95,7 @@ public class Value {
 
     // used to simplify logic of math functions
     public boolean numberType() {
-        return type == Type.INT || type == Type.FLOAT;
+        return getKind() == Kind.INT || getKind() == Kind.FLOAT;
     }
 
     // we need to print "" around an strings that may be in this list/set/dict
@@ -102,7 +106,7 @@ public class Value {
         String result = "";
         boolean first = false;
 
-        switch (type) {
+        switch (getKind()) {
             case INT:
                 return ((Integer) value).toString();
             case FLOAT:
@@ -195,7 +199,7 @@ public class Value {
     }
 
     public int toInt() {
-        switch (type) {
+        switch (getKind()) {
             case INT:
                 return ((Integer) value).intValue();
             case FLOAT:
@@ -207,7 +211,7 @@ public class Value {
     }
 
     public double toFloat() {
-        switch (type) {
+        switch (getKind()) {
             case INT:
                 return ((Integer) value).doubleValue();
             case FLOAT:
@@ -219,7 +223,7 @@ public class Value {
     }
 
     public boolean toBool() {
-        switch (type) {
+        switch (getKind()) {
             case BOOL:
                 return ((Boolean) value).booleanValue();
             default:
@@ -230,7 +234,7 @@ public class Value {
 
     @SuppressWarnings("unchecked")
     public ArrayList<Value> toList() {
-        if (type == Type.LIST || type == Type.TUPLE) {
+        if (getKind() == Kind.LIST || getKind() == Kind.TUPLE) {
             return (ArrayList<Value>) value;
         }
 
@@ -239,7 +243,7 @@ public class Value {
     
     @SuppressWarnings("unchecked")
     public HashMap<Value, Value> toDict() {
-        if (type == Type.DICT) {
+        if (getKind() == Kind.DICT) {
             return (HashMap<Value, Value>) value;
         }
 
@@ -248,7 +252,7 @@ public class Value {
     
     @SuppressWarnings("unchecked")
     public HashSet<Value> toSet() {
-        if (type == Type.SET) {
+        if (getKind() == Kind.SET) {
             return (HashSet<Value>) value;
         }
 
