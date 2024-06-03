@@ -13,7 +13,8 @@ import java.util.HashSet;
 public class Stepper {
     private Value source;
     int index;
-    private Iterator<Value> set_it; // used only for sets which have no other way
+    private Iterator<Value> set_it; // used only for sets and dicts
+                                    //  if only could be used for all :\
 
     public Stepper(Value source) {
         this.source = source;
@@ -21,11 +22,12 @@ public class Stepper {
     
         if (source.getType() == Type.SET) {
             set_it = source.toSet().iterator();
+        } else if (source.getType() == Type.DICT) {
+            set_it = source.toDict().keySet().iterator();
         }
     }
 
     public boolean done() {
-        // TODO add dict and set to this
         switch (source.getType()) {
             case STRING:
                 String sval = source.toString();
@@ -33,6 +35,7 @@ public class Stepper {
             case LIST:
                 ArrayList<Value> lval = source.toList();
                 return index >= lval.size();
+            case DICT:
             case SET:
                 return !set_it.hasNext();
         }
@@ -54,6 +57,13 @@ public class Stepper {
                 return v;
             case SET:
                 return set_it.next();
+            case DICT:
+                Value key = set_it.next();
+                Value value = source.toDict().get(key);
+                ArrayList<Value> tuple = new ArrayList<>();
+                tuple.add(key);
+                tuple.add(value);
+                return new Value(tuple, true);
         }
 
         throw new RuntimeException("iteration through illegal value");

@@ -1,0 +1,7 @@
+def main():
+    let yummyness = {"bbq sauce": 8, "salsa": 7, "ketchup": 3, "mustard": 6, "mayo": 7}
+    for thing in yummyness:
+        print(thing)
+
+
+

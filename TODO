@@ -1,10 +1,12 @@
 Immediate:
-    - for loop through dict (each value is key/val tuple)
     - match statement
     - destructures:
         - cons
         - tuple
         - nested ones
+        - also destructure in for loop of a dictionary:
+            for (name, number) in phonebook:
+                print(name, "can be called at", number)
     - enums
     - come up with consistent erroring scheme, with line numbers
     - add error test cases, ensuring errors are produced for bad code
@@ -43,6 +45,7 @@ Things to add into language:
     - classes or alternative...
     - libraries
     - multiple fors in list comprehension (like python)?
+    - maybe allow Int? to be an alias for Option<Int> (Swift does this)
 
 Math stuff:
     - use bigints for integers like python?
