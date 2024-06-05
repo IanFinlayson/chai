@@ -20,6 +20,34 @@ public class Type {
         return kind;
     }
 
+    public boolean equals(Object o) {
+        Type other = (Type) o;
+
+        if (this.kind != other.kind) {
+            return false;
+        }
+
+        if (this.subtypes == null && other.subtypes == null) {
+            // if neither has subtypes, they match
+            return true;
+        } else if (this,subtypes == null || other.subtypes == null) {
+            // if one is missing subtypes, they don't match
+            return false;
+        } else if (this.subtypes.size() != other.subtypes.size()) {
+            // if different amount of subtypes, they don't match
+            return false;
+        }
+
+        // go through subtypes, if mismatch false
+        for (int i = 0; i < this,subtypes.size(); i++) {
+            if (!this.subtypes.get(i).equals(other.subtypes.get(i))) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     public void addSub(Type t) {
         if (subtypes == null) {
             subtypes = new ArrayList<>();
