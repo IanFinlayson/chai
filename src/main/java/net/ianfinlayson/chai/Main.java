@@ -54,16 +54,16 @@ public class Main {
             return;
         }
 
-        // print the tree to a text file for debugging porpoises
-        try (PrintWriter dbgfile = new PrintWriter("parsetree.txt")) {
-            dbgfile.println(tree.toStringTree(parser));
-        } catch (FileNotFoundException e) {}
-
-        // create the visitor for running (eventually we'll make a type checker one too)
-        Executor executor = new Executor(stream);
-
         try {
+            // create a visitor for doing type checking
+            TypeChecker checker = new TypeChecker();
+            checker.visit(tree);
+
+            // create the visitor for running, this pass builds functions etc. in executor
+            Executor executor = new Executor(stream);
             executor.visit(tree);
+
+            // run the main function
             executor.callMain();
         } catch (RuntimeException e) {
             System.out.println(e.getMessage());

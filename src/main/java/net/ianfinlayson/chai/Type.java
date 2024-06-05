@@ -30,7 +30,7 @@ public class Type {
         if (this.subtypes == null && other.subtypes == null) {
             // if neither has subtypes, they match
             return true;
-        } else if (this,subtypes == null || other.subtypes == null) {
+        } else if (this.subtypes == null || other.subtypes == null) {
             // if one is missing subtypes, they don't match
             return false;
         } else if (this.subtypes.size() != other.subtypes.size()) {
@@ -39,7 +39,7 @@ public class Type {
         }
 
         // go through subtypes, if mismatch false
-        for (int i = 0; i < this,subtypes.size(); i++) {
+        for (int i = 0; i < this.subtypes.size(); i++) {
             if (!this.subtypes.get(i).equals(other.subtypes.get(i))) {
                 return false;
             }
