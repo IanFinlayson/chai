@@ -1,5 +1,7 @@
 package net.ianfinlayson.chai;
 
+import java.util.List;
+
 public class TypeChecker extends ChaiParserBaseVisitor<Type> {
     // each of these methods performs type checking in their part of the
     // tree, and returns they type of it (for expressions) or null (for stmts)
@@ -85,26 +87,29 @@ public class TypeChecker extends ChaiParserBaseVisitor<Type> {
 
     @Override
     public Type visitSetType(ChaiParser.SetTypeContext ctx) {
-        // TODO
-        return null;
+        Type set = new Type(Kind.LIST);
+        set.addSub(visit(ctx.type()));
+        return set;
     }
 
     @Override
     public Type visitListType(ChaiParser.ListTypeContext ctx) {
-        // TODO
-        return null;
+        Type list = new Type(Kind.LIST);
+        list.addSub(visit(ctx.type()));
+        return list;
     }
 
     @Override
     public Type visitBoolType(ChaiParser.BoolTypeContext ctx) {
-        // TODO
-        return null;
+        return new Type(Kind.BOOL);
     }
 
     @Override
     public Type visitDictType(ChaiParser.DictTypeContext ctx) {
-        // TODO
-        return null;
+        Type dict = new Type(Kind.DICT);
+        dict.addSub(visit(ctx.type(0)));
+        dict.addSub(visit(ctx.type(1)));
+        return dict;
     }
 
     @Override
@@ -139,8 +144,17 @@ public class TypeChecker extends ChaiParserBaseVisitor<Type> {
 
     @Override
     public Type visitVarStatement(ChaiParser.VarStatementContext ctx) {
-        // TODO
-        return null;
+        // TODO we also need to keep track of variables and shit
+
+        Type inferred = visit(ctx.expression());
+        if (ctx.type() != null) {
+            if (!visit(ctx.type()).equals(inferred)) {
+                throw new TypeMismatchException("Declared type '" + visit(ctx.type()) +
+                        "' does not match assigned type '" + inferred, ctx.getStart().getLine());
+            }
+        }
+
+        return inferred;
     }
 
     @Override
@@ -455,21 +469,40 @@ public class TypeChecker extends ChaiParserBaseVisitor<Type> {
 
 
 
+
+
+
+
+
+
+
+
     @Override
     public Type visitDictLiteralTerm(ChaiParser.DictLiteralTermContext ctx) {
-        // TODO
-        return null;
+        List<ChaiParser.DictentryContext> entries = ctx.dictentry();
+
+        // get the dict type for the first entry here
+        Type first = visit(entries.get(0));
+
+        // for each other one, ensure that it matches
+        for (int i = 1; i < entries.size(); i++) {
+            if (!visit(entries.get(i)).equals(first)) {
+                throw new TypeMismatchException("Dictionary literal has inconsistent type", ctx.getStart().getLine());
+            }
+        }
+
+        // return dictionary type
+        return first;
     }
 
     @Override
     public Type visitDictentry(ChaiParser.DictentryContext ctx) {
-        // TODO
-        return null;
+        // visit both of the expressions
+        Type dict = new Type(Kind.DICT);
+        dict.addSub(visit(ctx.expression(0)));
+        dict.addSub(visit(ctx.expression(1)));
+        return dict;
     }
-
-
-
-
 
     @Override
     public Type visitIntLiteral(ChaiParser.IntLiteralContext ctx) {

@@ -54,5 +54,31 @@ public class Type {
         }
         subtypes.add(t);
     }
+
+    @Override
+    public String toString() {
+        switch (kind) {
+            case INT: return "Int";
+            case FLOAT: return "Float";
+            case BOOL: return "Bool";
+            case STRING: return "String";
+            case SET:
+                return "{" + subtypes.get(0) + "}";
+            case LIST:
+                return "[" + subtypes.get(0) + "]";
+            case DICT:
+                return "{" + subtypes.get(0) + ": " + subtypes.get(1) + "}";
+            case TUPLE:
+                String t = "(";
+                for (int i = 0; i < subtypes.size() - 1; i++) {
+                    t += subtypes.get(i) + ", ";
+                }
+                t += subtypes.get(subtypes.size() - 1);
+                t += ")";
+                return t;
+            default:
+                throw new RuntimeException("Unhandled type");
+        }
+    }
 }
 
