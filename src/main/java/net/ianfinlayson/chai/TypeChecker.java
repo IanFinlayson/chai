@@ -7,11 +7,13 @@ public class TypeChecker extends ChaiParserBaseVisitor<Type> {
     // tree, and returns they type of it (for expressions) or null (for stmts)
     // it throws exceptions for type errors that are encountered
 
-    //@Override
-    //public Type visitFunctiondef(ChaiParser.FunctiondefContext ctx) {
-     //   // TODO
-    //    return null;
-   // }
+    @Override
+    public Type visitFunctiondef(ChaiParser.FunctiondefContext ctx) {
+        // TODO we should also register this function with its types!
+        // for now, just visit all the statements in this funciton, type checking them
+        visit(ctx.statements());
+        return null;
+    }
 
     @Override
     public Type visitParamlist(ChaiParser.ParamlistContext ctx) {
@@ -35,6 +37,59 @@ public class TypeChecker extends ChaiParserBaseVisitor<Type> {
 
 
 
+
+
+
+
+
+    @Override
+    public Type visitReturnStatement(ChaiParser.ReturnStatementContext ctx) {
+        // TODO
+        return null;
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+    @Override
+    public Type visitFunctioncall(ChaiParser.FunctioncallContext ctx) {
+        // TODO
+        return null;
+    }
+
+    @Override
+    public Type visitArglist(ChaiParser.ArglistContext ctx) {
+        // TODO
+        return null;
+    }
+
+    @Override
+    public Type visitArgument(ChaiParser.ArgumentContext ctx) {
+        // TODO
+        return null;
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
     @Override
     public Type visitTypedef(ChaiParser.TypedefContext ctx) {
         // TODO
@@ -48,10 +103,49 @@ public class TypeChecker extends ChaiParserBaseVisitor<Type> {
     }
 
     @Override
+    public Type visitTypeparamfills(ChaiParser.TypeparamfillsContext ctx) {
+        // TODO
+        return null;
+    }
+
+    @Override
     public Type visitNamedType(ChaiParser.NamedTypeContext ctx) {
         // TODO
         return null;
     }
+
+    @Override
+    public Type visitFunctionType(ChaiParser.FunctionTypeContext ctx) {
+        // TODO
+        return null;
+    }
+
+    @Override
+    public Type visitUnionType(ChaiParser.UnionTypeContext ctx) {
+        // TODO
+        return null;
+    }
+
+    @Override
+    public Type visitUnionpart(ChaiParser.UnionpartContext ctx) {
+        // TODO
+        return null;
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     @Override
     public Type visitFloatType(ChaiParser.FloatTypeContext ctx) {
@@ -75,14 +169,12 @@ public class TypeChecker extends ChaiParserBaseVisitor<Type> {
 
     @Override
     public Type visitTupleType(ChaiParser.TupleTypeContext ctx) {
-        // TODO
-        return null;
-    }
+        Type tups = new Type(Kind.TUPLE);
 
-    @Override
-    public Type visitFunctionType(ChaiParser.FunctionTypeContext ctx) {
-        // TODO
-        return null;
+        for (ChaiParser.TypeContext t : ctx.type()) {
+            tups.addSub(visit(t));
+        }
+        return tups;
     }
 
     @Override
@@ -112,95 +204,15 @@ public class TypeChecker extends ChaiParserBaseVisitor<Type> {
         return dict;
     }
 
-    @Override
-    public Type visitUnionType(ChaiParser.UnionTypeContext ctx) {
-        // TODO
-        return null;
-    }
 
-    @Override
-    public Type visitTypeparamfills(ChaiParser.TypeparamfillsContext ctx) {
-        // TODO
-        return null;
-    }
 
-    @Override
-    public Type visitUnionpart(ChaiParser.UnionpartContext ctx) {
-        // TODO
-        return null;
-    }
 
-    @Override
-    public Type visitFuncallStatement(ChaiParser.FuncallStatementContext ctx) {
-        // TODO
-        return null;
-    }
+
+
+
 
     @Override
     public Type visitAssignStatement(ChaiParser.AssignStatementContext ctx) {
-        // TODO
-        return null;
-    }
-
-    @Override
-    public Type visitVarStatement(ChaiParser.VarStatementContext ctx) {
-        // TODO we also need to keep track of variables and shit
-
-        Type inferred = visit(ctx.expression());
-        if (ctx.type() != null) {
-            if (!visit(ctx.type()).equals(inferred)) {
-                throw new TypeMismatchException("Declared type '" + visit(ctx.type()) +
-                        "' does not match assigned type '" + inferred, ctx.getStart().getLine());
-            }
-        }
-
-        return inferred;
-    }
-
-    @Override
-    public Type visitModassignStatement(ChaiParser.ModassignStatementContext ctx) {
-        // TODO
-        return null;
-    }
-
-
-    @Override
-    public Type visitAssertStatement(ChaiParser.AssertStatementContext ctx) {
-        // get the type of the expression, it must be boolean
-        Type exprType = visit(ctx.expression());
-        if (exprType.getKind() != Kind.BOOL) {
-            throw new TypeMismatchException("assert must be a boolean type", ctx.getStart().getLine());
-        }
-
-        return null;
-    }
-
-    @Override
-    public Type visitReturnStatement(ChaiParser.ReturnStatementContext ctx) {
-        // TODO
-        return null;
-    }
-
-    @Override
-    public Type visitIfstatement(ChaiParser.IfstatementContext ctx) {
-        // TODO
-        return null;
-    }
-
-    @Override
-    public Type visitForStatement(ChaiParser.ForStatementContext ctx) {
-        // TODO
-        return null;
-    }
-
-    @Override
-    public Type visitWhileStatement(ChaiParser.WhileStatementContext ctx) {
-        // TODO
-        return null;
-    }
-
-    @Override
-    public Type visitToplevelStatement(ChaiParser.ToplevelStatementContext ctx) {
         // TODO
         return null;
     }
@@ -224,6 +236,66 @@ public class TypeChecker extends ChaiParserBaseVisitor<Type> {
     }
 
     @Override
+    public Type visitVarStatement(ChaiParser.VarStatementContext ctx) {
+        // TODO we also need to keep track of variables and shit
+
+        Type inferred = visit(ctx.expression());
+        if (ctx.type() != null) {
+            if (!visit(ctx.type()).equals(inferred)) {
+                throw new TypeMismatchException("Declared type '" + visit(ctx.type()) +
+                        "' does not match assigned type '" + inferred, ctx.getStart().getLine());
+            }
+        }
+
+        return inferred;
+    }
+
+
+
+
+
+
+
+
+
+
+
+    @Override
+    public Type visitAssertStatement(ChaiParser.AssertStatementContext ctx) {
+        // get the type of the expression, it must be boolean
+        Type exprType = visit(ctx.expression());
+        if (exprType.getKind() != Kind.BOOL) {
+            throw new TypeMismatchException("assert must be a boolean type", ctx.getStart().getLine());
+        }
+
+        return null;
+    }
+
+
+
+
+
+
+
+
+    @Override
+    public Type visitForStatement(ChaiParser.ForStatementContext ctx) {
+        // TODO
+        return null;
+    }
+
+    @Override
+    public Type visitWhileStatement(ChaiParser.WhileStatementContext ctx) {
+        // TODO
+        return null;
+    }
+
+
+
+
+
+
+    @Override
     public Type visitIfstmt(ChaiParser.IfstmtContext ctx) {
         // TODO
         return null;
@@ -241,23 +313,9 @@ public class TypeChecker extends ChaiParserBaseVisitor<Type> {
         return null;
     }
 
-    @Override
-    public Type visitFunctioncall(ChaiParser.FunctioncallContext ctx) {
-        // TODO
-        return null;
-    }
 
-    @Override
-    public Type visitArglist(ChaiParser.ArglistContext ctx) {
-        // TODO
-        return null;
-    }
 
-    @Override
-    public Type visitArgument(ChaiParser.ArgumentContext ctx) {
-        // TODO
-        return null;
-    }
+
 
     @Override
     public Type visitShiftExpression(ChaiParser.ShiftExpressionContext ctx) {
@@ -279,12 +337,6 @@ public class TypeChecker extends ChaiParserBaseVisitor<Type> {
 
     @Override
     public Type visitBitxorExpression(ChaiParser.BitxorExpressionContext ctx) {
-        // TODO
-        return null;
-    }
-
-    @Override
-    public Type visitFuncallExpression(ChaiParser.FuncallExpressionContext ctx) {
         // TODO
         return null;
     }
@@ -374,71 +426,17 @@ public class TypeChecker extends ChaiParserBaseVisitor<Type> {
         return null;
     }
 
-
-
-
-    @Override
-    public Type visitEmptydictLiteralTerm(ChaiParser.EmptydictLiteralTermContext ctx) {
-        // TODO
-        return null;
-    }
-
-
-
-
-
     @Override
     public Type visitListRangeTerm(ChaiParser.ListRangeTermContext ctx) {
         // TODO
         return null;
     }
 
-
-
-
-
-    @Override
-    public Type visitParensTerm(ChaiParser.ParensTermContext ctx) {
-        return visit(ctx.expression());
-    }
-
-
-
-
-
-
     @Override
     public Type visitListSliceTerm(ChaiParser.ListSliceTermContext ctx) {
         // TODO
         return null;
     }
-
-
-
-
-
-    @Override
-    public Type visitSetLiteralTerm(ChaiParser.SetLiteralTermContext ctx) {
-        // TODO
-        return null;
-    }
-
-
-
-
-
-
-
-
-
-    @Override
-    public Type visitIdTerm(ChaiParser.IdTermContext ctx) {
-        // TODO
-        return null;
-    }
-
-
-
 
     @Override
     public Type visitListIndexTerm(ChaiParser.ListIndexTermContext ctx) {
@@ -450,20 +448,64 @@ public class TypeChecker extends ChaiParserBaseVisitor<Type> {
 
 
 
+    @Override
+    public Type visitEmptydictLiteralTerm(ChaiParser.EmptydictLiteralTermContext ctx) {
+        return new Type(Kind.DICT);
+    }
+
+    @Override
+    public Type visitSetLiteralTerm(ChaiParser.SetLiteralTermContext ctx) {
+        // get the items in the set
+        List<ChaiParser.ExpressionContext> entries = ctx.expression();
+
+        // get the type for the first entry
+        Type first = visit(entries.get(0));
+
+        // for each other one, ensure that it matches
+        for (int i = 1; i < entries.size(); i++) {
+            if (!visit(entries.get(i)).equals(first)) {
+                throw new TypeMismatchException("Set literal has inconsistent type", ctx.getStart().getLine());
+            }
+        }
+
+        // it's a set of whatever the thing is then
+        Type set = new Type(Kind.SET);
+        set.addSub(first);
+        return set;
+    }
 
     @Override
     public Type visitListLiteralTerm(ChaiParser.ListLiteralTermContext ctx) {
-        // TODO
-        return null;
+        // get the items in the list
+        List<ChaiParser.ExpressionContext> entries = ctx.expression();
+
+        // get the type for the first entry
+        Type first = visit(entries.get(0));
+
+        // for each other one, ensure that it matches
+        for (int i = 1; i < entries.size(); i++) {
+            if (!visit(entries.get(i)).equals(first)) {
+                throw new TypeMismatchException("List literal has inconsistent type", ctx.getStart().getLine());
+            }
+        }
+
+        // it's a list of whatever the thing is then
+        Type lst = new Type(Kind.LIST);
+        lst.addSub(first);
+        return lst;
     }
-
-
-
 
     @Override
     public Type visitTupleLiteralTerm(ChaiParser.TupleLiteralTermContext ctx) {
-        // TODO
-        return null;
+        // make a tuple type
+        Type tups = new Type(Kind.TUPLE);
+
+        // add all the things into it
+        for (ChaiParser.ExpressionContext expr : ctx.expression()) {
+            tups.addSub(visit(expr));
+        }
+
+        return tups;
     }
 
 
