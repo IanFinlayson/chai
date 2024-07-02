@@ -86,67 +86,6 @@ public class TypeChecker extends ChaiParserBaseVisitor<Type> {
 
 
 
-
-
-
-
-    @Override
-    public Type visitTypedef(ChaiParser.TypedefContext ctx) {
-        // TODO
-        return null;
-    }
-
-    @Override
-    public Type visitTypeparams(ChaiParser.TypeparamsContext ctx) {
-        // TODO
-        return null;
-    }
-
-    @Override
-    public Type visitTypeparamfills(ChaiParser.TypeparamfillsContext ctx) {
-        // TODO
-        return null;
-    }
-
-    @Override
-    public Type visitNamedType(ChaiParser.NamedTypeContext ctx) {
-        // TODO
-        return null;
-    }
-
-    @Override
-    public Type visitFunctionType(ChaiParser.FunctionTypeContext ctx) {
-        // TODO
-        return null;
-    }
-
-    @Override
-    public Type visitUnionType(ChaiParser.UnionTypeContext ctx) {
-        // TODO
-        return null;
-    }
-
-    @Override
-    public Type visitUnionpart(ChaiParser.UnionpartContext ctx) {
-        // TODO
-        return null;
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     @Override
     public Type visitFloatType(ChaiParser.FloatTypeContext ctx) {
         return new Type(Kind.FLOAT);
@@ -271,102 +210,280 @@ public class TypeChecker extends ChaiParserBaseVisitor<Type> {
         return null;
     }
 
-
-
-
-
-
-
-
     @Override
     public Type visitForStatement(ChaiParser.ForStatementContext ctx) {
-        // TODO
+        // TODO we also need to track the variable produced
+
+        // make sure that the expression is iterable
+        Type it = visit(ctx.expression());
+
+        switch (it.getKind()) {
+            case STRING:
+            case LIST:
+            case DICT:
+            case SET:
+                // these are ok
+                break;
+            default:
+                throw new TypeMismatchException("Value in for loop is not iterable", ctx.getStart().getLine());
+        }
+
+        // go through all of the statements
+        visit(ctx.statements());
         return null;
     }
 
     @Override
     public Type visitWhileStatement(ChaiParser.WhileStatementContext ctx) {
-        // TODO
+        // make sure that the expression is a boolean
+        Type cond = visit(ctx.expression());
+        if (cond.getKind() != Kind.BOOL) {
+            throw new TypeMismatchException("While condition must be boolean", ctx.getStart().getLine());
+        }
+
+        // go through all of the statements
+        visit(ctx.statements());
         return null;
     }
 
-
-
-
-
-
     @Override
     public Type visitIfstmt(ChaiParser.IfstmtContext ctx) {
-        // TODO
+        // make sure that the expression is a boolean
+        Type cond = visit(ctx.expression());
+        if (cond.getKind() != Kind.BOOL) {
+            throw new TypeMismatchException("If condition must be boolean", ctx.getStart().getLine());
+        }
+
+        // go through all of the statements
+        visit(ctx.statements());
+
+        // if there is elif clauses and an else clause, visit them
+        for (ChaiParser.ElifclauseContext elif : ctx.elifclause()) {
+            visit(elif);
+        }
+        if (ctx.elseclause() != null) {
+            visit(ctx.elseclause());
+        }
+
         return null;
     }
 
     @Override
     public Type visitElifclause(ChaiParser.ElifclauseContext ctx) {
-        // TODO
+        // make sure that the expression is a boolean
+        Type cond = visit(ctx.expression());
+        if (cond.getKind() != Kind.BOOL) {
+            throw new TypeMismatchException("If condition must be boolean", ctx.getStart().getLine());
+        }
+
+        // go through all of the statements
+        visit(ctx.statements());
         return null;
     }
 
     @Override
     public Type visitElseclause(ChaiParser.ElseclauseContext ctx) {
-        // TODO
+        // go through all of the statements
+        visit(ctx.statements());
         return null;
     }
 
-
-
-
-
     @Override
     public Type visitShiftExpression(ChaiParser.ShiftExpressionContext ctx) {
-        // TODO
-        return null;
+        if (visit(ctx.expression(0)).getKind() != Kind.INT ||
+            visit(ctx.expression(1)).getKind() != Kind.INT) {
+            throw new TypeMismatchException("Shifts only operate on integers", ctx.getStart().getLine());
+        }
+
+        return new Type(Kind.INT);
     }
 
     @Override
     public Type visitBitorExpression(ChaiParser.BitorExpressionContext ctx) {
-        // TODO
-        return null;
-    }
+        if (visit(ctx.expression(0)).getKind() != Kind.INT ||
+            visit(ctx.expression(1)).getKind() != Kind.INT) {
+            throw new TypeMismatchException("Bitwise or only operates on integers", ctx.getStart().getLine());
+        }
 
-    @Override
-    public Type visitNotExpression(ChaiParser.NotExpressionContext ctx) {
-        // TODO
-        return null;
+        return new Type(Kind.INT);
     }
 
     @Override
     public Type visitBitxorExpression(ChaiParser.BitxorExpressionContext ctx) {
-        // TODO
-        return null;
+        if (visit(ctx.expression(0)).getKind() != Kind.INT ||
+            visit(ctx.expression(1)).getKind() != Kind.INT) {
+            throw new TypeMismatchException("Bitwise xor only operate on integers", ctx.getStart().getLine());
+        }
+
+        return new Type(Kind.INT);
     }
 
     @Override
     public Type visitBitandExpression(ChaiParser.BitandExpressionContext ctx) {
-        // TODO
-        return null;
+        if (visit(ctx.expression(0)).getKind() != Kind.INT ||
+            visit(ctx.expression(1)).getKind() != Kind.INT) {
+            throw new TypeMismatchException("Bitwise and only operate on integers", ctx.getStart().getLine());
+        }
+
+        return new Type(Kind.INT);
     }
 
     @Override
-    public Type visitCompareExpression(ChaiParser.CompareExpressionContext ctx) {
-        // TODO
-        return null;
-    }
+    public Type visitNotExpression(ChaiParser.NotExpressionContext ctx) {
+        if (visit(ctx.expression()).getKind() != Kind.BOOL) {
+            throw new TypeMismatchException("Not only applies to booleans", ctx.getStart().getLine());
+        }
 
-    @Override
-    public Type visitNotinExpression(ChaiParser.NotinExpressionContext ctx) {
-        // TODO
-        return null;
+        return new Type(Kind.BOOL);
     }
 
     @Override
     public Type visitOrExpression(ChaiParser.OrExpressionContext ctx) {
+        if (visit(ctx.expression(0)).getKind() != Kind.BOOL ||
+            visit(ctx.expression(1)).getKind() != Kind.BOOL) {
+            throw new TypeMismatchException("Arguments to or operator must be boolean", ctx.getStart().getLine());
+        }
+
+        return new Type(Kind.BOOL);
+    }
+
+    @Override
+    public Type visitAndExpression(ChaiParser.AndExpressionContext ctx) {
+        if (visit(ctx.expression(0)).getKind() != Kind.BOOL ||
+            visit(ctx.expression(1)).getKind() != Kind.BOOL) {
+            throw new TypeMismatchException("Arguments to and operator must be boolean", ctx.getStart().getLine());
+        }
+
+        return new Type(Kind.BOOL);
+    }
+
+    private boolean numberType(Type t) {
+        return t.getKind() == Kind.INT || t.getKind() == Kind.FLOAT;
+    }
+
+    @Override
+    public Type visitCompareExpression(ChaiParser.CompareExpressionContext ctx) {
+        Type lhs = visit(ctx.expression(0));
+        Type rhs = visit(ctx.expression(1));
+
+        // we do equality separate from order
+        if (ctx.op.getType() == ChaiLexer.EQUALS || ctx.op.getType() == ChaiLexer.NOTEQUALS) {
+            // they must match, except float/int is fine
+            if (lhs.getKind() != rhs.getKind()) {
+                if (!numberType(lhs) || !numberType(rhs)) {
+                    throw new TypeMismatchException("Unsupported types to equality operator", ctx.getStart().getLine());
+                }
+            }
+        } else {
+            // we only allow these for numbers and strings
+            if (lhs.getKind() == Kind.STRING && rhs.getKind() == Kind.STRING) {
+                // this is ok
+            } else if (numberType(lhs) && numberType(rhs)) {
+                // this is ok
+            } else {
+                throw new TypeMismatchException("Unsupported types to comparison operator", ctx.getStart().getLine());
+            }
+        }
+
+        return new Type(Kind.BOOL);
+    }
+
+    @Override
+    public Type visitPlusMinusExpression(ChaiParser.PlusMinusExpressionContext ctx) {
+        Type lhs = visit(ctx.expression(0));
+        Type rhs = visit(ctx.expression(1));
+
+        if (ctx.op.getType() == ChaiLexer.PLUS) {
+            if (lhs.getKind() == Kind.LIST && rhs.getKind() == Kind.LIST) {
+                // must be same type of list
+                if (!lhs.equals(rhs)) {
+                    throw new TypeMismatchException("List types for + operator do not match", ctx.getStart().getLine());
+                }
+                return lhs;
+            } else if (lhs.getKind() == Kind.STRING && rhs.getKind() == Kind.STRING) {
+                return new Type(Kind.STRING);
+            } else if (lhs.getKind() == Kind.INT && rhs.getKind() == Kind.INT) {
+                return new Type(Kind.INT);
+            } else if (numberType(lhs) && numberType(rhs)) {
+                return new Type(Kind.FLOAT);
+            } else {
+                throw new TypeMismatchException("Unsupported types to + operator", ctx.getStart().getLine());
+            }
+        } else {
+            // subtraction
+            if (lhs.getKind() == Kind.INT && rhs.getKind() == Kind.INT) {
+                return new Type(Kind.INT);
+            } else if (numberType(lhs) && numberType(rhs)) {
+                return new Type(Kind.FLOAT);
+            } else {
+                throw new TypeMismatchException("Unsupported types to - operator", ctx.getStart().getLine());
+            }
+        }
+    }
+
+    @Override
+    public Type visitTimesdivExpression(ChaiParser.TimesdivExpressionContext ctx) {
+        Type lhs = visit(ctx.expression(0));
+        Type rhs = visit(ctx.expression(1));
+
+        switch (ctx.op.getType()) {
+            case ChaiLexer.TIMES:
+                // we can do list * num, or string * num
+                if ((lhs.getKind() == Kind.LIST || lhs.getKind() == Kind.STRING) && rhs.getKind() == Kind.INT) {
+                    return lhs;
+                } else if (lhs.getKind() == Kind.INT && (rhs.getKind() == Kind.LIST || rhs.getKind() == Kind.STRING)) {
+                    return rhs;
+                } else if (lhs.getKind() == Kind.INT && rhs.getKind() == Kind.INT) {
+                    return new Type(Kind.INT);
+                } else if (numberType(lhs) && numberType(rhs)) {
+                    return new Type(Kind.FLOAT);
+                } else {
+                    throw new TypeMismatchException("Unsupported types to * operator", ctx.getStart().getLine());
+                }
+
+            case ChaiLexer.DIVIDE:
+                if (numberType(lhs) && numberType(rhs)) {
+                    return new Type(Kind.FLOAT);
+                } else {
+                    throw new TypeMismatchException("Unsupported types to / operator", ctx.getStart().getLine());
+                }
+            case ChaiLexer.INTDIV:
+                if (numberType(lhs) && numberType(rhs)) {
+                    return new Type(Kind.INT);
+                } else {
+                    throw new TypeMismatchException("Unsupported types to // operator", ctx.getStart().getLine());
+                }
+            case ChaiLexer.MODULUS:
+                if (lhs.getKind() == Kind.INT && rhs.getKind() == Kind.INT) {
+                    return new Type(Kind.INT);
+                } else if (numberType(lhs) && numberType(rhs)) {
+                    return new Type(Kind.FLOAT);
+                } else {
+                    throw new TypeMismatchException("Unsupported types to % operator", ctx.getStart().getLine());
+                }
+            default:
+                throw new RuntimeException("Unhandled multiplicative operator in type checker");
+        }
+    }
+
+
+    @Override
+    public Type visitPowerExpression(ChaiParser.PowerExpressionContext ctx) {
         // TODO
         return null;
     }
 
+
     @Override
-    public Type visitPowerExpression(ChaiParser.PowerExpressionContext ctx) {
+    public Type visitUnaryExpression(ChaiParser.UnaryExpressionContext ctx) {
+        // TODO
+        return null;
+    }
+
+
+
+    @Override
+    public Type visitNotinExpression(ChaiParser.NotinExpressionContext ctx) {
         // TODO
         return null;
     }
@@ -377,26 +494,12 @@ public class TypeChecker extends ChaiParserBaseVisitor<Type> {
         return null;
     }
 
-    @Override
-    public Type visitAndExpression(ChaiParser.AndExpressionContext ctx) {
-        // TODO
-        return null;
-    }
+
+
+
 
     @Override
     public Type visitIfelseExpression(ChaiParser.IfelseExpressionContext ctx) {
-        // TODO
-        return null;
-    }
-
-    @Override
-    public Type visitPlusMinusExpression(ChaiParser.PlusMinusExpressionContext ctx) {
-        // TODO
-        return null;
-    }
-
-    @Override
-    public Type visitTimesdivExpression(ChaiParser.TimesdivExpressionContext ctx) {
         // TODO
         return null;
     }
@@ -407,11 +510,6 @@ public class TypeChecker extends ChaiParserBaseVisitor<Type> {
         return null;
     }
 
-    @Override
-    public Type visitUnaryExpression(ChaiParser.UnaryExpressionContext ctx) {
-        // TODO
-        return null;
-    }
 
 
 
@@ -507,17 +605,6 @@ public class TypeChecker extends ChaiParserBaseVisitor<Type> {
 
         return tups;
     }
-
-
-
-
-
-
-
-
-
-
-
 
     @Override
     public Type visitDictLiteralTerm(ChaiParser.DictLiteralTermContext ctx) {
