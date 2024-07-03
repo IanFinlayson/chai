@@ -116,7 +116,6 @@ public class Operators {
                 String haystack = collection.toString();
                 return haystack.indexOf(needle) != -1;
             case LIST:
-            case TUPLE:
                 for (Value v : collection.toList()) {
                     if (Operators.equals(v, target)) {
                         return true;

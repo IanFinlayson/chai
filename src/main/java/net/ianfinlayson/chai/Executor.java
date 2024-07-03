@@ -843,7 +843,16 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
         Value index = visit(ctx.expression());
         Value collection = visit(ctx.term());
 
-        if (collection.getKind() == Kind.LIST || collection.getKind() == Kind.LIST) {
+        if (collection.getKind() == Kind.STRING) {
+            String str = collection.toString();
+            int num = index.toInt();
+
+            if (num >= str.length()) {
+                throw new RuntimeException("String index out of range");
+            }
+
+            return new Value(Character.toString(str.charAt(num)));
+        } else if (collection.getKind() == Kind.LIST) {
             ArrayList<Value> vals = collection.toList();
             int num = index.toInt();
             if (num >= vals.size()) {

@@ -466,33 +466,89 @@ public class TypeChecker extends ChaiParserBaseVisitor<Type> {
         }
     }
 
-
     @Override
     public Type visitPowerExpression(ChaiParser.PowerExpressionContext ctx) {
-        // TODO
-        return null;
-    }
+        Type lhs = visit(ctx.expression(0));
+        Type rhs = visit(ctx.expression(1));
 
+        if (lhs.getKind() == Kind.INT && rhs.getKind() == Kind.INT) {
+            return new Type(Kind.INT);
+        } else if (numberType(lhs) && numberType(rhs)) {
+            return new Type(Kind.FLOAT);
+        } else {
+            throw new TypeMismatchException("Unsupported types to % operator", ctx.getStart().getLine());
+        }
+    }
 
     @Override
     public Type visitUnaryExpression(ChaiParser.UnaryExpressionContext ctx) {
-        // TODO
-        return null;
+        Type operand = visit(ctx.expression());
+
+        switch (ctx.op.getType()) {
+            case ChaiLexer.PLUS:
+            case ChaiLexer.MINUS:
+                if (operand.getKind() == Kind.INT) {
+                    return new Type(Kind.INT);
+                } else if (operand.getKind() == Kind.FLOAT) {
+                    return new Type(Kind.FLOAT);
+                } else {
+                    throw new TypeMismatchException("Unsupported types to % operator", ctx.getStart().getLine());
+                }
+            case ChaiLexer.COMPLEMENT:
+                if (operand.getKind() != Kind.INT) {
+                    throw new TypeMismatchException("Unsupported type to ~ operator", ctx.getStart().getLine());
+                } else {
+                    return new Type(Kind.INT);
+                }
+            default:
+                throw new RuntimeException("Unhandled unary operator in type checker");
+        }
     }
 
+    // private method used for 'in' and 'not in' checks
+    private Type checkInExpression(Type item, Type collection, int line) {
+        System.out.println(item);
+        System.out.println(collection);
 
+        switch (collection.getKind()) {
+            case STRING:
+                // the item must be a string
+                if (item.getKind() != Kind.STRING) {
+                    throw new TypeMismatchException("Unsupported types in 'in' expression", line);
+                }
+                break;
+            case LIST:
+            case SET:
+            case DICT:
+                // the item must match the (first) subtype
+                // TODO make sure this works for empty things?
+                if (!item.equals(collection.getSubs().get(0))) {
+                    System.out.println(item);
+                    System.out.println(collection.getSubs().get(0));
+                    throw new TypeMismatchException("Search type does not match collection type in 'in' expression", line);
+                }
+                break;
+
+            default:
+                throw new TypeMismatchException("Unsupported types in 'in' expression", line);
+        }
+
+        return new Type(Kind.BOOL);
+    }
 
     @Override
     public Type visitNotinExpression(ChaiParser.NotinExpressionContext ctx) {
-        // TODO
-        return null;
+        return checkInExpression(visit(ctx.expression(0)), visit(ctx.expression(1)), ctx.getStart().getLine());
     }
 
     @Override
     public Type visitInExpression(ChaiParser.InExpressionContext ctx) {
-        // TODO
-        return null;
+        return checkInExpression(visit(ctx.expression(0)), visit(ctx.expression(1)), ctx.getStart().getLine());
     }
+
+
+
+
 
 
 
@@ -538,13 +594,37 @@ public class TypeChecker extends ChaiParserBaseVisitor<Type> {
 
     @Override
     public Type visitListIndexTerm(ChaiParser.ListIndexTermContext ctx) {
-        // TODO
-        return null;
+        Type collection = visit(ctx.term());
+        Type index = visit(ctx.expression());
+
+        switch (collection.getKind()) {
+            case STRING:
+                // the index must be an int
+                if (index.getKind() != Kind.INT) {
+                    throw new TypeMismatchException("Index into string must be integer type", ctx.getStart().getLine());
+                }
+                // it returns a string
+                return new Type(Kind.STRING);
+
+            case LIST:
+                // the index must be an int
+                if (index.getKind() != Kind.INT) {
+                    throw new TypeMismatchException("Index into string must be integer type", ctx.getStart().getLine());
+                }
+                // it returns the type of the list
+                return collection.getSubs().get(0);
+            case DICT:
+                // the index must be the first subtype
+                if (!index.equals(collection.getSubs().get(0))) {
+                    throw new TypeMismatchException("Type of dictionary key does not match", ctx.getStart().getLine());
+                }
+                // it returns the second subtype
+                return collection.getSubs().get(1);
+
+            default:
+                throw new TypeMismatchException("Unsupported collection type in index expression", ctx.getStart().getLine());
+        }
     }
-
-
-
-
 
     @Override
     public Type visitEmptydictLiteralTerm(ChaiParser.EmptydictLiteralTermContext ctx) {

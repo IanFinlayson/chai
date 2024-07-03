@@ -65,8 +65,10 @@ public class Main {
 
             // run the main function
             executor.callMain();
-        } catch (RuntimeException e) {
+        } catch (TypeMismatchException e) {
             System.out.println(e.getMessage());
+        } catch (RuntimeException e) {
+            e.printStackTrace();
         }
     }
 }

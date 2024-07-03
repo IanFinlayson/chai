@@ -55,6 +55,10 @@ public class Type {
         subtypes.add(t);
     }
 
+    public ArrayList<Type> getSubs() {
+        return subtypes;
+    }
+
     @Override
     public String toString() {
         switch (kind) {
