@@ -520,9 +520,8 @@ public class TypeChecker extends ChaiParserBaseVisitor<Type> {
             case LIST:
             case SET:
             case DICT:
-                // the item must match the (first) subtype
-                // TODO make sure this works for empty things?
-                if (!item.equals(collection.getSubs().get(0))) {
+                // the item must match the (first) subtype, or the subtype can be empty
+                if (collection.getSubs() != null && !item.equals(collection.getSubs().get(0))) {
                     System.out.println(item);
                     System.out.println(collection.getSubs().get(0));
                     throw new TypeMismatchException("Search type does not match collection type in 'in' expression", line);
@@ -594,22 +593,46 @@ public class TypeChecker extends ChaiParserBaseVisitor<Type> {
 
 
 
-
-    @Override
-    public Type visitListcompTerm(ChaiParser.ListcompTermContext ctx) {
-        // TODO
-        return null;
-    }
-
     @Override
     public Type visitListRangeTerm(ChaiParser.ListRangeTermContext ctx) {
-        // TODO
-        return null;
+        // grab the start and end, both must be ints
+        Type start = visit(ctx.expression(0));
+        Type end = visit(ctx.expression(1));
+
+        if (start.getKind() != Kind.INT || end.getKind() != Kind.INT) {
+            throw new TypeMismatchException("Endpoints of range expression must be integers", ctx.getStart().getLine());
+        }
+
+        Type range = new Type(Kind.LIST);
+        range.addSub(new Type(Kind.INT));
+        return range;
     }
 
     @Override
     public Type visitListSliceTerm(ChaiParser.ListSliceTermContext ctx) {
+        Type list = visit(ctx.term());
+        List<ChaiParser.ExpressionContext> indices = ctx.expression();
+
+        // the list must be...a list
+        if (list.getKind() != Kind.LIST) {
+            throw new TypeMismatchException("Slices can only be applied to list types", ctx.getStart().getLine());
+        }
+
+        // any indices given must be integers (could be 0, 1, or 2)
+        for (ChaiParser.ExpressionContext index : indices) {
+            if(visit(index).getKind() != Kind.INT) {
+                throw new TypeMismatchException("Index in slice expression must be of integer type", ctx.getStart().getLine());
+            }
+        }
+
+        // the type is the same as the list itself
+        return list;
+    }
+
+    @Override
+    public Type visitListcompTerm(ChaiParser.ListcompTermContext ctx) {
         // TODO
+        // LBRACK expression FOR IDNAME IN expression (IF expression)? RBRACK    # listcompTerm
         return null;
     }
 

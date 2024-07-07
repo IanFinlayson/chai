@@ -1,3 +1,6 @@
+Type checking:
+    - make sure empty lists, sets, and dicts can be used in addition, in, etc.
+
 Immediate:
     - match statement
     - destructures:
