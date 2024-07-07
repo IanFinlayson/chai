@@ -546,24 +546,45 @@ public class TypeChecker extends ChaiParserBaseVisitor<Type> {
         return checkInExpression(visit(ctx.expression(0)), visit(ctx.expression(1)), ctx.getStart().getLine());
     }
 
-
-
-
-
-
-
-
-
     @Override
     public Type visitIfelseExpression(ChaiParser.IfelseExpressionContext ctx) {
-        // TODO
-        return null;
+        // grab the three expressions here
+        Type ifpart = visit(ctx.expression(0));
+        Type cond = visit(ctx.expression(1));
+        Type elsepart = visit(ctx.expression(2));
+
+        // the condition must be boolean
+        if (cond.getKind() != Kind.BOOL) {
+            throw new TypeMismatchException("Condition of if expression must be boolean", ctx.getStart().getLine());
+        }
+
+        // the if and then parts must match
+        if (!ifpart.equals(elsepart)) {
+            throw new TypeMismatchException("If and ele clauses of if expression must be of same type", ctx.getStart().getLine());
+        }
+
+        // the result is the type of the parts
+        return ifpart;
     }
 
     @Override
     public Type visitConsExpression(ChaiParser.ConsExpressionContext ctx) {
-        // TODO
-        return null;
+        // get the two expression types
+        Type elem = visit(ctx.expression(0));
+        Type existing = visit(ctx.expression(1));
+
+        // the existing must be a list
+        if (existing.getKind() != Kind.LIST) {
+            throw new TypeMismatchException("Cons operator can only apply to list type", ctx.getStart().getLine());
+        }
+
+        // either the existing list is empty or the types match
+        if (existing.getSubs() == null || elem.equals(existing.getSubs().get(0))) {
+            // the type is the same as the existing list
+            return existing;
+        } else {
+            throw new TypeMismatchException("Cannot cons item to list of different type", ctx.getStart().getLine());
+        }
     }
 
 
@@ -657,6 +678,11 @@ public class TypeChecker extends ChaiParserBaseVisitor<Type> {
         // get the items in the list
         List<ChaiParser.ExpressionContext> entries = ctx.expression();
 
+        // if the list is empty return list w/o subtype
+        if (entries.size() == 0) {
+            return new Type(Kind.LIST);
+        }
+        
         // get the type for the first entry
         Type first = visit(entries.get(0));
 
@@ -738,5 +764,4 @@ public class TypeChecker extends ChaiParserBaseVisitor<Type> {
         return new Type(Kind.BOOL);
     }
 }
-
 
