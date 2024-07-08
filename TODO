@@ -1,5 +1,9 @@
 Type checking:
-    - make sure empty lists, sets, and dicts can be used in addition, in, etc.
+    - amt needs to remain an int:
+      var amt = 10
+      amt += 4.5
+
+    Does casting the result from int -> float make sense though??
 
 Immediate:
     - match statement

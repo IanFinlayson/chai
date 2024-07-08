@@ -42,7 +42,7 @@ public class Type {
             case SET:
                 if  (this.subtypes == null || other.subtypes == null) {
                     return true;
-                } else if (this.subtypes.get(0) == other.subtypes.get(0)) {
+                } else if (this.subtypes.get(0).equals(other.subtypes.get(0))) {
                     return true;
                 } else {
                     return false;

@@ -213,8 +213,6 @@ public class TypeChecker extends ChaiParserBaseVisitor<Type> {
         throw new TypeMismatchException("Variable " + name + " was not declared in this scope", ctx.getStart().getLine());
     }
 
-
-
     @Override
     public Type visitAssignStatement(ChaiParser.AssignStatementContext ctx) {
         // get the types for the destination and expression and make sure they match
@@ -228,7 +226,6 @@ public class TypeChecker extends ChaiParserBaseVisitor<Type> {
 
         return null;
     }
-
 
     @Override
     public Type visitNestedLvalue(ChaiParser.NestedLvalueContext ctx) {
@@ -288,23 +285,50 @@ public class TypeChecker extends ChaiParserBaseVisitor<Type> {
         return vari.type;
     }
 
-
-
-
+    // helper function for numeric type checks
+    private boolean numberType(Type t) {
+        return t.getKind() == Kind.INT || t.getKind() == Kind.FLOAT;
+    }
 
     @Override
     public Type visitModassign(ChaiParser.ModassignContext ctx) {
         Type dest = visit(ctx.lvalue());
         Type rhs = visit(ctx.expression());
 
-        // TODO
         switch (ctx.op.getType()) {
+            // both numbers, both strings, both matching lists
             case ChaiLexer.PLUSASSIGN:
-            case ChaiLexer.MINUSASSIGN:
+                if (numberType(dest) && numberType(rhs)) {
+                    // this is ok
+                } else if (dest.getKind() == Kind.STRING && rhs.getKind() == Kind.STRING) {
+                    // fine too
+                } else if (dest.getKind() == Kind.LIST && dest.equals(rhs)) {
+                    // also cool
+                } else {
+                    throw new TypeMismatchException("Unsupported types for += operation", ctx.getStart().getLine());
+                }
+                break;
+
+            // both numbers, dest list/string and rhs int
             case ChaiLexer.TIMESASSIGN:
+                if (numberType(dest) && numberType(rhs)) {
+                    // this is ok
+                } else if ((dest.getKind() == Kind.STRING || dest.getKind() == Kind.LIST) && rhs.getKind() == Kind.INT) {
+                    // this is ok too
+                } else {
+                    throw new TypeMismatchException("Unsupported types for *= operation", ctx.getStart().getLine());
+                }
+                break;
+
+            // both numbers
+            case ChaiLexer.MINUSASSIGN:
             case ChaiLexer.DIVASSIGN:
             case ChaiLexer.MODASSIGN:
             case ChaiLexer.INTDIVASSIGN:
+                if (!numberType(dest) || !numberType(rhs)) {
+                    throw new TypeMismatchException("Unsupported types for assignment operation", ctx.getStart().getLine());
+                }
+                break;
 
             // these ones must all be ints
             case ChaiLexer.LSHIFTASSIGN:
@@ -315,21 +339,11 @@ public class TypeChecker extends ChaiParserBaseVisitor<Type> {
                 if (dest.getKind() != Kind.INT || rhs.getKind() != Kind.INT) {
                     throw new TypeMismatchException("Bitwise operator ony applies to integer type", ctx.getStart().getLine());
                 }
+                break;
         }
 
         return null;
     }
-
-
-
-
-
-
-
-
-
-
-
 
     @Override
     public Type visitAssertStatement(ChaiParser.AssertStatementContext ctx) {
@@ -487,10 +501,6 @@ public class TypeChecker extends ChaiParserBaseVisitor<Type> {
         }
 
         return new Type(Kind.BOOL);
-    }
-
-    private boolean numberType(Type t) {
-        return t.getKind() == Kind.INT || t.getKind() == Kind.FLOAT;
     }
 
     @Override
@@ -843,7 +853,7 @@ public class TypeChecker extends ChaiParserBaseVisitor<Type> {
         if (entries.size() == 0) {
             return new Type(Kind.LIST);
         }
-        
+
         // get the type for the first entry
         Type first = visit(entries.get(0));
 
