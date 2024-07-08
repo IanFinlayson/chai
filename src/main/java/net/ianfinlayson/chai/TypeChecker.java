@@ -1,11 +1,30 @@
 package net.ianfinlayson.chai;
 
 import java.util.List;
+import java.util.Stack;
+import java.util.HashMap;
 
 public class TypeChecker extends ChaiParserBaseVisitor<Type> {
     // each of these methods performs type checking in their part of the
     // tree, and returns they type of it (for expressions) or null (for stmts)
     // it throws exceptions for type errors that are encountered
+
+
+    // variables can be made constant, so this combines the value with that info
+    class Variable {
+        public Type type;
+        public boolean constant;
+
+        public Variable(Type type, boolean constant) {
+            this.type = type;
+            this.constant = constant;
+        }
+    }
+
+    // we keep track of the types of variables in functions and globals
+    private Stack<HashMap<String, Variable>> stack = new Stack<>();
+    private HashMap<String, Variable> globals = new HashMap<>();
+
 
     @Override
     public Type visitFunctiondef(ChaiParser.FunctiondefContext ctx) {
@@ -47,8 +66,6 @@ public class TypeChecker extends ChaiParserBaseVisitor<Type> {
         // TODO
         return null;
     }
-
-
 
 
 
@@ -143,51 +160,166 @@ public class TypeChecker extends ChaiParserBaseVisitor<Type> {
         return dict;
     }
 
+    @Override
+    public Type visitVarStatement(ChaiParser.VarStatementContext ctx) {
+        String name = ctx.IDNAME().getText();
 
+        // get the type of the expression being assigned
+        Type inferred = visit(ctx.expression());
+        if (ctx.type() != null) {
+            Type declared = visit(ctx.type());
+            if (!declared.equals(inferred)) {
+                throw new TypeMismatchException("Declared type '" + declared + "' does not match assigned type '" + inferred, ctx.getStart().getLine());
+            }
+        }
 
+        // check if it's declared as a constant
+        boolean constant = ctx.LET() != null;
 
+        // check if it exists first
+        // this prevents locals shadowing globals, which i think is good
+        if ((!stack.empty() && stack.peek().get(name) != null) || globals.get(name) != null) {
+            throw new TypeMismatchException("Variable " + name + " was already declared", ctx.getStart().getLine());
+        }
 
+        // actually write it into correct scope
+        if (!stack.empty()) {
+            stack.peek().put(name, new Variable(inferred, constant));
+        } else {
+            globals.put(name, new Variable(inferred, constant));
+        }
+
+        return null;
+    }
+
+    @Override
+    public Type visitIdTerm(ChaiParser.IdTermContext ctx) {
+        String name = ctx.IDNAME().getText();
+
+        // first look to see if it is in the top of the stack
+        if (!stack.empty()) {
+            Variable local = stack.peek().get(name);
+            if (local != null) {
+                return local.type;
+            }
+        }
+
+        // otherwise check globals
+        Variable global = globals.get(name);
+        if (global != null) {
+            return global.type;
+        }
+
+        throw new TypeMismatchException("Variable " + name + " was not declared in this scope", ctx.getStart().getLine());
+    }
 
 
 
     @Override
     public Type visitAssignStatement(ChaiParser.AssignStatementContext ctx) {
-        // TODO
+        // get the types for the destination and expression and make sure they match
+        Type dest = visit(ctx.lvalue());
+        Type result = visit(ctx.expression());
+
+        // make sure the types match up
+        if (!dest.equals(result)) {
+            throw new TypeMismatchException("Types in assignment do not match", ctx.getStart().getLine());
+        }
+
         return null;
     }
+
 
     @Override
     public Type visitNestedLvalue(ChaiParser.NestedLvalueContext ctx) {
-        // TODO
-        return null;
+        Type base = visit(ctx.lvalue());
+        Type index = visit(ctx.expression());
+        switch (base.getKind()) {
+            case STRING:
+                // make sure the index is an integer
+                if (index.getKind() != Kind.INT) {
+                    throw new TypeMismatchException("String index must be of integer type", ctx.getStart().getLine());
+                }
+                // return string
+                return base;
+            case LIST:
+                // make sure the index is an integer
+                if (index.getKind() != Kind.INT) {
+                    throw new TypeMismatchException("String index must be of integer type", ctx.getStart().getLine());
+                }
+                // return subtype
+                return base.getSubs().get(0);
+            case DICT:
+                // make sure index is sub0
+                if (!index.equals(base.getSubs().get(0))) {
+                    throw new TypeMismatchException("Incorrect index type on dictionary", ctx.getStart().getLine());
+                }
+
+                // return sub1
+                return base.getSubs().get(1);
+            default:
+                throw new TypeMismatchException("Cannot apply index operator to type", ctx.getStart().getLine());
+        }
     }
 
-    @Override
+	@Override
     public Type visitJustID(ChaiParser.JustIDContext ctx) {
-        // TODO
-        return null;
+        String name = ctx.IDNAME().getText();
+        Variable vari = null;
+
+        // find it on the stack or as a global
+        if (!stack.empty()) {
+            vari = stack.peek().get(name);
+        }
+        if (vari == null) {
+            vari = globals.get(name);
+        }
+
+        // if not found, that's an error
+        if (vari == null) {
+            throw new TypeMismatchException("Variable " + name + " was not declared in this scope", ctx.getStart().getLine());
+        }
+
+        // if it's constant, that's an error (this chain is only for assignment statements)
+        if (vari.constant) {
+            throw new TypeMismatchException("Attempt to reassign constat " + name, ctx.getStart().getLine());
+        }
+
+        return vari.type;
     }
+
+
+
+
 
     @Override
     public Type visitModassign(ChaiParser.ModassignContext ctx) {
+        Type dest = visit(ctx.lvalue());
+        Type rhs = visit(ctx.expression());
+
         // TODO
+        switch (ctx.op.getType()) {
+            case ChaiLexer.PLUSASSIGN:
+            case ChaiLexer.MINUSASSIGN:
+            case ChaiLexer.TIMESASSIGN:
+            case ChaiLexer.DIVASSIGN:
+            case ChaiLexer.MODASSIGN:
+            case ChaiLexer.INTDIVASSIGN:
+
+            // these ones must all be ints
+            case ChaiLexer.LSHIFTASSIGN:
+            case ChaiLexer.RSHIFTASSIGN:
+            case ChaiLexer.BITANDASSIGN:
+            case ChaiLexer.BITORASSIGN:
+            case ChaiLexer.BITXORASSIGN:
+                if (dest.getKind() != Kind.INT || rhs.getKind() != Kind.INT) {
+                    throw new TypeMismatchException("Bitwise operator ony applies to integer type", ctx.getStart().getLine());
+                }
+        }
+
         return null;
     }
 
-    @Override
-    public Type visitVarStatement(ChaiParser.VarStatementContext ctx) {
-        // TODO we also need to keep track of variables and shit
-
-        Type inferred = visit(ctx.expression());
-        if (ctx.type() != null) {
-            if (!visit(ctx.type()).equals(inferred)) {
-                throw new TypeMismatchException("Declared type '" + visit(ctx.type()) +
-                        "' does not match assigned type '" + inferred, ctx.getStart().getLine());
-            }
-        }
-
-        return inferred;
-    }
 
 
 
@@ -395,11 +527,17 @@ public class TypeChecker extends ChaiParserBaseVisitor<Type> {
 
         if (ctx.op.getType() == ChaiLexer.PLUS) {
             if (lhs.getKind() == Kind.LIST && rhs.getKind() == Kind.LIST) {
-                // must be same type of list
+                // must be compatible types
                 if (!lhs.equals(rhs)) {
                     throw new TypeMismatchException("List types for + operator do not match", ctx.getStart().getLine());
                 }
-                return lhs;
+
+                // one could be empty (or both i guess...) so we find the one that's not (if any)
+                if (lhs.getSubs() == null) {
+                    return rhs;
+                } else {
+                    return lhs;
+                }
             } else if (lhs.getKind() == Kind.STRING && rhs.getKind() == Kind.STRING) {
                 return new Type(Kind.STRING);
             } else if (lhs.getKind() == Kind.INT && rhs.getKind() == Kind.INT) {

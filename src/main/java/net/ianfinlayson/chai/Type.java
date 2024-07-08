@@ -23,29 +23,47 @@ public class Type {
     public boolean equals(Object o) {
         Type other = (Type) o;
 
+        // if different kinds, they dont match
         if (this.kind != other.kind) {
             return false;
         }
 
-        if (this.subtypes == null && other.subtypes == null) {
-            // if neither has subtypes, they match
-            return true;
-        } else if (this.subtypes == null || other.subtypes == null) {
-            // if one is missing subtypes, they don't match
-            return false;
-        } else if (this.subtypes.size() != other.subtypes.size()) {
-            // if different amount of subtypes, they don't match
-            return false;
-        }
+        switch (kind) {
+            // these are scalars, so they just match
+            case INT:
+            case FLOAT:
+            case BOOL:
+            case STRING:
+                return true;
 
-        // go through subtypes, if mismatch false
-        for (int i = 0; i < this.subtypes.size(); i++) {
-            if (!this.subtypes.get(i).equals(other.subtypes.get(i))) {
-                return false;
-            }
-        }
+                // if one or both are empty they match, if both filled they must be the same
+            case LIST:
+            case TUPLE:
+            case SET:
+                if  (this.subtypes == null || other.subtypes == null) {
+                    return true;
+                } else if (this.subtypes.get(0) == other.subtypes.get(0)) {
+                    return true;
+                } else {
+                    return false;
+                }
 
-        return true;
+                // if one or both are empty they match, if both filled they must be the same, but for both!
+            case DICT:
+                if  (this.subtypes == null || other.subtypes == null) {
+                    return true;
+                } else {
+                    if (this.subtypes.get(0) == other.subtypes.get(0) &&
+                            this.subtypes.get(1) == other.subtypes.get(1)) {
+                        return true;
+                    } else {
+                        return false;
+                    }
+                }
+
+            default:
+                throw new RuntimeException("Unhandled type in type equality method");
+        }
     }
 
     public void addSub(Type t) {
@@ -69,7 +87,11 @@ public class Type {
             case SET:
                 return "{" + subtypes.get(0) + "}";
             case LIST:
-                return "[" + subtypes.get(0) + "]";
+                if (subtypes == null) {
+                    return "[]";
+                } else {
+                    return "[" + subtypes.get(0) + "]";
+                }
             case DICT:
                 return "{" + subtypes.get(0) + ": " + subtypes.get(1) + "}";
             case TUPLE:

@@ -41,21 +41,10 @@ class FunctionReturn extends RuntimeException {
     }
 }
 
-// variables can be made constant, so this combines the value with that info
-class Variable {
-    public Value value;
-    public boolean constant;
-
-    public Variable(Value value) {
-        this.value = value;
-        this.constant = false;
-    }
-}
-
 public class Executor extends ChaiParserBaseVisitor<Value> {
     //private Scanner input = new Scanner(System.in);
-    private Stack<HashMap<String, Variable>> stack = new Stack<>();
-    private HashMap<String, Variable> globals = new HashMap<>();
+    private Stack<HashMap<String, Value>> stack = new Stack<>();
+    private HashMap<String, Value> globals = new HashMap<>();
     private CharStream stream;
 
     // we keep a reference to the char stream for reporting the text that produces
@@ -74,7 +63,7 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
         }
 
         // make a stack frame and call it
-        stack.push(new HashMap<String, Variable>());
+        stack.push(new HashMap<String, Value>());
         try {
             visit(functions.get("main").statements());
         } catch (AssertException e) {
@@ -87,21 +76,21 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
     private Value loadVar(String name) {
         if (!stack.empty()) {
             if (stack.peek().get(name) != null) {
-                return stack.peek().get(name).value;
+                return stack.peek().get(name);
             }
         }
 
         if (globals.get(name) != null) {
-            return globals.get(name).value;
+            return globals.get(name);
         }
 
         return null;
     }
 
     // put a var -- again into the top function if there is one, or global
-    private void putVar(String name, Value val, boolean constant) {
+    private void putVar(String name, Value val) {
         // check if it exists first
-        Variable exiting = null;
+        Value exiting = null;
         if (!stack.empty()) {
             if (stack.peek().get(name) != null) {
                 exiting = stack.peek().get(name);
@@ -111,20 +100,11 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
             exiting = globals.get(name);
         }
 
-        // if it exists and is constant, error
-        if (exiting != null && exiting.constant) {
-            throw new RuntimeException("Constant value being re-assigned");
-        }
-
-        // keep track of the constant information and val
-        Variable v = new Variable(val);
-        v.constant = constant;
-
         // actually write it into correct scope
         if (!stack.empty()) {
-            stack.peek().put(name, v);
+            stack.peek().put(name, val);
         } else {
-            globals.put(name, v);
+            globals.put(name, val);
         }
     }
 
@@ -159,7 +139,7 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
             if (loadVar(name) == null) {
                 throw new RuntimeException("Variable '" + name + "' assigned without being declared");
             } else {
-                putVar(name, val, false);
+                putVar(name, val);
             }
         } else {
             // it's a list/set/dict assignment, and is possibly nested
@@ -227,7 +207,6 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
 	@Override
     public Value visitVarStatement(ChaiParser.VarStatementContext ctx) {
         // get the parts out
-        boolean constant = ctx.LET() != null;
         String name = ctx.IDNAME().getText();
         Value val = visit(ctx.expression());
 
@@ -237,7 +216,7 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
         }
 
         // add this as a variable
-        putVar(name, val, constant);
+        putVar(name, val);
         return null;
     }
 
@@ -287,7 +266,7 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
         Stepper it = new Stepper(collection);
         while (!it.done()) {
             // assign the var, run the stmts
-            putVar(inductionVar, it.next(), false);
+            putVar(inductionVar, it.next());
             visit(ctx.statements());
         }
 
@@ -427,7 +406,7 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
 
     // assign parameters for a function
     // this takes into account keyword style parameters and default values
-    private void assignArgs(ChaiParser.ArglistContext args, ChaiParser.ParamlistContext formals, HashMap<String, Variable> scope) {
+    private void assignArgs(ChaiParser.ArglistContext args, ChaiParser.ParamlistContext formals, HashMap<String, Value> scope) {
 
         // step 1: go through args looking for named ones, and assign those into formals w/ same name
         // if name does not exist, that's an error
@@ -449,7 +428,7 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
 
                         if (formalName.equals(arg.IDNAME().getText())) {
                             // assign it
-                            scope.put(formalName, new Variable(val));
+                            scope.put(formalName, val);
                             done = true;
                             break;
                         }
@@ -488,7 +467,7 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
                     }
 
                     // do the assignment
-                    scope.put(formalName, new Variable(val));
+                    scope.put(formalName, val);
                 }
             }
         }
@@ -502,7 +481,7 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
                 if (scope.get(formalName) == null) {
                     // eval the default param and stick it into the scope
                     Value val = visit(((ChaiParser.DefaultParamContext) (param)).term());
-                    scope.put(formalName, new Variable(val));
+                    scope.put(formalName, val);
                 }
             }
         }
@@ -542,7 +521,7 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
         }
 
         // this function makes a new symbol table for locals
-        HashMap<String, Variable> scope = new HashMap<>();
+        HashMap<String, Value> scope = new HashMap<>();
 
         // next we need to evaluate expressions in args into formals, if there are formals
         if (func.paramlist() != null) {
@@ -782,7 +761,7 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
         // next we go through each thing
         for (Value val : starters) {
             // make this variable and give it the value
-            putVar(genVar, val, false);
+            putVar(genVar, val);
 
             // check the condition, if it exists
             if (exprs.size() == 3) {
