@@ -14,10 +14,12 @@ public class TypeChecker extends ChaiParserBaseVisitor<Type> {
     class Variable {
         public Type type;
         public boolean constant;
+        public int declared_line;
 
-        public Variable(Type type, boolean constant) {
+        public Variable(Type type, boolean constant, int line) {
             this.type = type;
             this.constant = constant;
+            this.declared_line = line;
         }
     }
 
@@ -26,11 +28,60 @@ public class TypeChecker extends ChaiParserBaseVisitor<Type> {
     private HashMap<String, Variable> globals = new HashMap<>();
 
 
+    private Variable loadVar(String name) {
+        // first look to see if it is in the top of the stack
+        if (!stack.empty()) {
+            Variable local = stack.peek().get(name);
+            if (local != null) {
+                return local;
+            }
+        }
+
+        // otherwise check globals
+        Variable global = globals.get(name);
+        if (global != null) {
+            return global;
+        }
+
+        return null;
+    }
+
+    private void putVar(String name, Type type, boolean constant, int line) {
+        // check if it exists first
+        // this prevents locals shadowing globals, which i think is good
+        if ((!stack.empty() && stack.peek().get(name) != null) || globals.get(name) != null) {
+            throw new TypeMismatchException("Variable " + name + " was already declared", line);
+        }
+
+        // actually write it into correct scope
+        if (!stack.empty()) {
+            stack.peek().put(name, new Variable(type, constant, line));
+        } else {
+            globals.put(name, new Variable(type, constant, line));
+        }
+    }
+
+    private void nixVar(String name) {
+        if (!stack.empty()) {
+            if (stack.peek().get(name) != null) {
+                stack.peek().remove(name);
+                return;
+            }
+        }
+
+        if (globals.get(name) != null) {
+            globals.remove(name);
+        }
+    }
+
     @Override
     public Type visitFunctiondef(ChaiParser.FunctiondefContext ctx) {
         // TODO we should also register this function with its types!
         // for now, just visit all the statements in this funciton, type checking them
+
+        stack.push(new HashMap<String, Variable>());
         visit(ctx.statements());
+        stack.pop();
         return null;
     }
 
@@ -176,19 +227,8 @@ public class TypeChecker extends ChaiParserBaseVisitor<Type> {
         // check if it's declared as a constant
         boolean constant = ctx.LET() != null;
 
-        // check if it exists first
-        // this prevents locals shadowing globals, which i think is good
-        if ((!stack.empty() && stack.peek().get(name) != null) || globals.get(name) != null) {
-            throw new TypeMismatchException("Variable " + name + " was already declared", ctx.getStart().getLine());
-        }
-
-        // actually write it into correct scope
-        if (!stack.empty()) {
-            stack.peek().put(name, new Variable(inferred, constant));
-        } else {
-            globals.put(name, new Variable(inferred, constant));
-        }
-
+        // put it into the scope
+        putVar(name, inferred, constant, ctx.getStart().getLine());
         return null;
     }
 
@@ -196,21 +236,14 @@ public class TypeChecker extends ChaiParserBaseVisitor<Type> {
     public Type visitIdTerm(ChaiParser.IdTermContext ctx) {
         String name = ctx.IDNAME().getText();
 
-        // first look to see if it is in the top of the stack
-        if (!stack.empty()) {
-            Variable local = stack.peek().get(name);
-            if (local != null) {
-                return local.type;
-            }
-        }
+        // grab the variable
+        Variable vari = loadVar(name);
 
-        // otherwise check globals
-        Variable global = globals.get(name);
-        if (global != null) {
-            return global.type;
+        if (vari == null) {
+            throw new TypeMismatchException("Variable " + name + " was not declared in this scope", ctx.getStart().getLine());
+        } else {
+            return vari.type;
         }
-
-        throw new TypeMismatchException("Variable " + name + " was not declared in this scope", ctx.getStart().getLine());
     }
 
     @Override
@@ -290,6 +323,7 @@ public class TypeChecker extends ChaiParserBaseVisitor<Type> {
         return t.getKind() == Kind.INT || t.getKind() == Kind.FLOAT;
     }
 
+    // TODO these are too loose!  a float CANT be modassigned into an int!
     @Override
     public Type visitModassign(ChaiParser.ModassignContext ctx) {
         Type dest = visit(ctx.lvalue());
@@ -358,24 +392,56 @@ public class TypeChecker extends ChaiParserBaseVisitor<Type> {
 
     @Override
     public Type visitForStatement(ChaiParser.ForStatementContext ctx) {
-        // TODO we also need to track the variable produced
-
-        // make sure that the expression is iterable
+        // we need to make the induction variable with the right type, then type check the body
+        // and then remove the induction variable again
         Type it = visit(ctx.expression());
 
+        // get the type of the induction variable
+        Type indType = null;
         switch (it.getKind()) {
             case STRING:
+                indType = new Type(Kind.STRING);
+                break;
             case LIST:
+                if (it.getSubs() != null) {
+                    indType = it.getSubs().get(0);
+                } else {
+                    // why would someone loop through []?
+                    indType = new Type(Kind.LIST);
+                }
+                break;
             case DICT:
+                indType = new Type(Kind.TUPLE);
+                indType.addSub(it.getSubs().get(0));
+                indType.addSub(it.getSubs().get(1));
+                break;
             case SET:
-                // these are ok
+                if (it.getSubs() != null) {
+                    indType = it.getSubs().get(0);
+                } else {
+                    // why would someone loop through {}?
+                    indType = new Type(Kind.SET);
+                }
                 break;
             default:
                 throw new TypeMismatchException("Value in for loop is not iterable", ctx.getStart().getLine());
         }
 
+        // make sure the variable does not already exist
+        String indVar = ctx.IDNAME().getText();
+        if (loadVar(indVar) != null) {
+            throw new TypeMismatchException("For loop variable " + indVar + " already exists", ctx.getStart().getLine());
+        }
+
+        // make it
+        putVar(indVar, indType, false, ctx.getStart().getLine());
+
         // go through all of the statements
         visit(ctx.statements());
+
+        // remove it
+        nixVar(indVar);
+
         return null;
     }
 
@@ -655,9 +721,6 @@ public class TypeChecker extends ChaiParserBaseVisitor<Type> {
 
     // private method used for 'in' and 'not in' checks
     private Type checkInExpression(Type item, Type collection, int line) {
-        System.out.println(item);
-        System.out.println(collection);
-
         switch (collection.getKind()) {
             case STRING:
                 // the item must be a string
@@ -670,8 +733,6 @@ public class TypeChecker extends ChaiParserBaseVisitor<Type> {
             case DICT:
                 // the item must match the (first) subtype, or the subtype can be empty
                 if (collection.getSubs() != null && !item.equals(collection.getSubs().get(0))) {
-                    System.out.println(item);
-                    System.out.println(collection.getSubs().get(0));
                     throw new TypeMismatchException("Search type does not match collection type in 'in' expression", line);
                 }
                 break;
@@ -779,9 +840,38 @@ public class TypeChecker extends ChaiParserBaseVisitor<Type> {
 
     @Override
     public Type visitListcompTerm(ChaiParser.ListcompTermContext ctx) {
-        // TODO
         // LBRACK expression FOR IDNAME IN expression (IF expression)? RBRACK    # listcompTerm
-        return null;
+        // find the name of the induction var and the list being pulled from
+        String indVar = ctx.IDNAME().getText();
+        Type list = visit(ctx.expression(1));
+
+        // find the type of the induction variable based on the range which is given
+        if (list.getKind() != Kind.LIST) {
+            throw new TypeMismatchException("Source of list comprehension must be list type", ctx.getStart().getLine());
+        }
+
+        // add the induction variable into this scope
+        System.out.println("Found induction var of type " + list.getSubs().get(0));
+        putVar(indVar, list.getSubs().get(0), false, ctx.getStart().getLine());
+
+        // type check the generating expression
+        Type generator = visit(ctx.expression(0));
+        
+        // if there is a predicate, type check it, and make sure it's of bool type
+        if (ctx.expression(2) != null) {
+            Type predicate = visit(ctx.expression(2));
+            if (predicate.getKind() != Kind.BOOL) {
+                throw new TypeMismatchException("The predicate of a list comprehension must be boolean type", ctx.getStart().getLine());
+            }
+        }
+
+        // remove the induction variable
+        nixVar(indVar);
+
+        // the type is a list of whatever the generating exprssion type is
+        Type listcomp = new Type(Kind.LIST);
+        listcomp.addSub(generator);
+        return listcomp;
     }
 
     @Override

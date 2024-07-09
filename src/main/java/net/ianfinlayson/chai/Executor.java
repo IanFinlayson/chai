@@ -210,12 +210,7 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
         String name = ctx.IDNAME().getText();
         Value val = visit(ctx.expression());
 
-        // make sure this variable does not already exist
-        if (loadVar(name) != null) {
-            throw new RuntimeException("Variable '" + name + "' already exists");
-        }
-
-        // add this as a variable
+        // add this as a variable (or set it again if we're in a loop)
         putVar(name, val);
         return null;
     }
