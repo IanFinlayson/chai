@@ -1,11 +1,8 @@
 Type checking:
-    - amt needs to remain an int:
-      var amt = 10
-      amt += 4.5
-
-    Does casting the result from int -> float make sense though??
+    - get functions to work with type checker!
 
 Immediate:
+    - function types
     - match statement
     - destructures:
         - cons

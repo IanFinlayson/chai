@@ -323,7 +323,6 @@ public class TypeChecker extends ChaiParserBaseVisitor<Type> {
         return t.getKind() == Kind.INT || t.getKind() == Kind.FLOAT;
     }
 
-    // TODO these are too loose!  a float CANT be modassigned into an int!
     @Override
     public Type visitModassign(ChaiParser.ModassignContext ctx) {
         Type dest = visit(ctx.lvalue());
@@ -332,7 +331,9 @@ public class TypeChecker extends ChaiParserBaseVisitor<Type> {
         switch (ctx.op.getType()) {
             // both numbers, both strings, both matching lists
             case ChaiLexer.PLUSASSIGN:
-                if (numberType(dest) && numberType(rhs)) {
+                if (dest.getKind() == Kind.INT && rhs.getKind() == Kind.INT) {
+                    // this is cool
+                } else if (dest.getKind() == Kind.FLOAT && numberType(rhs)) {
                     // this is ok
                 } else if (dest.getKind() == Kind.STRING && rhs.getKind() == Kind.STRING) {
                     // fine too
@@ -345,7 +346,9 @@ public class TypeChecker extends ChaiParserBaseVisitor<Type> {
 
             // both numbers, dest list/string and rhs int
             case ChaiLexer.TIMESASSIGN:
-                if (numberType(dest) && numberType(rhs)) {
+                if (dest.getKind() == Kind.INT && rhs.getKind() == Kind.INT) {
+                    // this is cool
+                } else if (dest.getKind() == Kind.FLOAT && numberType(rhs)) {
                     // this is ok
                 } else if ((dest.getKind() == Kind.STRING || dest.getKind() == Kind.LIST) && rhs.getKind() == Kind.INT) {
                     // this is ok too
@@ -359,7 +362,11 @@ public class TypeChecker extends ChaiParserBaseVisitor<Type> {
             case ChaiLexer.DIVASSIGN:
             case ChaiLexer.MODASSIGN:
             case ChaiLexer.INTDIVASSIGN:
-                if (!numberType(dest) || !numberType(rhs)) {
+                if (dest.getKind() == Kind.INT && rhs.getKind() == Kind.INT) {
+                    // this is cool
+                } else if (dest.getKind() == Kind.FLOAT && numberType(rhs)) {
+                    // this is ok
+                } else {
                     throw new TypeMismatchException("Unsupported types for assignment operation", ctx.getStart().getLine());
                 }
                 break;
