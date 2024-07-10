@@ -1,6 +1,7 @@
 package net.ianfinlayson.chai;
 
 import java.util.List;
+import java.util.ArrayList;
 import java.util.Stack;
 import java.util.HashMap;
 
@@ -26,7 +27,6 @@ public class TypeChecker extends ChaiParserBaseVisitor<Type> {
     // we keep track of the types of variables in functions and globals
     private Stack<HashMap<String, Variable>> stack = new Stack<>();
     private HashMap<String, Variable> globals = new HashMap<>();
-
 
     private Variable loadVar(String name) {
         // first look to see if it is in the top of the stack
@@ -74,47 +74,120 @@ public class TypeChecker extends ChaiParserBaseVisitor<Type> {
         }
     }
 
+    class Parameter {
+        public String name;
+        public Type type;
+        public boolean defaultValue;
+
+        public Parameter(String name, Type type, boolean defaultValue) {
+            this.name = name;
+            this.type = type;
+            this.defaultValue = defaultValue;
+        }
+
+        @Override
+        public String toString() {
+            return "(" + name + ", " + type + ", " + defaultValue + ")";
+        }
+    }
+
+    // we keep track of all the types for functions
+    class Function {
+        public String name;
+        public Type returnType;
+        public ArrayList<Parameter> parameters;
+
+        public Function(String name) {
+            this.name = name;
+            this.returnType = null;
+            this.parameters = new ArrayList<>();
+        }
+    }
+
+    // this is used to keep track of function types so we can check the calls
+    HashMap<String, Function> functions = new HashMap<>();
+
+    // this is used so we know what function we're in so we can check returns
+    Stack<Function> currentFunctions = new Stack<>();
+
     @Override
     public Type visitFunctiondef(ChaiParser.FunctiondefContext ctx) {
-        // TODO we should also register this function with its types!
-        // for now, just visit all the statements in this funciton, type checking them
+        // grab the name and setup a function for it
+        String name = ctx.IDNAME().getText();
+        Function func = new Function(name);
+        currentFunctions.push(func);
 
+        // get the parameters
+        if (ctx.paramlist() != null) {
+            List<ChaiParser.ParamContext> params = ctx.paramlist().param();
+            for (ChaiParser.ParamContext param : params) {
+                if (param instanceof ChaiParser.NamedParamContext) {
+                    ChaiParser.NamedParamContext np = (ChaiParser.NamedParamContext) param;
+
+                    // put in the parameter with no default value
+                    func.parameters.add(new Parameter(np.IDNAME().getText(), visit(np.type()), false));
+                } else {
+                    ChaiParser.DefaultParamContext dp = (ChaiParser.DefaultParamContext) param;
+                    
+                    // get the pieces
+                    String pname = dp.IDNAME().getText();
+                    Type inferred = visit(dp.term());
+                    
+                    // if given a type, we type-check it
+                    if (dp.type() != null) {
+                        if (!inferred.equals(visit(dp.type()))) {
+                            throw new TypeMismatchException("Given type of paramter '" + pname +"' does not match actual type",
+                                    ctx.getStart().getLine());
+                        }
+                    }
+
+                    // put it in
+                    func.parameters.add(new Parameter(pname, inferred, true));
+                }
+            }
+        }
+
+        // get the return type for it (maybe null)
+        if (ctx.type() == null) {
+            func.returnType = null;
+        } else {
+            func.returnType = visit(ctx.type());
+        }
+
+        // add it to the map of functions
+        functions.put(name, func);
+
+        // make a scope for this function and then type check it
         stack.push(new HashMap<String, Variable>());
         visit(ctx.statements());
         stack.pop();
+        currentFunctions.pop();
         return null;
     }
-
-    @Override
-    public Type visitParamlist(ChaiParser.ParamlistContext ctx) {
-        // TODO
-        return null;
-    }
-
-    @Override
-    public Type visitNamedParam(ChaiParser.NamedParamContext ctx) {
-        // TODO
-        return null;
-    }
-
-    @Override
-    public Type visitDefaultParam(ChaiParser.DefaultParamContext ctx) {
-        // TODO
-        return null;
-    }
-
-
-
-
-
-
-
-
-
 
     @Override
     public Type visitReturnStatement(ChaiParser.ReturnStatementContext ctx) {
-        // TODO
+        // make sure we are in a function
+        if (currentFunctions.empty()) {
+            throw new TypeMismatchException("Return encountered outside of a function", ctx.getStart().getLine());
+        }
+
+        // if there is no return type, make sure the function is void
+        if (ctx.expression() == null) {
+            if (currentFunctions.peek().returnType != null) {
+                throw new TypeMismatchException("Function returns a value but none given", ctx.getStart().getLine());
+            }
+        }
+
+        // if there is a return type, make sure it matches the function type
+        else {
+            Type givenValue = visit(ctx.expression());
+            if (!givenValue.equals(currentFunctions.peek().returnType)) {
+                throw new TypeMismatchException("Return value does match the function type", ctx.getStart().getLine());
+            }
+
+        }
+
         return null;
     }
 
