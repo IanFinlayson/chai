@@ -78,11 +78,13 @@ public class TypeChecker extends ChaiParserBaseVisitor<Type> {
         public String name;
         public Type type;
         public boolean defaultValue;
+        public boolean assigned;
 
         public Parameter(String name, Type type, boolean defaultValue) {
             this.name = name;
             this.type = type;
             this.defaultValue = defaultValue;
+            this.assigned = false;
         }
 
         @Override
@@ -101,6 +103,13 @@ public class TypeChecker extends ChaiParserBaseVisitor<Type> {
             this.name = name;
             this.returnType = null;
             this.parameters = new ArrayList<>();
+        }
+
+        // reset all params to un-assigned so we can type check the next call
+        public void reset() {
+            for (Parameter p : parameters) {
+                p.assigned = false;
+            }
         }
     }
 
@@ -201,31 +210,93 @@ public class TypeChecker extends ChaiParserBaseVisitor<Type> {
 
 
 
+
     @Override
     public Type visitFunctioncall(ChaiParser.FunctioncallContext ctx) {
-        // TODO
-        return null;
+        // functioncall: IDNAME LPAREN arglist? RPAREN;
+        List<ChaiParser.ArgumentContext> args;
+        if (ctx.arglist() != null) {
+           args = ctx.arglist().argument();
+        } else {
+            args = new ArrayList<>();
+        }
+
+        // TODO handle library functions
+
+        // get the function that we are calling
+        String name = ctx.IDNAME().getText();
+        Function callee = functions.get(name);
+        if (callee == null) {
+            throw new TypeMismatchException("Function '" + name +"' not found", ctx.getStart().getLine());
+        }
+        callee.reset();
+        
+        for (ChaiParser.ArgumentContext arg : args) {
+            System.out.println("\t" + visit(arg.expression()) + (arg.IDNAME() == null ? "(no name)" : "(" + arg.IDNAME().getText() + ")"));
+        }
+
+        // step 1: go through args looking for named ones, and assign those into formals w/ same name
+        for (ChaiParser.ArgumentContext arg : args) {
+            if (arg.IDNAME() != null) {
+                String argname = arg.IDNAME().getText();
+
+                // find it in the list of formal params
+                boolean found = false;
+                for (Parameter formal : callee.parameters) {
+                    if (formal.name.equals(argname)) {
+                        formal.assigned = true;
+                        found = true;
+
+                        // ensure types match
+                        if (!formal.type.equals(visit(arg.expression()))) {
+                            throw new TypeMismatchException("Named argument '" + argname +"' does not match expected type", ctx.getStart().getLine());
+                        }
+                        break;
+                    }
+                }
+                if (!found) {
+                    throw new TypeMismatchException("Named argument '" + argname +"' not found in formals", ctx.getStart().getLine());
+                }
+            }
+        }
+
+        // step 2: go through args looking for unnamed ones, and assign positionally to unassigned formals
+        for (ChaiParser.ArgumentContext arg : args) {
+            if (arg.IDNAME() == null) {
+                boolean done = false;
+                for (Parameter formal : callee.parameters) {
+                    if (!formal.assigned) {
+                        // ensure types match
+                        if (!formal.type.equals(visit(arg.expression()))) {
+                            throw new TypeMismatchException("Positional argument does not match expected type", ctx.getStart().getLine());
+                        }
+
+                        formal.assigned = true;
+                        done = true;
+                        break;
+                    }
+                }
+                if (!done) {
+                    throw new TypeMismatchException("Too many arguments given to function", ctx.getStart().getLine());
+                }
+            }
+        }
+
+        // step 3: go through formals and assign un-assigned ones their default params
+        // if they don't ave one, that's an error (for now -- lter they will be curried functions!)
+        for (Parameter formal : callee.parameters) {
+            if (!formal.assigned) {
+                if (formal.defaultValue) {
+                    formal.assigned = true;
+                } else {
+                    throw new TypeMismatchException("Not enough arguments given to function", ctx.getStart().getLine());
+                }
+            }
+        }
+
+        // the type of the call is the return value of the function
+        return callee.returnType;
     }
-
-    @Override
-    public Type visitArglist(ChaiParser.ArglistContext ctx) {
-        // TODO
-        return null;
-    }
-
-    @Override
-    public Type visitArgument(ChaiParser.ArgumentContext ctx) {
-        // TODO
-        return null;
-    }
-
-
-
-
-
-
-
-
 
     @Override
     public Type visitFloatType(ChaiParser.FloatTypeContext ctx) {
@@ -1105,4 +1176,3 @@ public class TypeChecker extends ChaiParserBaseVisitor<Type> {
         return new Type(Kind.BOOL);
     }
 }
-
