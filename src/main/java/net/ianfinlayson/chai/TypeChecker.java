@@ -166,9 +166,18 @@ public class TypeChecker extends ChaiParserBaseVisitor<Type> {
         // add it to the map of functions
         functions.put(name, func);
 
-        // make a scope for this function and then type check it
+        // make a scope for this function
         stack.push(new HashMap<String, Variable>());
+
+        // add the parameters into the scope
+        for (Parameter param : func.parameters) {
+            putVar(param.name, param.type, false, ctx.getStart().getLine());
+        }
+
+        // type check the function body
         visit(ctx.statements());
+
+        // get rid of the stack frames
         stack.pop();
         currentFunctions.pop();
         return null;
@@ -200,17 +209,6 @@ public class TypeChecker extends ChaiParserBaseVisitor<Type> {
         return null;
     }
 
-
-
-
-
-
-
-
-
-
-
-
     @Override
     public Type visitFunctioncall(ChaiParser.FunctioncallContext ctx) {
         // functioncall: IDNAME LPAREN arglist? RPAREN;
@@ -231,10 +229,6 @@ public class TypeChecker extends ChaiParserBaseVisitor<Type> {
         }
         callee.reset();
         
-        for (ChaiParser.ArgumentContext arg : args) {
-            System.out.println("\t" + visit(arg.expression()) + (arg.IDNAME() == null ? "(no name)" : "(" + arg.IDNAME().getText() + ")"));
-        }
-
         // step 1: go through args looking for named ones, and assign those into formals w/ same name
         for (ChaiParser.ArgumentContext arg : args) {
             if (arg.IDNAME() != null) {
@@ -283,7 +277,7 @@ public class TypeChecker extends ChaiParserBaseVisitor<Type> {
         }
 
         // step 3: go through formals and assign un-assigned ones their default params
-        // if they don't ave one, that's an error (for now -- lter they will be curried functions!)
+        // if they don't ave one, that's an error (for now -- later they will be curried functions!)
         for (Parameter formal : callee.parameters) {
             if (!formal.assigned) {
                 if (formal.defaultValue) {

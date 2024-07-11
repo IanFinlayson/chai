@@ -1,5 +1,5 @@
 Type checking:
-    - get functions to work with type checker!
+    - type checking of library functions
 
 Immediate:
     - function types
