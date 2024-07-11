@@ -211,7 +211,10 @@ public class TypeChecker extends ChaiParserBaseVisitor<Type> {
 
     @Override
     public Type visitFunctioncall(ChaiParser.FunctioncallContext ctx) {
-        // functioncall: IDNAME LPAREN arglist? RPAREN;
+        // grab the function name
+        String name = ctx.IDNAME().getText();
+
+        // get the arguments
         List<ChaiParser.ArgumentContext> args;
         if (ctx.arglist() != null) {
            args = ctx.arglist().argument();
@@ -219,10 +222,14 @@ public class TypeChecker extends ChaiParserBaseVisitor<Type> {
             args = new ArrayList<>();
         }
 
-        // TODO handle library functions
+        // handle library functions
+        switch (name) {
+            case "print": return checkPrint(args, ctx.getStart().getLine());
+            case "input": return checkInput(args, ctx.getStart().getLine());
+            case "len": return checkLen(args, ctx.getStart().getLine());
+        }
 
         // get the function that we are calling
-        String name = ctx.IDNAME().getText();
         Function callee = functions.get(name);
         if (callee == null) {
             throw new TypeMismatchException("Function '" + name +"' not found", ctx.getStart().getLine());
@@ -290,6 +297,35 @@ public class TypeChecker extends ChaiParserBaseVisitor<Type> {
 
         // the type of the call is the return value of the function
         return callee.returnType;
+    }
+
+    private Type checkPrint(List<ChaiParser.ArgumentContext> args, int line)  {
+        // scan for the end and sep keywords, other than that, fair game
+        for (ChaiParser.ArgumentContext arg : args) {
+            if (arg.IDNAME() != null) {
+                if (arg.IDNAME().getText().equals("end") || arg.IDNAME().getText().equals("sep")) {
+                    if (visit(arg.expression()).getKind() != Kind.STRING) {
+                        throw new TypeMismatchException("Key word argument '" + arg.IDNAME().getText() + "' must be of type string", line);
+                    }
+                }
+            }
+        }
+
+        return null;
+    }
+    private Type checkInput(List<ChaiParser.ArgumentContext> args, int line) {
+        if (args.size() != 1) {
+            throw new TypeMismatchException("Too " + (args.size() == 0 ? "few" : "many") + " arguments given to input", line);
+        }
+        if (visit(args.get(0).expression()).getKind() != Kind.STRING) {
+            throw new TypeMismatchException("Argument to input must be of type String", line);
+        }
+
+        return new Type(Kind.STRING);
+    }
+    private Type checkLen(List<ChaiParser.ArgumentContext> args, int line) {
+        // TODO
+        return null;
     }
 
     @Override
@@ -1168,5 +1204,8 @@ public class TypeChecker extends ChaiParserBaseVisitor<Type> {
     @Override
     public Type visitFalseLiteral(ChaiParser.FalseLiteralContext ctx) {
         return new Type(Kind.BOOL);
+    }
+	@Override public Type visitParensTerm(ChaiParser.ParensTermContext ctx) {
+        return visit(ctx.expression());
     }
 }
