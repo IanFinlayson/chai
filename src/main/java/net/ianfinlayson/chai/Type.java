@@ -53,8 +53,8 @@ public class Type {
                 if  (this.subtypes == null || other.subtypes == null) {
                     return true;
                 } else {
-                    if (this.subtypes.get(0) == other.subtypes.get(0) &&
-                            this.subtypes.get(1) == other.subtypes.get(1)) {
+                    if (this.subtypes.get(0).equals(other.subtypes.get(0)) &&
+                            this.subtypes.get(1).equals(other.subtypes.get(1))) {
                         return true;
                     } else {
                         return false;

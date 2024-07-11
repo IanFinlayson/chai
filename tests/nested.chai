@@ -1,10 +1,10 @@
 def main():
-    let maps = [{"a": 1, "b": 2}, {"c": 3, "d": 4, "e": 5}, {:}]
+    var maps = [{"a": 1, "b": 2}, {"c": 3, "d": 4, "e": 5}, {:}]
     maps[1]["f"] = 6
     print(maps[0]["b"])
     print(maps)
     
-    let nums = {"ian": [26, 10, 84], "caitie": [9, 10, 84]}
+    var nums = {"ian": [26, 10, 84], "caitie": [9, 10, 84]}
     nums["ryan"] = [28, 3, 12]
     nums["caitie"] += [19]
     print(nums)

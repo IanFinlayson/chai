@@ -324,8 +324,20 @@ public class TypeChecker extends ChaiParserBaseVisitor<Type> {
         return new Type(Kind.STRING);
     }
     private Type checkLen(List<ChaiParser.ArgumentContext> args, int line) {
-        // TODO
-        return null;
+        if (args.size() != 1) {
+            throw new TypeMismatchException("Too " + (args.size() == 0 ? "few" : "many") + " arguments given to len", line);
+        }
+        switch (visit(args.get(0)).getKind()) {
+            case STRING:
+            case LIST:
+            case DICT:
+            case TUPLE:
+            case SET:
+                // these are OK
+                return new Type(Kind.INT);
+            default:
+                throw new TypeMismatchException("Cannot take length of scalar value", line);
+        }
     }
 
     @Override
@@ -360,7 +372,7 @@ public class TypeChecker extends ChaiParserBaseVisitor<Type> {
 
     @Override
     public Type visitSetType(ChaiParser.SetTypeContext ctx) {
-        Type set = new Type(Kind.LIST);
+        Type set = new Type(Kind.SET);
         set.addSub(visit(ctx.type()));
         return set;
     }
@@ -1032,7 +1044,6 @@ public class TypeChecker extends ChaiParserBaseVisitor<Type> {
         }
 
         // add the induction variable into this scope
-        System.out.println("Found induction var of type " + list.getSubs().get(0));
         putVar(indVar, list.getSubs().get(0), false, ctx.getStart().getLine());
 
         // type check the generating expression
