@@ -200,7 +200,7 @@ public class TypeChecker extends ChaiParserBaseVisitor<Type> {
         // if there is a return type, make sure it matches the function type
         else {
             Type givenValue = visit(ctx.expression());
-            if (!givenValue.equals(currentFunctions.peek().returnType)) {
+            if (currentFunctions.peek().returnType == null || !givenValue.equals(currentFunctions.peek().returnType)) {
                 throw new TypeMismatchException("Return value does match the function type", ctx.getStart().getLine());
             }
 
