@@ -480,16 +480,9 @@ public class TypeChecker extends ChaiParserBaseVisitor<Type> {
 
 	@Override
     public Type visitJustID(ChaiParser.JustIDContext ctx) {
+        // lookup the variable
         String name = ctx.IDNAME().getText();
-        Variable vari = null;
-
-        // find it on the stack or as a global
-        if (!stack.empty()) {
-            vari = stack.peek().get(name);
-        }
-        if (vari == null) {
-            vari = globals.get(name);
-        }
+        Variable vari = loadVar(name);
 
         // if not found, that's an error
         if (vari == null) {
@@ -503,6 +496,80 @@ public class TypeChecker extends ChaiParserBaseVisitor<Type> {
 
         return vari.type;
     }
+
+	@Override
+    public Type visitMatchStatment(ChaiParser.MatchStatmentContext ctx) {
+        // MATCH expression COLON NEWLINE INDENT caseline+ DEDENT           # matchStatment
+        
+        // get the type of the expression
+        Type expr = visit(ctx.expression());
+
+        // for each case line
+        for (ChaiParser.CaselineContext caseline : ctx.caseline()) {
+            // get the type of the case line thingy, ensure match
+            Type destr = visit(caseline.destructure());
+            if (!destr.equals(expr)) {
+                throw new TypeMismatchException("Cannot match types in match statement", caseline.getStart().getLine());
+            }
+
+            // TODO some can introduce variable bindings!!!???
+            // if we put them in below, how do we take them back out??
+
+            // type check the statements under it
+            visit(caseline.statements());
+        }
+
+        return null;
+    }
+
+	@Override
+    public Type visitLiteralDestr(ChaiParser.LiteralDestrContext ctx) {
+        return visit(ctx.literal());
+    }
+
+/*
+destructure: ID                                                 # idDestr
+           | USCORE                                             # uscoreDestr
+           | LPAREN (destructure COMMA)+ destructure RPAREN     # tupleDestr
+           | destructure (CONS destructure)+                    # consDestr
+           | LBRACK (destructure COMMA)* RBRACK                 # listDestr
+           | TYPENAME destructure?                              # unionDestr
+           ;
+*/
+	@Override
+    public Type visitIdDestr(ChaiParser.IdDestrContext ctx) {
+        // TODO 
+        return null;
+    }
+	@Override
+    public Type visitTupleDestr(ChaiParser.TupleDestrContext ctx) {
+        // TODO
+        return null;
+    }
+	@Override
+    public Type visitListDestr(ChaiParser.ListDestrContext ctx) {
+        // TODO
+        return null;
+    }
+	@Override
+    public Type visitUscoreDestr(ChaiParser.UscoreDestrContext ctx) {
+        // TODO
+        return null;
+    }
+	@Override
+    public Type visitUnionDestr(ChaiParser.UnionDestrContext ctx) {
+        // TODO
+        return null;
+    }
+	@Override
+    public Type visitConsDestr(ChaiParser.ConsDestrContext ctx) {
+        // TODO
+        return null;
+    }
+
+
+
+
 
     // helper function for numeric type checks
     private boolean numberType(Type t) {

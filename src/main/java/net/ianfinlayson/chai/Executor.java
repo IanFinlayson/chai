@@ -295,6 +295,76 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
         return null;
     }
 
+	@Override
+    public Value visitMatchStatment(ChaiParser.MatchStatmentContext ctx) {
+        // MATCH expression COLON NEWLINE INDENT caseline+ DEDENT           # matchStatment
+        
+        // get the expression
+        Value expr = visit(ctx.expression());
+
+        // for each case line
+        for (ChaiParser.CaselineContext caseline : ctx.caseline()) {
+            // evaluate the thingy
+            Value destr = visit(caseline.destructure());
+
+            if (destr.equals(expr)) {
+                // execute the statements under it
+                visit(caseline.statements());
+            }
+
+            // TODO some can introduce variable bindings!!!???
+            // if we put them in below, how do we take them back out??
+        }
+
+        return null;
+    }
+
+	@Override
+    public Value visitLiteralDestr(ChaiParser.LiteralDestrContext ctx) {
+        return visit(ctx.literal());
+    }
+
+/*
+destructure: ID                                                 # idDestr
+           | USCORE                                             # uscoreDestr
+           | LPAREN (destructure COMMA)+ destructure RPAREN     # tupleDestr
+           | destructure (CONS destructure)+                    # consDestr
+           | LBRACK (destructure COMMA)* RBRACK                 # listDestr
+           | TYPENAME destructure?                              # unionDestr
+           ;
+*/
+	@Override
+    public Value visitIdDestr(ChaiParser.IdDestrContext ctx) {
+        // TODO 
+        return null;
+    }
+	@Override
+    public Value visitTupleDestr(ChaiParser.TupleDestrContext ctx) {
+        // TODO
+        return null;
+    }
+	@Override
+    public Value visitListDestr(ChaiParser.ListDestrContext ctx) {
+        // TODO
+        return null;
+    }
+	@Override
+    public Value visitUscoreDestr(ChaiParser.UscoreDestrContext ctx) {
+        // TODO
+        return null;
+    }
+	@Override
+    public Value visitUnionDestr(ChaiParser.UnionDestrContext ctx) {
+        // TODO
+        return null;
+    }
+	@Override
+    public Value visitConsDestr(ChaiParser.ConsDestrContext ctx) {
+        // TODO
+        return null;
+    }
+
+
     // get the current value of an L-value, for modassign purposes
     private Value readLvalue(ChaiParser.LvalueContext lvalue) {
         if (lvalue instanceof ChaiParser.NestedLvalueContext) {

@@ -1,6 +1,3 @@
-Type checking:
-    - type checking of library functions
-
 Immediate:
     - function types
     - match statement

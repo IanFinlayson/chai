@@ -13,7 +13,7 @@ def main():
         # make a guess
         guess = (max + min) // 2
         print("Is your number", guess, "?")
-        answer = input()
+        answer = input(": ")
         
         # adjust based on their answer
         if answer == "yes":
