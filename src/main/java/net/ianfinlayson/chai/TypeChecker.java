@@ -497,77 +497,69 @@ public class TypeChecker extends ChaiParserBaseVisitor<Type> {
         return vari.type;
     }
 
+    // this recurses through the destructure expressions and does type
+    // checking, and builds out new variables being introduced
+    private void walkDestructures(ChaiParser.DestructureContext destr, ArrayList<String> newvars, Type expr) {
+        // we need to see what kind of destr it is
+        // we check the types against expr and also introduce variables if needed
+        if (destr instanceof ChaiParser.LiteralDestrContext) {
+            // literal: just make sure type matches
+            Type given = visit(((ChaiParser.LiteralDestrContext) destr).literal());
+            if (!given.equals(expr)) {
+                throw new TypeMismatchException("Literal does not match expression in match statement", destr.getStart().getLine());
+            }
+        } else if (destr instanceof ChaiParser.TupleDestrContext) {
+            // LPAREN (destructure COMMA)+ destructure RPAREN
+            // TODO recurse on each destructure, matching to subtypes of expr
+        } else if (destr instanceof ChaiParser.ListDestrContext) {
+            // LBRACK (destructure COMMA)* RBRACK
+            // TODO recurse on each destructure, matching to THE subtype of expr
+        } else if (destr instanceof ChaiParser.IdDestrContext) {
+            // ID: introduce it with this given type
+            String name = ((ChaiParser.IdDestrContext) destr).IDNAME().getText();
+            putVar(name, expr, true, destr.getStart().getLine());
+            newvars.add(name);
+        } else if (destr instanceof ChaiParser.UscoreDestrContext) {
+            // USCORE
+            // nothing to go wrong here!
+        } else if (destr instanceof ChaiParser.UnionDestrContext) {
+            // TYPENAME destructure?
+            // TODO
+        } else if (destr instanceof ChaiParser.ConsDestrContext) {
+            // destructure (CONS destructure)+
+            // TODO
+        } else {
+            throw new RuntimeException("Unhandled destructure type in match statement");
+        }
+    }
+
 	@Override
     public Type visitMatchStatment(ChaiParser.MatchStatmentContext ctx) {
-        // MATCH expression COLON NEWLINE INDENT caseline+ DEDENT           # matchStatment
-        
         // get the type of the expression
         Type expr = visit(ctx.expression());
 
         // for each case line
         for (ChaiParser.CaselineContext caseline : ctx.caseline()) {
-            // get the type of the case line thingy, ensure match
-            Type destr = visit(caseline.destructure());
-            if (!destr.equals(expr)) {
-                throw new TypeMismatchException("Cannot match types in match statement", caseline.getStart().getLine());
-            }
+            ChaiParser.DestructureContext destr = caseline.destructure();
 
-            // TODO some can introduce variable bindings!!!???
-            // if we put them in below, how do we take them back out??
+            // we make a list of new variables we introduce in destructures,
+            // so that we can remove them again at the end
+            ArrayList<String> newvars = new ArrayList<>();
+
+            // walk the destructures for this case line
+            walkDestructures(destr, newvars, expr);
 
             // type check the statements under it
             visit(caseline.statements());
+
+            // remove variable destructures we've added
+            for (String vari : newvars) {
+                nixVar(vari);
+            }
         }
 
         return null;
     }
-
-	@Override
-    public Type visitLiteralDestr(ChaiParser.LiteralDestrContext ctx) {
-        return visit(ctx.literal());
-    }
-
-/*
-destructure: ID                                                 # idDestr
-           | USCORE                                             # uscoreDestr
-           | LPAREN (destructure COMMA)+ destructure RPAREN     # tupleDestr
-           | destructure (CONS destructure)+                    # consDestr
-           | LBRACK (destructure COMMA)* RBRACK                 # listDestr
-           | TYPENAME destructure?                              # unionDestr
-           ;
-*/
-	@Override
-    public Type visitIdDestr(ChaiParser.IdDestrContext ctx) {
-        // TODO 
-        return null;
-    }
-	@Override
-    public Type visitTupleDestr(ChaiParser.TupleDestrContext ctx) {
-        // TODO
-        return null;
-    }
-	@Override
-    public Type visitListDestr(ChaiParser.ListDestrContext ctx) {
-        // TODO
-        return null;
-    }
-	@Override
-    public Type visitUscoreDestr(ChaiParser.UscoreDestrContext ctx) {
-        // TODO
-        return null;
-    }
-	@Override
-    public Type visitUnionDestr(ChaiParser.UnionDestrContext ctx) {
-        // TODO
-        return null;
-    }
-	@Override
-    public Type visitConsDestr(ChaiParser.ConsDestrContext ctx) {
-        // TODO
-        return null;
-    }
-
-
 
 
 

@@ -295,74 +295,83 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
         return null;
     }
 
+
+    // this recurses through the destructure expression and returns if we do it or not
+    // and builds out new variables being introduced
+    private boolean walkDestructures(ChaiParser.DestructureContext destr, ArrayList<String> newvars, Value expr) {
+        // we need to see what kind of destr it is
+        // we check the types against expr and also introduce variables if needed
+        if (destr instanceof ChaiParser.LiteralDestrContext) {
+            // literal, check if it's equal
+            ChaiParser.LiteralDestrContext lit = (ChaiParser.LiteralDestrContext) destr;
+            return expr.equals(visit(lit.literal()));
+        } else if (destr instanceof ChaiParser.TupleDestrContext) {
+            // LPAREN (destructure COMMA)+ destructure RPAREN
+            // TODO
+            return false;
+        } else if (destr instanceof ChaiParser.ListDestrContext) {
+            // LBRACK (destructure COMMA)* RBRACK
+            // TODO
+            return false;
+        } else if (destr instanceof ChaiParser.IdDestrContext) {
+            // ID: introduce it with this given value
+            String name = ((ChaiParser.IdDestrContext) destr).IDNAME().getText();
+            putVar(name, expr);
+            newvars.add(name);
+            return true;
+        } else if (destr instanceof ChaiParser.UscoreDestrContext) {
+            // nothing to do here
+            return true;
+        } else if (destr instanceof ChaiParser.UnionDestrContext) {
+            // TYPENAME destructure?
+            // TODO
+            return false;
+        } else if (destr instanceof ChaiParser.ConsDestrContext) {
+            // destructure (CONS destructure)+
+            // TODO
+            return false;
+        } else {
+            throw new RuntimeException("Unhandled destructure type in match statement");
+        }
+    }
+
 	@Override
     public Value visitMatchStatment(ChaiParser.MatchStatmentContext ctx) {
-        // MATCH expression COLON NEWLINE INDENT caseline+ DEDENT           # matchStatment
-        
-        // get the expression
+        // get the type of the expression
         Value expr = visit(ctx.expression());
 
         // for each case line
         for (ChaiParser.CaselineContext caseline : ctx.caseline()) {
-            // evaluate the thingy
-            Value destr = visit(caseline.destructure());
+            ChaiParser.DestructureContext destr = caseline.destructure();
 
-            if (destr.equals(expr)) {
-                // execute the statements under it
+            // we make a list of new variables we introduce in destructures,
+            // so that we can remove them again at the end
+            ArrayList<String> newvars = new ArrayList<>();
+
+            // walk the destructures for this case line, and see if it can be matched
+            if (walkDestructures(destr, newvars, expr)) {
+                // type check the statements under it
                 visit(caseline.statements());
-            }
+                // remove variable destructures we've added
+                for (String vari : newvars) {
+                    nixVar(vari);
+                }
 
-            // TODO some can introduce variable bindings!!!???
-            // if we put them in below, how do we take them back out??
+                // only one case can be matched for each match
+                break;
+            }
         }
 
         return null;
     }
 
-	@Override
-    public Value visitLiteralDestr(ChaiParser.LiteralDestrContext ctx) {
-        return visit(ctx.literal());
-    }
 
-/*
-destructure: ID                                                 # idDestr
-           | USCORE                                             # uscoreDestr
-           | LPAREN (destructure COMMA)+ destructure RPAREN     # tupleDestr
-           | destructure (CONS destructure)+                    # consDestr
-           | LBRACK (destructure COMMA)* RBRACK                 # listDestr
-           | TYPENAME destructure?                              # unionDestr
-           ;
-*/
-	@Override
-    public Value visitIdDestr(ChaiParser.IdDestrContext ctx) {
-        // TODO 
-        return null;
-    }
-	@Override
-    public Value visitTupleDestr(ChaiParser.TupleDestrContext ctx) {
-        // TODO
-        return null;
-    }
-	@Override
-    public Value visitListDestr(ChaiParser.ListDestrContext ctx) {
-        // TODO
-        return null;
-    }
-	@Override
-    public Value visitUscoreDestr(ChaiParser.UscoreDestrContext ctx) {
-        // TODO
-        return null;
-    }
-	@Override
-    public Value visitUnionDestr(ChaiParser.UnionDestrContext ctx) {
-        // TODO
-        return null;
-    }
-	@Override
-    public Value visitConsDestr(ChaiParser.ConsDestrContext ctx) {
-        // TODO
-        return null;
-    }
+
+
+
+
+
+
 
 
     // get the current value of an L-value, for modassign purposes
