@@ -508,9 +508,21 @@ public class TypeChecker extends ChaiParserBaseVisitor<Type> {
             if (!given.equals(expr)) {
                 throw new TypeMismatchException("Literal does not match expression in match statement", destr.getStart().getLine());
             }
+
         } else if (destr instanceof ChaiParser.TupleDestrContext) {
             // LPAREN (destructure COMMA)+ destructure RPAREN
-            // TODO recurse on each destructure, matching to subtypes of expr
+            // recurse on each destructure, matching to subtypes of expr
+            List<ChaiParser.DestructureContext> elements = ((ChaiParser.TupleDestrContext) destr).destructure();
+
+            if (expr.getKind() != Kind.TUPLE) {
+                throw new TypeMismatchException("Value being matched is not of type tuple", destr.getStart().getLine());
+            } else if (elements.size() != expr.getSubs().size()) {
+                throw new TypeMismatchException("Tuple destructure differs in length from matched target", destr.getStart().getLine());
+            }
+            for (int i = 0; i < elements.size(); i++) {
+                walkDestructures(elements.get(i), newvars, expr.getSubs().get(i));
+            }
+
         } else if (destr instanceof ChaiParser.ListDestrContext) {
             // LBRACK (destructure COMMA)* RBRACK
             // TODO recurse on each destructure, matching to THE subtype of expr

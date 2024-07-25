@@ -1,0 +1,18 @@
+
+def printJunk(info (String, Int)):
+    match info:
+        case ("", 0):
+            print("got nothin'")
+        case ("", age):
+            print(age, "year old has no name")
+        case (name, 0):
+            print(name, "has no age")
+        case (name, age):
+            print(name, "is", age, "years old")
+
+def main():
+    printJunk(("", 0))
+    printJunk(("", 65))
+    printJunk(("Joe Anderson", 0))
+    printJunk(("Joe Anderson", 65))
+

@@ -307,8 +307,31 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
             return expr.equals(visit(lit.literal()));
         } else if (destr instanceof ChaiParser.TupleDestrContext) {
             // LPAREN (destructure COMMA)+ destructure RPAREN
-            // TODO
-            return false;
+            // check for equality of tuple positions, recursively
+
+            ChaiParser.TupleDestrContext tups = (ChaiParser.TupleDestrContext) destr;
+            List<ChaiParser.DestructureContext> terms = tups.destructure();
+
+            boolean allMatch = true;
+            ArrayList<String> trynewvars = new ArrayList<>();
+            for (int i = 0; i < terms.size(); i++) {
+                allMatch = allMatch && walkDestructures(terms.get(i), trynewvars, expr.toList().get(i));
+            }
+
+            // if all tuple terms are equal, we got a match
+            // otherwise, we need to remove any vars we created in the process
+            if (allMatch) {
+                for (String nv : trynewvars) {
+                    newvars.add(nv);
+                }
+                return true;
+            } else {
+                for (String scrub : trynewvars) {
+                    nixVar(scrub);
+                }
+                return false;
+            }
+
         } else if (destr instanceof ChaiParser.ListDestrContext) {
             // LBRACK (destructure COMMA)* RBRACK
             // TODO
