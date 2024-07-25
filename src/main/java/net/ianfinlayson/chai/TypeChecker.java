@@ -528,7 +528,17 @@ public class TypeChecker extends ChaiParserBaseVisitor<Type> {
 
         } else if (destr instanceof ChaiParser.ListDestrContext) {
             // LBRACK (destructure COMMA)* RBRACK
-            // TODO recurse on each destructure, matching to THE subtype of expr
+            // recurse on each destructure, matching to THE subtype of expr
+
+            List<ChaiParser.DestructureContext> elements = ((ChaiParser.ListDestrContext) destr).destructure();
+            if (expr.getKind() != Kind.LIST) {
+                throw new TypeMismatchException("Value being matched is not of type list", destr.getStart().getLine());
+            }
+
+            for (int i = 0; i < elements.size(); i++) {
+                walkDestructures(elements.get(i), newvars, expr.getSubs().get(0));
+            }
+
         } else if (destr instanceof ChaiParser.IdDestrContext) {
             // ID: introduce it with this given type
             String name = ((ChaiParser.IdDestrContext) destr).IDNAME().getText();

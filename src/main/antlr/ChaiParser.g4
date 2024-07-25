@@ -101,9 +101,10 @@ destructure: IDNAME                                             # idDestr
            | USCORE                                             # uscoreDestr
            | LPAREN (destructure COMMA)+ destructure RPAREN     # tupleDestr
            | destructure (CONS destructure)+                    # consDestr
-           | LBRACK (destructure COMMA)* RBRACK                 # listDestr
+           | LBRACK (destructure (COMMA destructure)*)? RBRACK    # listDestr
            | TYPENAME destructure?                              # unionDestr
            ;
+
 
 // we don't get else if for free
 ifstmt: IF expression COLON NEWLINE INDENT statements DEDENT elifclause* elseclause?;
@@ -174,7 +175,7 @@ term: IDNAME                                                        # idTerm
     // a set literal
     | LBRACE (expression (COMMA expression)*)? RBRACE               # setLiteralTerm
 
-   // a dictionary literal
+    // a dictionary literal
     | LBRACE (dictentry (COMMA dictentry)*) RBRACE                  # dictLiteralTerm
     | LBRACE COLON RBRACE                                           # emptydictLiteralTerm
     

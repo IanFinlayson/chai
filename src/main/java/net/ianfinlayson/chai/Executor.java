@@ -333,9 +333,37 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
             }
 
         } else if (destr instanceof ChaiParser.ListDestrContext) {
-            // LBRACK (destructure COMMA)* RBRACK
-            // TODO
-            return false;
+            // LBRACK (destructure (COMMA destructure)*)? RBRACK    # listDestr
+
+            ChaiParser.ListDestrContext ls = (ChaiParser.ListDestrContext) destr;
+            List<ChaiParser.DestructureContext> terms = ls.destructure();
+
+            // if different size, it can't match
+            if (terms.size() != expr.toList().size()) {
+                return false;
+            }
+
+            // check if all the thingies match
+            boolean allMatch = true;
+            ArrayList<String> trynewvars = new ArrayList<>();
+            for (int i = 0; i < terms.size(); i++) {
+                allMatch = allMatch && walkDestructures(terms.get(i), trynewvars, expr.toList().get(i));
+            }
+
+            // if all list terms are equal, we got a match
+            // otherwise, we need to remove any vars we created in the process
+            if (allMatch) {
+                for (String nv : trynewvars) {
+                    newvars.add(nv);
+                }
+                return true;
+            } else {
+                for (String scrub : trynewvars) {
+                    nixVar(scrub);
+                }
+                return false;
+            }
+
         } else if (destr instanceof ChaiParser.IdDestrContext) {
             // ID: introduce it with this given value
             String name = ((ChaiParser.IdDestrContext) destr).IDNAME().getText();
