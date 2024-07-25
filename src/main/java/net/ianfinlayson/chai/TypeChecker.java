@@ -147,6 +147,9 @@ public class TypeChecker extends ChaiParserBaseVisitor<Type> {
                         if (!inferred.equals(visit(dp.type()))) {
                             throw new TypeMismatchException("Given type of paramter '" + pname +"' does not match actual type",
                                     ctx.getStart().getLine());
+                        } else {
+                            // assign the type since it may be more specific ([Int] vs. [] for example)
+                            inferred = visit(dp.type());
                         }
                     }
 

@@ -1,14 +1,13 @@
 Immediate:
     - function types
-    - match statement
     - destructures:
         - cons
-        - tuple
         - nested ones
         - also destructure in for loop of a dictionary:
             for (name, number) in phonebook:
                 print(name, "can be called at", number)
     - enums
+    - type parameters
     - come up with consistent erroring scheme, with line numbers
     - add error test cases, ensuring errors are produced for bad code
     - make it so vars can be declared in a loop w/o being "re-declared"
@@ -25,7 +24,7 @@ Re-think ranges:
         [4,3..0]  = [4,3,2,1,0]
         [0,5..]   = [0,5,10,15,20,25,30,35...  -- infinite
         [1,1..]   = [1,1,1,1,1,1,1,1,1,1,1...  -- infinite
-    Or math style [) (] type things?  Not sure about that
+    Or math style [) (] type things?  Not sure about the asymmetery of that...
     Or just use the range function?
     Should produce generators eventually either way!
 
