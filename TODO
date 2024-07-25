@@ -1,11 +1,8 @@
 Immediate:
     - function types
-    - destructures:
-        - cons
-        - nested ones
-        - also destructure in for loop of a dictionary:
-            for (name, number) in phonebook:
-                print(name, "can be called at", number)
+    - destructure in for loop of a dictionary:
+        for (name, number) in phonebook:
+            print(name, "can be called at", number)
     - enums
     - type parameters
     - come up with consistent erroring scheme, with line numbers
