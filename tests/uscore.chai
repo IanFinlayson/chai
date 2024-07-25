@@ -1,0 +1,20 @@
+def stuff(nums = [] [Int]):
+    match nums:
+        case [0, 0, 0]:
+            print("All zeros")
+        case [128, _, _]:
+            print("128 in beginning!")
+        case [_, 128, _]:
+            print("128 in middle!")
+        case [_, _, 128]:
+            print("128 at end!")
+        case ls:
+            print("no 128...")
+
+def main():
+    stuff([0, 0, 0])
+    stuff([8, 10, 128])
+    stuff([43, 128, 555])
+    stuff([128, -133, 3])
+    stuff([131, -133, 3])
+

@@ -1,17 +1,18 @@
 
-
 def printInfo(info [(String, Int)]):
     match info:
         case []:
             print("Done!")
+        case ("Hammy", _) :: rest:
+            print("If your name is Hammy, I don't care your age!")
+            printInfo(rest)
         case (name, 0) :: rest:
             print(name, "is missing their age!")
+            print("Giving up on recursion!")
         case (name, age) :: rest:
             print(name, "is", age, "years old.")
             printInfo(rest)
-        case ("Hammy", _):
-            print("If your name is Hammy, I don't care your age!")
             
 def main():
-    printInfo([("Xavier", 26), ("Bob", 0), ("Alice", 36)])
+    printInfo([("Xavier", 26), ("Hammy", 13), ("Jean", 34), ("Bob", 0), ("Alice", 36)])
 

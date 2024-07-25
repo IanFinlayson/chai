@@ -101,7 +101,7 @@ destructure: IDNAME                                             # idDestr
            | USCORE                                             # uscoreDestr
            | LPAREN (destructure COMMA)+ destructure RPAREN     # tupleDestr
            | destructure (CONS destructure)+                    # consDestr
-           | LBRACK (destructure (COMMA destructure)*)? RBRACK    # listDestr
+           | LBRACK (destructure (COMMA destructure)*)? RBRACK  # listDestr
            | TYPENAME destructure?                              # unionDestr
            ;
 

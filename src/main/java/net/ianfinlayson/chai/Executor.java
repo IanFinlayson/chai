@@ -375,12 +375,51 @@ public class Executor extends ChaiParserBaseVisitor<Value> {
             return true;
         } else if (destr instanceof ChaiParser.UnionDestrContext) {
             // TYPENAME destructure?
-            // TODO
+            // TODO add this when we actually get unions!
             return false;
         } else if (destr instanceof ChaiParser.ConsDestrContext) {
             // destructure (CONS destructure)+
-            // TODO
-            return false;
+
+            // grab the things being destructured
+            ChaiParser.ConsDestrContext ls = (ChaiParser.ConsDestrContext) destr;
+            List<ChaiParser.DestructureContext> terms = ls.destructure();
+
+            // we loop through all but the last
+            // each must match the subsequent value in the expr
+            boolean allMatch = true;
+            ArrayList<String> trynewvars = new ArrayList<>();
+            int consies = 0;
+            for (; consies < (terms.size() - 1); consies++) {
+                // if there's nothin to match with, we have no match
+                if (expr.toList().size() <= consies) {
+                    allMatch = false;
+                } else {
+                    allMatch = allMatch && walkDestructures(terms.get(consies), trynewvars, expr.toList().get(consies));
+                }
+            }
+
+            // we get the remainders of the list without the stuff cons'd in
+            ArrayList<Value> remainders = new ArrayList<>();
+            for (int j = consies; j < expr.toList().size(); j++) {
+                remainders.add(expr.toList().get(j));
+            }
+
+            // now the LAST one must be matched against the remainder of the list...
+            allMatch = allMatch && walkDestructures(terms.get(terms.size() - 1), trynewvars, new Value(remainders, false));
+
+            // if we are good, go with it... else bail out
+            if (allMatch) {
+                for (String nv : trynewvars) {
+                    newvars.add(nv);
+                }
+                return true;
+            } else {
+                for (String scrub : trynewvars) {
+                    nixVar(scrub);
+                }
+                return false;
+            }
+
         } else {
             throw new RuntimeException("Unhandled destructure type in match statement");
         }

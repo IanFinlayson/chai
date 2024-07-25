@@ -549,10 +549,24 @@ public class TypeChecker extends ChaiParserBaseVisitor<Type> {
             // nothing to go wrong here!
         } else if (destr instanceof ChaiParser.UnionDestrContext) {
             // TYPENAME destructure?
-            // TODO
+            // TODO when we actually add unions to the interpreter...
         } else if (destr instanceof ChaiParser.ConsDestrContext) {
             // destructure (CONS destructure)+
-            // TODO
+
+            List<ChaiParser.DestructureContext> elements = ((ChaiParser.ConsDestrContext) destr).destructure();
+            if (expr.getKind() != Kind.LIST) {
+                throw new TypeMismatchException("Value being matched is not of type list", destr.getStart().getLine());
+            }
+
+            // match each of the thing being destructured with the ELEMENT type
+            // except for the last...
+            for (int i = 0; i < (elements.size() - 1); i++) {
+                walkDestructures(elements.get(i), newvars, expr.getSubs().get(0));
+            }
+
+            // ... which needs to match the LIST type itself!
+            walkDestructures(elements.get(elements.size() - 1), newvars, expr);
+
         } else {
             throw new RuntimeException("Unhandled destructure type in match statement");
         }
