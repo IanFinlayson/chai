@@ -1,0 +1,35 @@
+
+
+# a simple guess the number program
+def main():
+    var min = 1
+    var max = 100
+    var done = False
+
+    # for automated testing, we hard-code answers
+    let answers = ["high", "low", "low", "high", "high", "low", "yes"]
+
+    # need a way to make it so vars can be declared in a loop!!
+    var guess = 0
+    var answer = ""
+    var round = 0
+
+    # start the loop
+    while not done:
+        # make a guess
+        guess = (max + min) // 2
+        print("Is your number", guess, "?")
+        answer = answers[round]
+        round += 1
+        
+        # adjust based on their answer
+        if answer == "yes":
+            done = True
+        elif answer == "low":
+            min = guess + 1
+        elif answer == "high":
+            max = guess - 1
+        else:
+            print("Answers are 'yes', 'low', or 'high'.")
+    print("Got it!")
+

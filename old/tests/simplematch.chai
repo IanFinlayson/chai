@@ -1,0 +1,15 @@
+
+def f(num Int):
+    match num:
+        case 3:
+            print("three")
+        case 4:
+            print("four")
+        case 5:
+            print("five")
+        case x:
+            print("not three, four, or five")
+
+def main():
+    for i in [2 .. 6]:
+        f(i)

@@ -1,0 +1,10 @@
+def main():
+    var x = 0
+    while x < 10:
+        print(x % 2, x % 3)
+        x = x + 1
+    print(17 % 10 % 5)  # should be 2
+    
+    print(4.5 % 3)
+    print(3 % 4.5)
+

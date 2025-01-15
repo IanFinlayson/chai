@@ -1,0 +1,8 @@
+
+def main():
+    # this needs to be fixed
+    print("he said \"why?\" to me")
+    print("hey\nthere")
+    print("hello\ta")
+    print("byenow\tb")
+    

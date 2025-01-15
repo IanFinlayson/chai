@@ -1,0 +1,24 @@
+def main():
+    var x = 75
+    var y = "positive" if x > 0 else "negative"
+    print(y)
+
+    x = -14
+    print("positive" if x > 0 else "negative")
+
+    x = 14
+    var cond = ("very" if (x if x > 0 else -x) > 100 else "somewhat") + " " + ("large" if x > 0 else "small")
+    print(x, "is", cond)
+
+    x = 150
+    cond = ("very" if (x if x > 0 else -x) > 100 else "somewhat") + " " + ("large" if x > 0 else "small")
+    print(x, "is", cond)
+
+    x = -60
+    cond = ("very" if (x if x > 0 else -x) > 100 else "somewhat") + " " + ("large" if x > 0 else "small")
+    print(x, "is", cond)
+
+    x = -560
+    cond = ("very" if (x if x > 0 else -x) > 100 else "somewhat") + " " + ("large" if x > 0 else "small")
+    print(x, "is", cond)
+    

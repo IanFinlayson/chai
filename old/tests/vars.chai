@@ -1,0 +1,11 @@
+def main():
+    var x = 100
+    print(x)
+    var y = x + 13
+    print(y)
+    print(y + x)
+    let zz_stuff_oh_man = "hey"
+    x = 2
+    print(zz_stuff_oh_man, x)
+
+

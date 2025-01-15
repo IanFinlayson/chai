@@ -1,0 +1,14 @@
+def main():
+    print("Hello world!")
+    print("Hello", "world!")
+    print("Hello", "world", "!", sep="_")
+    print("Hello", end="")
+    print(" world!")
+    var name = "Bobby"
+    var age = 37
+    print("Hey", name, "you are", age, "years old!")
+    print(True, False, True, True, 4.69)
+    print("a", "b", "c", "d", sep=" balogna ", end=" and hamburgers.")
+    print()
+    print("peace out")
+

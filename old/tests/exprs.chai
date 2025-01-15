@@ -1,0 +1,8 @@
+def main():
+    var x1 = 100
+    var zz = 3.5
+    var y = (x1 / 2) * 4 + 6 * zz
+    print(y)
+    print(y - zz ** 2 + 9.5)
+    print(x1 * 3 - 2 + 4 - -zz)
+

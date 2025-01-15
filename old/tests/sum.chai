@@ -1,0 +1,10 @@
+def sum(nums [Int]) Int:
+    match nums:
+        case []:
+            return 0
+        case first :: rest:
+            return first + sum(rest)
+
+def main():
+    print(sum([1 .. 100]))
+

@@ -1,0 +1,6 @@
+def main():
+    def inner(num Int):
+        print("Hey! " * num)
+    inner(3)
+    inner(4)
+    inner(5)

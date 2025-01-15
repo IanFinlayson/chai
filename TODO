@@ -1,17 +1,13 @@
-Immediate:
-    - function types
-    - destructure in for loop of a dictionary:
-        for (name, number) in phonebook:
-            print(name, "can be called at", number)
-    - enums
-    - type parameters
-    - come up with consistent erroring scheme, with line numbers
-    - add error test cases, ensuring errors are produced for bad code
-    - make it so vars can be declared in a loop w/o being "re-declared"
+Re-write:
+    - lexer
+    - parser
+    - bytecode generator
+    - vm interpreter
+
 
 Consider the type system more carefully:
     - What exactly does polymorphism look like?  Haskell style type classes?
-      Java style interaces/classes?  Do the built-in type belong to classes?
+      Java style interaces/classes?  Do the built-in types belong to classes?
       Swift protocols are cool...
 
 Re-think ranges:
@@ -46,14 +42,4 @@ Things to add into language:
 
 Math stuff:
     - use bigints for integers like python?
-
-Front End improvements:
-    - allow line breaks in discriminated unions?
-    - make long lines being joined with \ work
-    - maybe steal python lexer...or write one by hand...
-
-Roadmap:
-    - write random code samples for each feature
-    - write a tree-walking interpreter in Java, not efficient but easy to try things out in
-    - write a more efficient compiler/VM backend
 

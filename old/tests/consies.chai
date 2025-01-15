@@ -1,0 +1,21 @@
+def thing(nums [Int]):
+    match nums:
+        case 0 :: 1 :: rest:
+            print("First two are ordered")
+        case 0 :: x :: rest:
+            print("First is zero, second is", x)
+        case 1 :: rest:
+            print("First is 1.  Rest is", rest)
+        case ls:
+            print("sth else")
+
+def main():
+    thing([0])
+    thing([0, 1, 2, 3])
+    thing([0, 7, 9, 11])
+    thing([1, 0, 4, 5, 88])
+    thing([1])
+    thing([2, 4, 5])
+
+
+

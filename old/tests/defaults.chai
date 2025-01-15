@@ -1,0 +1,12 @@
+def sum(list = [] [Int], accum = 0) Int:
+    if len(list) == 0:
+        return accum
+    else:
+        return sum(list[1:], list[0] + accum)
+
+def main():
+    print(sum())
+    print(sum([]))
+    print(sum([1, 3, 5, 7,  9]))
+    print(sum([1, 3, 5, 7,  9], 5))
+

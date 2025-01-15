@@ -1,0 +1,24 @@
+def main():
+    let nums = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    var i = 0
+    var j = 0
+
+    while i < 10:
+        print(nums[i] ** 2)
+        i = i + 1
+
+    let nested = [[1, 2], [3, 4], [5, 6]]
+    print(nested)
+    print(nested[0])
+    print(nested[1])
+    print(nested[2])
+    
+    # can you tell we don't have for loops when I wrote this test
+    i = 0
+    while i < 3:
+        j = 0
+        while j < 2:
+            print(nested[i][j])
+            j = j + 1
+        i = i + 1
+

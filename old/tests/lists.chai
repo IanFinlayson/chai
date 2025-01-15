@@ -1,0 +1,10 @@
+# fun with lists
+
+def main():
+    var nums = [1, 2, 3, 4, 5]
+    var names = ["Joe"]
+    print(names[0])
+    for i in nums:
+        for name in names:
+            print("Hello " + name)
+

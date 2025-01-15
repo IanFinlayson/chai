@@ -1,0 +1,17 @@
+
+def f1(msg String, times Int):
+    for i in [1 .. times]:
+        print(msg)
+
+def f2(name = "Bob", count = 4):
+    print("name is", name, "and count is", count)
+
+def main():
+    f1("sup?", 3)
+    f1(times = 4, msg = "me oh my!")
+    f1(times = 7, "oh")
+    f1(msg = "gee", 5)
+    f2()
+    f2("Susan")
+    f2(count = 3)
+
