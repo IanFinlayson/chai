@@ -1,9 +1,0 @@
-# some tuples
-def getInfo() (String, Int, Bool):
-    let info = ("Ian", 39, True)
-    return info
-
-def main():
-    let stuff = getInfo()
-    print(stuff)
-

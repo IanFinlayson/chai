@@ -1,8 +1,0 @@
-def main():
-    assert 2 * 3 > 5
-    assert False or True
-    assert 3 < 4
-    assert "hey" in "what are they doing?"
-    assert "i" in "Ian"
-    print("not gonna get here...")
-    
