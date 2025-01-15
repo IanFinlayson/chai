@@ -1,7 +1,0 @@
-def main():
-    var some_v9ar = 999
-    print(some_v9ar + 1)
-    print(77 + some_v9ar + some_v9ar + some_v9ar + 2)
-    print("hey" + " " + "there")
-    print([1, 2] + [] + [3, 4] + [5])
-

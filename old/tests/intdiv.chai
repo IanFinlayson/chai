@@ -1,5 +1,0 @@
-def main():
-    print(3 / 2)
-    print(3 // 2)
-    print(19 // 3)
-    print(100 // 10)

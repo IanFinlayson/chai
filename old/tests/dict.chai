@@ -1,9 +1,0 @@
-def main():
-    var ages = {"Joe" : 31, "Alice":28, "Olive": 56}
-    print(ages["Joe"])
-    ages["Joe"] = ages["Joe"] + 1
-    print(ages["Joe"])
-    ages["Joe"] += 1
-    print(ages["Joe"])
-    print(ages)
-    
