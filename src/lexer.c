@@ -16,6 +16,9 @@ int spaces_per_indent = 0;
 int indent_level = 0;
 int dedents_remaining = 0;
 
+// used for reading in strings, ids, numbers...
+#define BUFFER_SIZE 1024
+char buffer[BUFFER_SIZE];
 
 // checks if next character of input is something, if not put it back
 bool match(char expected) {
@@ -119,26 +122,42 @@ void setStream(FILE* file) {
 }
 
 
-// TODO put an error if the 1024 is not big enough
-
 // we saw the start of a number, lex it!
-// TODO allow for nested \" characters
 Token lexString() {
     // grab the whole thang
-    char buffer[1024];
-
     int i = 0;
     bool done = false;
     while (!done) {
         char next = fgetc(stream);
         if (next == '"') {
             done = true;
+        } else if (next == '\\') {
+            next = fgetc(stream);
+            switch (next) {
+                case '"':
+                    buffer[i++] = '\"';
+                    break;
+                case '\\':
+                    buffer[i++] = '\\';
+                    break;
+                case 'n':
+                    buffer[i++] = '\n';
+                    break;
+                case 't':
+                    buffer[i++] = '\t';
+                    break;
+                default:
+                    lexerror("invalid escape sequence in string literal");
+            }
         } else {
             buffer[i] = next;
             i++;
         }
+        if (i >= BUFFER_SIZE) lexerror("string literal too long");
     }
     buffer[i] = '\0';
+
+    printf("String we grabbed is '%s'\n", buffer);
 
     return STRINGVAL;
 }
@@ -148,7 +167,6 @@ Token lexString() {
 // TODO add in more for these (hex numbers, scientific notation, etc.
 Token lexNumber(char start) {
     // grab the whole thang
-    char buffer[1024];
     buffer[0] = start;
     bool seendot = start == '.';
 
@@ -172,6 +190,7 @@ Token lexNumber(char start) {
             buffer[i] = next;
             i++;
         }
+        if (i >= BUFFER_SIZE) lexerror("numeric literal too long");
     }
     buffer[i] = '\0';
 
@@ -182,7 +201,6 @@ Token lexNumber(char start) {
 // we saw the start of a id or keyword, lex it!
 Token lexWord(char start) {
     // grab the whole thang
-    char buffer[1024];
     buffer[0] = start;
 
     int i = 1;
@@ -196,6 +214,7 @@ Token lexWord(char start) {
             buffer[i] = next;
             i++;
         }
+        if (i >= BUFFER_SIZE) lexerror("identifier name too long");
     }
     buffer[i] = '\0';
 
@@ -242,7 +261,6 @@ Token lex() {
             case '&': return match('=') ? BITANDASSIGN : BITAND;
             case '^': return match('=') ? BITXORASSIGN : BITXOR;
             case '=': return match('=') ? EQUALS : ASSIGN;
-            case '|': return match('=') ? BITORASSIGN : BAR;
             case ':': return match(':') ? CONS : COLON;
 
             case '!':
@@ -374,6 +392,24 @@ Token lex() {
                 start_of_line = true;
                 line_number++;
                 continue;
+
+            // this is the line extender character we DONT say start of line
+            case '\\':
+                if (match('\n')) {
+                    line_number++;
+                    continue;
+                } else {
+                    lexerror("unexpected character after line break");
+                }
+
+            // we also allow | to be a line ender because it's nice for discriminated unions
+            case '|': 
+                if (match('=')) return BITORASSIGN;
+                else if (match('\n')) {
+                    // consume the \n w/o setting start of line to true
+                    line_number++;
+                    return BAR;
+                } else return BAR;
 
             case EOF:
                 // if we were indented, we need to trigger dedents on subsequent lex calls
