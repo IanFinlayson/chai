@@ -17,10 +17,6 @@ int indent_level = 0;
 int dedents_remaining = 0;
 
 
-void setStream(FILE* file) {
-    stream = file;
-}
-
 // checks if next character of input is something, if not put it back
 bool match(char expected) {
     char next = fgetc(stream);
@@ -38,6 +34,90 @@ void lexerror(const char* mesg) {
     exit(-1);
 
 }
+
+// we create a hash table of reserved words so when we see an id we can look it up
+#define KEYWORD_SIZE 16
+#define HASHTABLE_SIZE 127
+
+typedef struct {
+    char keyword[KEYWORD_SIZE];
+    Token token;
+} KeywordTableEntry;
+
+KeywordTableEntry keywords[HASHTABLE_SIZE];
+
+// we tweaked this until there was only 1 collision
+int hashKeyword(const char* keyword) {
+    int length = strlen(keyword);
+    int code = 0;
+    for (int i = 0; i < length; i++) {
+        code += keyword[i] * 37;
+    }
+    return code % HASHTABLE_SIZE;
+}
+
+void insertKeyword(const char* keyword, Token token) {
+    int index = hashKeyword(keyword);
+    while (keywords[index].token != END) {
+        index = (index + 1) % HASHTABLE_SIZE;
+    }
+
+    strcpy(keywords[index].keyword, keyword);
+    keywords[index].token = token;
+}
+
+Token lookupKeyword(const char* keyword) {
+    int index = hashKeyword(keyword);
+
+    while (keywords[index].token != END && strcmp(keywords[index].keyword, keyword)) {
+        index = (index + 1) % HASHTABLE_SIZE;
+    }
+
+    return keywords[index].token;
+}
+
+void setupKeywords() {
+    for (int i = 0; i < HASHTABLE_SIZE; i++) {
+        strcpy(keywords[i].keyword, "");
+        keywords[i].token = END;
+    }
+
+    insertKeyword("and", AND);
+    insertKeyword("assert", ASSERT);
+    insertKeyword("break", BREAK);
+    insertKeyword("case", CASE);
+    insertKeyword("continue", CONTINUE);
+    insertKeyword("def", DEF);
+    insertKeyword("elif", ELIF);
+    insertKeyword("else", ELSE);
+    insertKeyword("for", FOR);
+    insertKeyword("if", IF);
+    insertKeyword("in", IN);
+    insertKeyword("lambda", LAMBDA);
+    insertKeyword("let", LET);
+    insertKeyword("match", MATCH);
+    insertKeyword("not", NOT);
+    insertKeyword("of", OF);
+    insertKeyword("or", OR);
+    insertKeyword("pass", PASS);
+    insertKeyword("return", RETURN);
+    insertKeyword("type", TYPE);
+    insertKeyword("var", VAR);
+    insertKeyword("while", WHILE);
+    insertKeyword("Int", INT);
+    insertKeyword("Float", FLOAT);
+    insertKeyword("String", STRING);
+    insertKeyword("Bool", BOOL);
+    insertKeyword("Void", VOID);
+    insertKeyword("True", TRUE);
+    insertKeyword("False", FALSE);
+}
+
+void setStream(FILE* file) {
+    stream = file;
+    setupKeywords();
+}
+
 
 // TODO put an error if the 1024 is not big enough
 
@@ -119,37 +199,11 @@ Token lexWord(char start) {
     }
     buffer[i] = '\0';
 
-    // TODO use a hash table instead to make this faster!
-    if (!strcmp(buffer, "and")) return AND;
-    if (!strcmp(buffer, "assert")) return ASSERT;
-    if (!strcmp(buffer, "break")) return BREAK;
-    if (!strcmp(buffer, "case")) return CASE;
-    if (!strcmp(buffer, "continue")) return CONTINUE;
-    if (!strcmp(buffer, "def")) return DEF;
-    if (!strcmp(buffer, "elif")) return ELIF;
-    if (!strcmp(buffer, "else")) return ELSE;
-    if (!strcmp(buffer, "for")) return FOR;
-    if (!strcmp(buffer, "if")) return IF;
-    if (!strcmp(buffer, "in")) return IN;
-    if (!strcmp(buffer, "lambda")) return LAMBDA;
-    if (!strcmp(buffer, "let")) return LET;
-    if (!strcmp(buffer, "match")) return MATCH;
-    if (!strcmp(buffer, "not")) return NOT;
-    if (!strcmp(buffer, "of")) return OF;
-    if (!strcmp(buffer, "or")) return OR;
-    if (!strcmp(buffer, "pass")) return PASS;
-    if (!strcmp(buffer, "return")) return RETURN;
-    if (!strcmp(buffer, "type")) return TYPE;
-    if (!strcmp(buffer, "var")) return VAR;
-    if (!strcmp(buffer, "while")) return WHILE;
-    if (!strcmp(buffer, "Int")) return INT;
-    if (!strcmp(buffer, "Float")) return FLOAT;
-    if (!strcmp(buffer, "String")) return STRING;
-    if (!strcmp(buffer, "Bool")) return BOOL;
-    if (!strcmp(buffer, "Void")) return VOID;
-    if (!strcmp(buffer, "True")) return TRUE;
-    if (!strcmp(buffer, "False")) return FALSE;
+    // look this up in the keyword hash table and return if found
+    Token keytoken = lookupKeyword(buffer);
+    if (keytoken != END) return keytoken;
 
+    // it's an id or type name based on first letter's capitaization
     if (isupper(buffer[0])) return TYPENAME;
     else return IDNAME;
 }

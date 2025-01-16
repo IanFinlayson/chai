@@ -7,13 +7,13 @@ int main(int argc, char* argv[]) {
         return -1;
     }
 
-    FILE* f = fopen(argv[1], "r");
-    if (f == NULL) {
+    FILE* file = fopen(argv[1], "r");
+    if (file == NULL) {
         printf("File '%s' could not be opened for reading\n", argv[1]);
         return -1;
     }
 
-    setStream(f);
+    setStream(file);
 
     Token t = lex();
     while (t != END) {
@@ -22,6 +22,7 @@ int main(int argc, char* argv[]) {
     }
     printf("%s\n", tokenString(t));
 
+    fclose(file);
     return 0;
 }
 
