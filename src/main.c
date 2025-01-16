@@ -16,7 +16,7 @@ int main(int argc, char* argv[]) {
     setStream(file);
 
     Token t = lex();
-    while (t != END) {
+    while (t != TOK_END) {
         printf("%s\n", tokenString(t));
         t = lex();
     }
