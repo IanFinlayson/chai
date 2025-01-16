@@ -16,11 +16,11 @@ int main(int argc, char* argv[]) {
     setStream(file);
 
     Token t = lex();
-    while (t != TOK_END) {
-        printf("%s\n", tokenString(t));
+    while (t.type != TOK_END) {
+        printToken(t);
         t = lex();
     }
-    printf("%s\n", tokenString(t));
+    printToken(t);
 
     fclose(file);
     return 0;

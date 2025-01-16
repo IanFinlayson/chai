@@ -1,7 +1,6 @@
 Lexer:
     - hex literals
     - scientific notation literals
-    - make token struct with the captured text and line number
     - create proper error handling
     - document lexer (formats for things, that | can end a line...)
 

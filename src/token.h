@@ -5,6 +5,7 @@ typedef enum {
     // indentation (these are fake tokens lexer adds in)
     TOK_INDENT,
     TOK_DEDENT,
+    TOK_NEWLINE,
 
     // keywords
     TOK_AND,
@@ -96,9 +97,16 @@ typedef enum {
 
     // end of the input
     TOK_END
+} TokenType;
+
+typedef struct {
+    TokenType type;
+    char* lexeme;
+    int line;
 } Token;
 
-const char* tokenString(Token t);
+Token makeToken(TokenType type, char* lexeme, int line);
+void printToken(Token t);
 
 #endif
 

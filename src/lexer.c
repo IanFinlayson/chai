@@ -16,6 +16,9 @@ int spaces_per_indent = 0;
 int indent_level = 0;
 int dedents_remaining = 0;
 
+// used to make tokens without typing line number all the time
+#define TOK(type) makeToken(type, NULL, line_number)
+
 // used for reading in strings, ids, numbers...
 #define BUFFER_SIZE 1024
 char buffer[BUFFER_SIZE];
@@ -44,7 +47,7 @@ void lexerror(const char* mesg) {
 
 typedef struct {
     char keyword[KEYWORD_SIZE];
-    Token token;
+    TokenType token;
 } KeywordTableEntry;
 
 KeywordTableEntry keywords[HASHTABLE_SIZE];
@@ -59,7 +62,7 @@ int hashKeyword(const char* keyword) {
     return code % HASHTABLE_SIZE;
 }
 
-void insertKeyword(const char* keyword, Token token) {
+void insertKeyword(const char* keyword, TokenType token) {
     int index = hashKeyword(keyword);
     while (keywords[index].token != TOK_END) {
         index = (index + 1) % HASHTABLE_SIZE;
@@ -69,7 +72,7 @@ void insertKeyword(const char* keyword, Token token) {
     keywords[index].token = token;
 }
 
-Token lookupKeyword(const char* keyword) {
+TokenType lookupKeyword(const char* keyword) {
     int index = hashKeyword(keyword);
 
     while (keywords[index].token != TOK_END && strcmp(keywords[index].keyword, keyword)) {
@@ -156,10 +159,7 @@ Token lexString() {
         if (i >= BUFFER_SIZE) lexerror("string literal too long");
     }
     buffer[i] = '\0';
-
-    printf("String we grabbed is '%s'\n", buffer);
-
-    return TOK_STRINGVAL;
+    return makeToken(TOK_STRINGVAL, strdup(buffer), line_number);
 }
 
 
@@ -194,8 +194,8 @@ Token lexNumber(char start) {
     }
     buffer[i] = '\0';
 
-    if (seendot) return TOK_FLOATVAL;
-    else return TOK_INTVAL;
+    if (seendot) return makeToken(TOK_FLOATVAL, strdup(buffer), line_number);
+    else return makeToken(TOK_INTVAL, strdup(buffer), line_number);
 }
 
 // we saw the start of a id or keyword, lex it!
@@ -219,12 +219,12 @@ Token lexWord(char start) {
     buffer[i] = '\0';
 
     // look this up in the keyword hash table and return if found
-    Token keytoken = lookupKeyword(buffer);
-    if (keytoken != TOK_END) return keytoken;
+    TokenType keytoken = lookupKeyword(buffer);
+    if (keytoken != TOK_END) return TOK(keytoken);
 
     // it's an id or type name based on first letter's capitaization
-    if (isupper(buffer[0])) return TOK_TYPENAME;
-    else return TOK_IDNAME;
+    if (isupper(buffer[0])) return makeToken(TOK_TYPENAME, strdup(buffer), line_number);
+    else return makeToken(TOK_IDNAME, strdup(buffer), line_number);
 }
 
 // returns the next token in the input stream
@@ -234,7 +234,7 @@ Token lex() {
         if (dedents_remaining > 0) {
             dedents_remaining--;
             indent_level--;
-            return TOK_DEDENT;
+            return TOK(TOK_DEDENT);
         }
 
         int current = fgetc(stream);
@@ -246,29 +246,29 @@ Token lex() {
 
         switch (current) {
             // we handle operators first, in order of complexity
-            case '~': return TOK_COMPLEMENT;
-            case ',': return TOK_COMMA;
-            case '(': return TOK_LPAREN;
-            case ')': return TOK_RPAREN;
-            case '[': return TOK_LBRACK;
-            case ']': return TOK_RBRACK;
-            case '{': return TOK_LBRACE;
-            case '}': return TOK_RBRACE;
-            case '_': return TOK_USCORE;
+            case '~': return TOK(TOK_COMPLEMENT);
+            case ',': return TOK(TOK_COMMA);
+            case '(': return TOK(TOK_LPAREN);
+            case ')': return TOK(TOK_RPAREN);
+            case '[': return TOK(TOK_LBRACK);
+            case ']': return TOK(TOK_RBRACK);
+            case '{': return TOK(TOK_LBRACE);
+            case '}': return TOK(TOK_RBRACE);
+            case '_': return TOK(TOK_USCORE);
 
-            case '+': return match('=') ? TOK_PLUSASSIGN : TOK_PLUS;
-            case '%': return match('=') ? TOK_MODASSIGN : TOK_MODULUS;
-            case '&': return match('=') ? TOK_BITANDASSIGN : TOK_BITAND;
-            case '^': return match('=') ? TOK_BITXORASSIGN : TOK_BITXOR;
-            case '=': return match('=') ? TOK_EQUALS : TOK_ASSIGN;
-            case ':': return match(':') ? TOK_CONS : TOK_COLON;
+            case '+': return TOK(match('=') ? TOK_PLUSASSIGN : TOK_PLUS);
+            case '%': return TOK(match('=') ? TOK_MODASSIGN : TOK_MODULUS);
+            case '&': return TOK(match('=') ? TOK_BITANDASSIGN : TOK_BITAND);
+            case '^': return TOK(match('=') ? TOK_BITXORASSIGN : TOK_BITXOR);
+            case '=': return TOK(match('=') ? TOK_EQUALS : TOK_ASSIGN);
+            case ':': return TOK(match(':') ? TOK_CONS : TOK_COLON);
 
             case '!':
-                if (match('=')) return TOK_NOTEQUALS;
+                if (match('=')) return TOK(TOK_NOTEQUALS);
                 else lexerror("! given as an operator without =");
 
             case '.':
-                if (match('.')) return TOK_ELIPSIS;
+                if (match('.')) return TOK(TOK_ELIPSIS);
                 else {
                     // it might be the start of a number
                     char next = fgetc(stream);
@@ -278,39 +278,39 @@ Token lex() {
                 }
 
             case '-':
-                if (match('=')) return TOK_MINUSASSIGN;
-                else if (match('>')) return TOK_ARROW;
-                else return TOK_MINUS;
+                if (match('=')) return TOK(TOK_MINUSASSIGN);
+                else if (match('>')) return TOK(TOK_ARROW);
+                else return TOK(TOK_MINUS);
 
             case '*':
-                if (match('=')) return TOK_TIMESASSIGN;
+                if (match('=')) return TOK(TOK_TIMESASSIGN);
                 else if (match('*')) {
-                if (match('=')) return TOK_POWERASSIGN;
-                    else return TOK_POWER;
-                } else return TOK_TIMES;
+                if (match('=')) return TOK(TOK_POWERASSIGN);
+                    else return TOK(TOK_POWER);
+                } else return TOK(TOK_TIMES);
 
             case '/':
                 if (match('='))
-                    return TOK_DIVASSIGN;
+                    return TOK(TOK_DIVASSIGN);
                 else if (match('/')) {
-                    if (match('=')) return TOK_INTDIVASSIGN;
-                    else return TOK_INTDIV;
+                    if (match('=')) return TOK(TOK_INTDIVASSIGN);
+                    else return TOK(TOK_INTDIV);
 
-                } else return TOK_DIVIDE;
+                } else return TOK(TOK_DIVIDE);
 
             case '<':
-               if (match('=')) return TOK_LESSEQ;
+               if (match('=')) return TOK(TOK_LESSEQ);
                else if (match('<')) {
-                   if (match('=')) return TOK_LSHIFTASSIGN;
-                   else return TOK_LSHIFT;
-               } else return TOK_LESS;
+                   if (match('=')) return TOK(TOK_LSHIFTASSIGN);
+                   else return TOK(TOK_LSHIFT);
+               } else return TOK(TOK_LESS);
 
             case '>':
-               if (match('=')) return TOK_GREATEREQ;
+               if (match('=')) return TOK(TOK_GREATEREQ);
                else if (match('>')) {
-                   if (match('=')) return TOK_RSHIFTASSIGN;
-                   else return TOK_RSHIFT;
-               } else return TOK_GREATER;
+                   if (match('=')) return TOK(TOK_RSHIFTASSIGN);
+                   else return TOK(TOK_RSHIFT);
+               } else return TOK(TOK_GREATER);
 
 
             // comments
@@ -365,7 +365,7 @@ Token lex() {
                    // if we indented, do that
                    if (level == (indent_level + 1)) {
                        indent_level++;
-                       return TOK_INDENT;
+                       return TOK(TOK_INDENT);
                    }
 
                    // if we indented too much, that's an error
@@ -391,7 +391,7 @@ Token lex() {
             case '\n':
                 start_of_line = true;
                 line_number++;
-                continue;
+                return TOK(TOK_NEWLINE);
 
             // this is the line extender character we DONT say start of line
             case '\\':
@@ -404,19 +404,19 @@ Token lex() {
 
             // we also allow | to be a line ender because it's nice for discriminated unions
             case '|': 
-                if (match('=')) return TOK_BITORASSIGN;
+                if (match('=')) return TOK(TOK_BITORASSIGN);
                 else if (match('\n')) {
                     // consume the \n w/o setting start of line to true
                     line_number++;
-                    return TOK_BAR;
-                } else return TOK_BAR;
+                    return TOK(TOK_BAR);
+                } else return TOK(TOK_BAR);
 
             case EOF:
                 // if we were indented, we need to trigger dedents on subsequent lex calls
                 if (indent_level != 0) {
                     dedents_remaining = indent_level;
                     continue;
-                } else return TOK_END;
+                } else return TOK(TOK_END);
         }
 
         // now we need to handle things that don't start with a specifc character
