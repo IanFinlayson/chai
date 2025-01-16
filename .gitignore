@@ -1,5 +1,2 @@
-.gradle/
-src/generated/
-build/
-*.swp
-parsetree.txt
+a.out
+*.o
