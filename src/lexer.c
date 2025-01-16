@@ -39,6 +39,67 @@ void lexerror(const char* mesg) {
 
 }
 
+// TODO put an error if the 1024 is not big enough
+
+// we saw the start of a number, lex it!
+// TODO allow for nested \" characters
+Token lexString() {
+    // grab the whole thang
+    char buffer[1024];
+
+    int i = 0;
+    bool done = false;
+    while (!done) {
+        char next = fgetc(stream);
+        if (next == '"') {
+            done = true;
+        } else {
+            buffer[i] = next;
+            i++;
+        }
+    }
+    buffer[i] = '\0';
+
+    return STRINGVAL;
+}
+
+
+// we saw the start of a number, lex it!
+// TODO add in more for these (hex numbers, scientific notation, etc.
+Token lexNumber(char start) {
+    // grab the whole thang
+    char buffer[1024];
+    buffer[0] = start;
+    bool seendot = start == '.';
+
+    int i = 1;
+    bool done = false;
+    while (!done) {
+        char next = fgetc(stream);
+        if (next == '.' && !seendot) {
+            buffer[i] = next;
+            i++;
+            seendot = true;
+        }
+        else if (next == '.') {
+            ungetc(next, stream);
+            done = true;
+        }
+        else if (!isdigit(next)) {
+            ungetc(next, stream);
+            done = true;
+        } else {
+            buffer[i] = next;
+            i++;
+        }
+    }
+    buffer[i] = '\0';
+
+    if (seendot) return FLOATVAL;
+    else return INTVAL;
+}
+
+// we saw the start of a id or keyword, lex it!
 Token lexWord(char start) {
     // grab the whole thang
     char buffer[1024];
@@ -135,8 +196,14 @@ Token lex() {
                 else lexerror("! given as an operator without =");
 
             case '.':
-                if (match('r')) return ELIPSIS;
-                else lexerror(". alone is not an operator");
+                if (match('.')) return ELIPSIS;
+                else {
+                    // it might be the start of a number
+                    char next = fgetc(stream);
+                    ungetc(next, stream);
+                    if (isdigit(next)) return lexNumber(current);
+                    else lexerror(". alone is not an operator");
+                }
 
             case '-':
                 if (match('=')) return MINUSASSIGN;
@@ -181,6 +248,9 @@ Token lex() {
                }
                continue;
 
+            // string literals
+            case '"':
+               return lexString();
 
             // we do not allow tabs or carriage returns, for now anyway
             case '\t':
@@ -194,14 +264,17 @@ Token lex() {
                    start_of_line = false;
 
                    // count the number of spaces here
-                   int spaces = 1;
+                   int spaces = 0;
                    while (current == ' ') {
                        spaces++;
                        current = fgetc(stream);
                    }
 
                    // if this was ALL spaces, or a comment is hit, skip
-                   if (current == '\n' || current == '#') continue;
+                   if (current == '\n' || current == '#') {
+                       ungetc(current, stream);
+                       continue;
+                   }
 
                    // otherwise put the thing after the spaces back in
                    ungetc(current, stream);
@@ -261,22 +334,14 @@ Token lex() {
             return lexWord(current);
         }
 
-        // TODO let them start with a . as well
-        //if (isdigit(current)) {
-        //    return lexNumber(current);
-        //}
+        // start of a number
+        if (isdigit(current)) {
+            return lexNumber(current);
+        }
 
         printf("Invalid token: '%c' (%d)\n", current, current);
         lexerror("invalid token given");
 
     } while (true); // keep looping over skippables
 }
-
-
-
-    // literal values
-    // TODO add in more for these (hex numbers, scientific notation, etc.
-    //INTVAL,
-    //FLOATVAL,
-    //STRINGVAL,
 
