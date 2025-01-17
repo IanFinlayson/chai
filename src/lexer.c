@@ -5,9 +5,11 @@
 #include <string.h>
 
 #include "lexer.h"
+#include "errors.h"
 #include "token.h"
 
 // global lexer state, mostly for indentation haha
+const char* file_name;
 FILE* stream;
 int line_number = 1;
 
@@ -32,13 +34,6 @@ bool match(char expected) {
         ungetc(next, stream);
         return false;
     }
-}
-
-void lexerror(const char* mesg) {
-    // TODO
-    printf("error occured in lexer: %s\n", mesg);
-    exit(-1);
-
 }
 
 // we create a hash table of reserved words so when we see an id we can look it up
@@ -119,8 +114,9 @@ void setupKeywords() {
     insertKeyword("False", TOK_FALSE);
 }
 
-void setStream(FILE* file) {
+void setStream(FILE* file, const char* name) {
     stream = file;
+    file_name = name;
     setupKeywords();
 }
 
@@ -150,17 +146,23 @@ Token lexString() {
                     buffer[i++] = '\t';
                     break;
                 default:
-                    lexerror("invalid escape sequence in string literal");
+                    issue(file_name, line_number, "invalid escape sequence in string literal: %c", next);
             }
         } else {
             buffer[i] = next;
             i++;
         }
-        if (i >= BUFFER_SIZE) lexerror("string literal too long");
+        if (i >= BUFFER_SIZE) {
+            issue(file_name, line_number, "string literal too long");
+            // consume the rest of it
+            while (next != '"') next = fgetc(stream);
+            break;
+        }
     }
     buffer[i] = '\0';
     return makeToken(TOK_STRINGVAL, strdup(buffer), line_number);
 }
+
 
 
 // we saw the start of a number, lex it!
@@ -190,7 +192,12 @@ Token lexNumber(char start) {
             buffer[i] = next;
             i++;
         }
-        if (i >= BUFFER_SIZE) lexerror("numeric literal too long");
+        if (i >= BUFFER_SIZE) {
+            issue(file_name, line_number, "numeric literal too long");
+            // consume the rest of it
+            while (isdigit(next) || next == '.') next = fgetc(stream);
+            break;
+        }
     }
     buffer[i] = '\0';
 
@@ -214,7 +221,12 @@ Token lexWord(char start) {
             buffer[i] = next;
             i++;
         }
-        if (i >= BUFFER_SIZE) lexerror("identifier name too long");
+        if (i >= BUFFER_SIZE) {
+            issue(file_name, line_number, "identifier name too long");
+            // consume the rest of it
+            while (isalnum(next) || next == '_') next = fgetc(stream);
+            break;
+        }
     }
     buffer[i] = '\0';
 
@@ -265,7 +277,10 @@ Token lex() {
 
             case '!':
                 if (match('=')) return TOK(TOK_NOTEQUALS);
-                else lexerror("! given as an operator without =");
+                else {
+                    issue(file_name, line_number, "stray '!' in program");
+                    continue;
+                }
 
             case '.':
                 if (match('.')) return TOK(TOK_ELIPSIS);
@@ -274,7 +289,10 @@ Token lex() {
                     char next = fgetc(stream);
                     ungetc(next, stream);
                     if (isdigit(next)) return lexNumber(current);
-                    else lexerror(". alone is not an operator");
+                    else {
+                        issue(file_name, line_number, "stray '.' in program");
+                        continue;
+                    }
                 }
 
             case '-':
@@ -326,8 +344,11 @@ Token lex() {
 
             // we do not allow tabs or carriage returns, for now anyway
             case '\t':
+               issue(file_name, line_number, "stray '\\t' in program");
+               continue;
             case '\r':
-               lexerror("tabs or carriage returns not allowed in chai source");
+               issue(file_name, line_number, "stray '\\r' in program");
+               continue;
 
             // spaces are tough...
             case ' ':
@@ -359,7 +380,9 @@ Token lex() {
                    // compute indentation level
                    int level = spaces / spaces_per_indent;
                    if ((spaces % spaces_per_indent) != 0) {
-                       lexerror("Indentation level inconsistent");
+                       issue(file_name, line_number, "indentation of %d spaces not consistent with previous indent width of %d",
+                               spaces, spaces_per_indent);
+                       continue;
                    }
 
                    // if we indented, do that
@@ -370,7 +393,8 @@ Token lex() {
 
                    // if we indented too much, that's an error
                    if (level > indent_level) {
-                       lexerror("Too much indentation");
+                       issue(file_name, line_number, "indentation of more than one level encountered");
+                       continue;
                    }
 
                    // if we are de-denting, trigger that
@@ -399,7 +423,11 @@ Token lex() {
                     line_number++;
                     continue;
                 } else {
-                    lexerror("unexpected character after line break");
+                    issue(file_name, line_number, "unexpected character after line break");
+                    // consume rest of this line
+                    char next = fgetc(stream);
+                    while (next != '\n') next = fgetc(stream);
+                    continue;
                 }
 
             // we also allow | to be a line ender because it's nice for discriminated unions
@@ -429,9 +457,7 @@ Token lex() {
             return lexNumber(current);
         }
 
-        printf("Invalid token: '%c' (%d)\n", current, current);
-        lexerror("invalid token given");
-
+        issue(file_name, line_number, "stray '%c' found in program", current);
     } while (true); // keep looping over skippables
 }
 

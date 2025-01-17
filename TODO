@@ -1,8 +1,8 @@
 Lexer:
     - hex literals
     - scientific notation literals
-    - create proper error handling
     - document lexer (formats for things, that | can end a line...)
+    - remember to clean up the lexemes stored in some tokens (alloc'd with strdup)
 
 
 

@@ -5,7 +5,7 @@
 #include "token.h"
 
 // set up input stream for lexing
-void setStream(FILE* stream);
+void setStream(FILE* stream, const char* name);
 
 // returns the next token in the input stream
 Token lex();

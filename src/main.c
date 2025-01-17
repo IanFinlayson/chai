@@ -13,7 +13,7 @@ int main(int argc, char* argv[]) {
         return -1;
     }
 
-    setStream(file);
+    setStream(file, argv[1]);
 
     Token t = lex();
     while (t.type != TOK_END) {
