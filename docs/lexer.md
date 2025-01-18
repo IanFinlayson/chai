@@ -11,7 +11,6 @@ number formats, as well as the white-spaced based indentation rules.
 Chai includes the following operators and symbols:
 
 | Operator    | Meaning |
-| -------- | ------- |
 | + | addition, concatenation |
 | - | subtraction, unary negate |
 | / | division |
@@ -19,21 +18,18 @@ Chai includes the following operators and symbols:
 | % | modulus |
 | ** | exponentiation |
 | // | integer division |
-| -------- | ------- |
 | ~ | bitwise complement |
 | << | left shift |
 | >> | right shift |
 | & | bitwise and |
 | | bitwise or, separation of discriminated union types |
 | ^ | bitwise exclusive or |
-| -------- | ------- |
 | < | less than |
 | > | greater than |
 | <= | less than or equal to |
 | >= | greater than or equal to |
 | == | equals to |
 | != | not equals to |
-| -------- | ------- |
 | : | block beginning, dictionary key/value separator |
 | , | parameter separator |
 | = | assignment operator |
@@ -44,11 +40,9 @@ Chai includes the following operators and symbols:
 | { | left brace |
 | } | right brace |
 | .. | ellipsis |
-| -------- | ------- |
 | -> | function type separator |
 | :: | cons operator |
 | _ | wildcard match operator |
-| -------- | ------- |
 | += | add and assign |
 | -= | subtract and assign |
 | *= | multiplication and assign |
@@ -59,9 +53,8 @@ Chai includes the following operators and symbols:
 | <<= | left shift and assign |
 | >>= | right shift and assign |
 | &= | bitwise and and assign |
-| |= | bitwise or and assign |
+| \|= | bitwise or and assign |
 | ^= | bitwise exclusive or and assign |
-| -------- | ------- |
 
 
 
