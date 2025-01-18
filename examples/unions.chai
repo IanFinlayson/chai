@@ -1,5 +1,8 @@
 # make a simple union
-type Direction = North | South | East | West
+type Direction = North |
+                 South |
+                 East |
+                 West
 
 # match based off it
 def getCoords(d Direction) (Int, Int):

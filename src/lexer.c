@@ -252,13 +252,15 @@ Token lex() {
         int current = fgetc(stream);
 
         // if this is not a space character, and it was the start of the line, dedent all the way
-        if (current != ' ' && start_of_line) {
+        if (current != ' ' && current != '\n' && start_of_line) {
             start_of_line = false;
+            ungetc(current, stream);
 
             if (indent_level > 0) {
                 dedents_remaining = indent_level;
-                continue;
             }
+
+            continue;
         }
 
         switch (current) {
