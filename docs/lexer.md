@@ -11,6 +11,7 @@ number formats, as well as the white-spaced based indentation rules.
 Chai includes the following operators and symbols:
 
 | Operator    | Meaning |
+| -------- | ------- |
 | + | addition, concatenation |
 | - | subtraction, unary negate |
 | / | division |
