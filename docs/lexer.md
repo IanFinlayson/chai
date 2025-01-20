@@ -46,10 +46,10 @@ Chai includes the following operators and symbols:
 | _ | wildcard match operator |
 | += | add and assign |
 | -= | subtract and assign |
-| *= | multiplication and assign |
+| \*= | multiplication and assign |
 | /= | division and assign |
 | %= | modulus and assign |
-| **= | exponentiation and assign |
+| \*\*= | exponentiation and assign |
 | //= | integer division and assign |
 | <<= | left shift and assign |
 | >>= | right shift and assign |
@@ -60,6 +60,10 @@ Chai includes the following operators and symbols:
 
 
 ## Keywords
+
+Chai includes the following reserved keywords:
+
+| Operator    | Meaning |
     // keywords
     TOK_AND,
     TOK_ASSERT,
