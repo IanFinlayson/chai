@@ -23,7 +23,7 @@ Chai includes the following operators and symbols:
 | << | left shift |
 | >> | right shift |
 | & | bitwise and |
-| \| bitwise or, separation of discriminated union types |
+| \| | bitwise or, separation of discriminated union types |
 | ^ | bitwise exclusive or |
 | < | less than |
 | > | greater than |
