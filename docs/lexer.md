@@ -6,6 +6,32 @@ This document describes the lexical features of Chai.  This includes the list
 of operators and keywords, rules for variable names, string constants, comments,
 number formats, as well as the white-spaced based indentation rules.
 
+## Indentation
+
+Chai, like Python and Haskell, uses indentation to indicate the structure of
+code.  The first time indentation is found, the compiler will use the number
+of spaces as the size of one indentation level.
+
+Further lines that are indented must be done is a multiple of that prior size.
+For example, if the first indentation encountered is 4 spaces, then valid
+indent amounts are 0, 4, 8, 12, 16, etc.  An invalid indentation amount is an
+error.  Likewise, indenting by more than one level at a time (such as going from
+0 to 8 spaces in this instance) is an error.
+
+Lines can be continued using the \ character.  When two lines are continued in
+this way, they are treated as one very long line.
+
+Chai also allows the | symbol to be used as a continuation line, which is
+helpful with discriminated unions.  For example:
+
+```
+type Tree<T> = Leaf |
+               Node of (T, Tree<T>, Tree<T>)
+```
+
+This allows the parts of a union to be aligned on individual lines.
+
+
 ## Operators and Symbols
 
 Chai includes the following operators and symbols:
@@ -69,6 +95,7 @@ documentation, but are summarized here.
 | assert | check that a condition is true or halt the program |
 | break | exit a loop early |
 | case | used in a match statement to denote a possible case |
+| class | creates a class structure |
 | continue | move on to the next loop iteration |
 | def | define a function |
 | elif | check a condition after a previous if (and possibly other elifs) |
@@ -103,16 +130,42 @@ and variables always begin with lower-case.
 | False |
 
 
-## Variables
+## Identifiers
+
+As mentioned above, identifiers come in two kinds in Chai: type identifiers
+begin with capital letters and all others begin with lower-case ones.  This is a
+convention in many languages, but is enforced in Chai.
+
+Following the initial letter which begins an identifier name are any number of
+letters (of either case), digits, or the underscore character.  Identifiers
+cannot begin with digits or underscores.
 
 ## Strings
 
+Strings in Chai are delimited by double quotes.  They can contain the following
+escape sequences:
+ - \"
+ - \\
+ - \n
+ - \t
+
+String literals cannot span more than one line.
+
 ## Comments
+
+Comments begin with the \# character and extend to the end of the line.
+
 
 ## Number Formats
 
-## Indentation
+If a number begins with '0x' it will be treated as a hexadecimal one.  The
+digits 0-9 as well as letters A-F (in either case) will be treated as part
+of the number.  If it begins with '0b' it will be treated as binary and only
+digits 0 and 1 will be treated as part of it.  Numbers beginning with '0o'
+are treated as octal and contain digits 0-7.
 
-
+Otherwise, numbers in Chai begin with a '.' or a digit.  They contain any number
+of digits and up to one '.' total.  If there is a '.', it will be treated as
+a floating-point value, otherwise an integer.
 
 

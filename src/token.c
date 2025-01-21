@@ -17,6 +17,7 @@ void printToken(Token t) {
         case TOK_ASSERT: printf("assert "); break;
         case TOK_BREAK: printf("break"); break;
         case TOK_CASE: printf("case "); break;
+        case TOK_CLASS: printf("class "); break;
         case TOK_CONTINUE: printf("continue"); break;
         case TOK_DEF: printf("def "); break;
         case TOK_ELIF: printf("elif "); break;

@@ -87,6 +87,7 @@ void setupKeywords() {
     insertKeyword("assert", TOK_ASSERT);
     insertKeyword("break", TOK_BREAK);
     insertKeyword("case", TOK_CASE);
+    insertKeyword("class", TOK_CLASS);
     insertKeyword("continue", TOK_CONTINUE);
     insertKeyword("def", TOK_DEF);
     insertKeyword("elif", TOK_ELIF);
@@ -163,11 +164,116 @@ Token lexString() {
     return makeToken(TOK_STRINGVAL, strdup(buffer), line_number);
 }
 
+// lex a hex constant
+Token lexHex() {
+    // grab the whole thang
+    buffer[0] = '0';
+    buffer[1] = 'x';
 
+    int i = 2;
+    bool done = false;
+    while (!done) {
+        char next = fgetc(stream);
+        if (isxdigit(next)) {
+            buffer[i] = next;
+            i++;
+        } else if (isalpha(next)) {
+            issue(file_name, line_number, "illegal '%c' found in hexadecimal literal", next);
+            ungetc(next, stream);
+            done = true;
+        }
+        else {
+            ungetc(next, stream);
+            done = true;
+        }
+        if (i >= BUFFER_SIZE) {
+            issue(file_name, line_number, "hexadecimal literal too long");
+            // consume the rest of it
+            while (isxdigit(next)) next = fgetc(stream);
+            break;
+        }
+    }
+    buffer[i] = '\0';
+    return makeToken(TOK_INTVAL, strdup(buffer), line_number);
+}
+
+Token lexBinary() {
+    // grab the whole thang
+    buffer[0] = '0';
+    buffer[1] = 'b';
+
+    int i = 2;
+    bool done = false;
+    while (!done) {
+        char next = fgetc(stream);
+        if (next == '0' || next == '1') {
+            buffer[i] = next;
+            i++;
+        } else if (isalnum(next)) {
+            issue(file_name, line_number, "illegal '%c' found in binary literal", next);
+            ungetc(next, stream);
+            done = true;
+        }
+        else {
+            ungetc(next, stream);
+            done = true;
+        }
+        if (i >= BUFFER_SIZE) {
+            issue(file_name, line_number, "binary literal too long");
+            // consume the rest of it
+            while (next == '0' || next == '1') next = fgetc(stream);
+            break;
+        }
+    }
+    buffer[i] = '\0';
+    return makeToken(TOK_INTVAL, strdup(buffer), line_number);
+}
+
+Token lexOctal() {
+    // grab the whole thang
+    buffer[0] = '0';
+    buffer[1] = 'o';
+
+    int i = 2;
+    bool done = false;
+    while (!done) {
+        char next = fgetc(stream);
+        if (next >= '0' && next <= '7') {
+            buffer[i] = next;
+            i++;
+        } else if (isalnum(next)) {
+            issue(file_name, line_number, "illegal '%c' found in octal literal", next);
+            ungetc(next, stream);
+            done = true;
+        }
+        else {
+            ungetc(next, stream);
+            done = true;
+        }
+        if (i >= BUFFER_SIZE) {
+            issue(file_name, line_number, "octal literal too long");
+            // consume the rest of it
+            while (next >= '0' && next <= '7') next = fgetc(stream);
+            break;
+        }
+    }
+    buffer[i] = '\0';
+    return makeToken(TOK_INTVAL, strdup(buffer), line_number);
+
+
+}
 
 // we saw the start of a number, lex it!
-// TODO add in more for these (hex numbers, scientific notation, etc.
 Token lexNumber(char start) {
+    // check for hex, binary, octal
+    if (start == '0') {
+        char next = fgetc(stream);
+        if (next == 'x' || next == 'X') return lexHex();
+        else if (next == 'b' || next == 'B') return lexBinary();
+        else if (next == 'o' || next == 'O') return lexOctal();
+        else ungetc(next, stream);
+    }
+
     // grab the whole thang
     buffer[0] = start;
     bool seendot = start == '.';
@@ -182,15 +288,21 @@ Token lexNumber(char start) {
             seendot = true;
         }
         else if (next == '.') {
+            issue(file_name, line_number, "multiple '.' found in number literal");
             ungetc(next, stream);
             done = true;
         }
-        else if (!isdigit(next)) {
+        else if (isdigit(next)) {
+            buffer[i] = next;
+            i++;
+        }
+        else if (isalpha(next)) {
+            issue(file_name, line_number, "'%c' found in number literal", next);
             ungetc(next, stream);
             done = true;
         } else {
-            buffer[i] = next;
-            i++;
+            ungetc(next, stream);
+            done = true;
         }
         if (i >= BUFFER_SIZE) {
             issue(file_name, line_number, "numeric literal too long");

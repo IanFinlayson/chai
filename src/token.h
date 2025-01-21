@@ -12,6 +12,7 @@ typedef enum {
     TOK_ASSERT,
     TOK_BREAK,
     TOK_CASE,
+    TOK_CLASS,
     TOK_CONTINUE,
     TOK_DEF,
     TOK_ELIF,

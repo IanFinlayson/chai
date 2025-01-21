@@ -1,5 +1,6 @@
 # define binary search tree structure
-type Tree<T> = Leaf | Node of (T, Tree<T>, Tree<T>)
+type Tree<T> = Leaf |
+               Node of (T, Tree<T>, Tree<T>)
 
 # insert a value into a tree
 def insert<T>(tree Tree<T>, value T) Tree<T>:
