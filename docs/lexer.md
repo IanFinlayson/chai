@@ -168,4 +168,5 @@ Otherwise, numbers in Chai begin with a '.' or a digit.  They contain any number
 of digits and up to one '.' total.  If there is a '.', it will be treated as
 a floating-point value, otherwise an integer.
 
+Numbers can also be written in scientific notation such as 1.4e6, or 89e-4.
 

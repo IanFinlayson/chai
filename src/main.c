@@ -21,6 +21,7 @@ int main(int argc, char* argv[]) {
         t = lex();
     }
     printToken(t);
+    printf("\n");
 
     fclose(file);
     return 0;

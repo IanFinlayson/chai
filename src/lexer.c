@@ -277,6 +277,7 @@ Token lexNumber(char start) {
     // grab the whole thang
     buffer[0] = start;
     bool seendot = start == '.';
+    bool seene = false;
 
     int i = 1;
     bool done = false;
@@ -289,6 +290,25 @@ Token lexNumber(char start) {
         }
         else if (next == '.') {
             issue(file_name, line_number, "multiple '.' found in number literal");
+            ungetc(next, stream);
+            done = true;
+        }
+        // scientific notation can have an e
+        else if ((next == 'e' || next == 'E') && !seene) {
+            buffer[i] = next;
+            i++;
+            seene = true;
+
+            next = fgetc(stream);
+            if (next == '-') {
+                buffer[i] = next;
+                i++;
+            } else {
+                ungetc(next, stream);
+            }
+        }
+        else if (next == 'e' || next == 'E') {
+            issue(file_name, line_number, "multiple 'E' found in number literal");
             ungetc(next, stream);
             done = true;
         }
@@ -313,7 +333,7 @@ Token lexNumber(char start) {
     }
     buffer[i] = '\0';
 
-    if (seendot) return makeToken(TOK_FLOATVAL, strdup(buffer), line_number);
+    if (seendot || seene) return makeToken(TOK_FLOATVAL, strdup(buffer), line_number);
     else return makeToken(TOK_INTVAL, strdup(buffer), line_number);
 }
 

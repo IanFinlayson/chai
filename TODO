@@ -1,9 +1,5 @@
-Lexer:
-    - scientific notation literals
-    - remember to clean up the lexemes stored in some tokens (alloc'd with strdup)
-
 Re-write:
-    - lexer
+    - lexer....DONE!
     - parser
     - bytecode generator
     - vm interpreter
