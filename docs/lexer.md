@@ -144,10 +144,10 @@ cannot begin with digits or underscores.
 
 Strings in Chai are delimited by double quotes.  They can contain the following
 escape sequences:
- - \"
- - \\
- - \n
- - \t
+ - \\"
+ - \\\\
+ - \\n
+ - \\t
 
 String literals cannot span more than one line.
 
