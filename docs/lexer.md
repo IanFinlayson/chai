@@ -57,46 +57,50 @@ Chai includes the following operators and symbols:
 | \|= | bitwise or and assign |
 | ^= | bitwise exclusive or and assign |
 
-
-
 ## Keywords
 
-Chai includes the following reserved keywords:
+Chai includes the following reserved keywords.  They will
+be documented more extensively in syntactical and semantic
+documentation, but are summarized here.
 
-| Operator    | Meaning |
-    // keywords
-    TOK_AND,
-    TOK_ASSERT,
-    TOK_BREAK,
-    TOK_CASE,
-    TOK_CONTINUE,
-    TOK_DEF,
-    TOK_ELIF,
-    TOK_ELSE,
-    TOK_FOR,
-    TOK_IF,
-    TOK_IN,
-    TOK_LAMBDA,
-    TOK_LET,
-    TOK_MATCH,
-    TOK_NOT,
-    TOK_OF,
-    TOK_OR,
-    TOK_PASS,
-    TOK_RETURN,
-    TOK_TYPE,
-    TOK_VAR,
-    TOK_WHILE,
+| Keyword | Meaning |
+| -------- | ------- |
+| and | boolean and operator |
+| assert | check that a condition is true or halt the program |
+| break | exit a loop early |
+| case | used in a match statement to denote a possible case |
+| continue | move on to the next loop iteration |
+| def | define a function |
+| elif | check a condition after a previous if (and possibly other elifs) |
+| else | execute code if a previous if (and possibly elifs) were all false |
+| for | begin a for loop construct |
+| if | check a condition and execute code if it's true |
+| in | used in a for loop, and also as an operator on collections |
+| lambda | define an anonymous function |
+| let | create a constant |
+| match | compare a value to several possible values or patterns |
+| not | a unary boolean operator |
+| of | specify the subtype of part of a discriminated union |
+| or | boolean or operator |
+| pass | take no action (used when a statement is syntactically required) |
+| return | return to the caller of a function, possibly with a value |
+| type | used to declare new types |
+| var | create a variable |
+| while | begin a while loop construct |
 
+Chai also includes the following built-in type names.  In Chai, type names
+always begin with a capital letter while identifier names for functions
+and variables always begin with lower-case.
 
-    // pre-defined type names
-    TOK_INT,
-    TOK_FLOAT,
-    TOK_STRING,
-    TOK_BOOL,
-    TOK_VOID,
-    TOK_TRUE,
-    TOK_FALSE,
+| Type |
+| -------- |
+| Int |
+| Float |
+| String |
+| Bool |
+| Void |
+| True |
+| False |
 
 
 ## Variables
