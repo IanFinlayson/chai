@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdbool.h>
 #include <ctype.h>
 #include <string.h>
 
@@ -8,51 +7,43 @@
 #include "errors.h"
 #include "token.h"
 
-// global lexer state, mostly for indentation haha
-const char* file_name;
-FILE* stream;
-int line_number = 1;
-
-bool start_of_line = true;
-int spaces_per_indent = 0;
-int indent_level = 0;
-int dedents_remaining = 0;
-
 // used to make tokens without typing line number all the time
-#define TOK(type) makeToken(type, NULL, line_number)
+#define TOK(type) makeToken(type, NULL, state->line_number)
 
 // used for reading in strings, ids, numbers...
 #define BUFFER_SIZE 1024
 char buffer[BUFFER_SIZE];
 
 // checks if next character of input is something, if not put it back
-bool match(char expected) {
-    char next = fgetc(stream);
+bool match(char expected, LexerState* state) {
+    char next = fgetc(state->stream);
     if (next == expected) {
         return true;
     } else {
-        ungetc(next, stream);
+        ungetc(next, state->stream);
         return false;
     }
 }
 
 // we create a hash table of reserved words so when we see an id we can look it up
 #define KEYWORD_SIZE 16
-#define HASHTABLE_SIZE 127
+#define HASHTABLE_SIZE 255
 
 typedef struct {
     char keyword[KEYWORD_SIZE];
     TokenType token;
 } KeywordTableEntry;
 
+// this is global, but all lexers can share this table
 KeywordTableEntry keywords[HASHTABLE_SIZE];
+bool table_innited = false;
 
-// we tweaked this until there was only 1 collision
+// get a hash code of a keyword
 int hashKeyword(const char* keyword) {
     int length = strlen(keyword);
     int code = 0;
     for (int i = 0; i < length; i++) {
-        code += keyword[i] * 37;
+        code += keyword[i] * 31;
     }
     return code % HASHTABLE_SIZE;
 }
@@ -67,16 +58,7 @@ void insertKeyword(const char* keyword, TokenType token) {
     keywords[index].token = token;
 }
 
-TokenType lookupKeyword(const char* keyword) {
-    int index = hashKeyword(keyword);
-
-    while (keywords[index].token != TOK_END && strcmp(keywords[index].keyword, keyword)) {
-        index = (index + 1) % HASHTABLE_SIZE;
-    }
-
-    return keywords[index].token;
-}
-
+// TODO call this ONE time
 void setupKeywords() {
     for (int i = 0; i < HASHTABLE_SIZE; i++) {
         strcpy(keywords[i].keyword, "");
@@ -115,24 +97,45 @@ void setupKeywords() {
     insertKeyword("False", TOK_FALSE);
 }
 
-void setStream(FILE* file, const char* name) {
-    stream = file;
-    file_name = name;
-    setupKeywords();
+TokenType lookupKeyword(const char* keyword) {
+    // ensure table is built one time
+    if (!table_innited) {
+        setupKeywords();
+        table_innited = true;
+    }
+
+    int index = hashKeyword(keyword);
+
+    while (keywords[index].token != TOK_END && strcmp(keywords[index].keyword, keyword)) {
+        index = (index + 1) % HASHTABLE_SIZE;
+    }
+
+    return keywords[index].token;
 }
 
+LexerState createLexerState(FILE* file, const char* name) {
+    LexerState state;
+    state.stream = file;
+    state.file_name = name;
+    state.line_number = 1;
+    state.start_of_line = true;
+    state.spaces_per_indent = 0;
+    state.indent_level = 0;
+    state.dedents_remaining = 0;
+    return state;
+}
 
 // we saw the start of a number, lex it!
-Token lexString() {
+Token lexString(LexerState* state) {
     // grab the whole thang
     int i = 0;
     bool done = false;
     while (!done) {
-        char next = fgetc(stream);
+        char next = fgetc(state->stream);
         if (next == '"') {
             done = true;
         } else if (next == '\\') {
-            next = fgetc(stream);
+            next = fgetc(state->stream);
             switch (next) {
                 case '"':
                     buffer[i++] = '\"';
@@ -147,25 +150,25 @@ Token lexString() {
                     buffer[i++] = '\t';
                     break;
                 default:
-                    issue(file_name, line_number, "invalid escape sequence in string literal: %c", next);
+                    issue(state->file_name, state->line_number, "invalid escape sequence in string literal: %c", next);
             }
         } else {
             buffer[i] = next;
             i++;
         }
         if (i >= BUFFER_SIZE) {
-            issue(file_name, line_number, "string literal too long");
+            issue(state->file_name, state->line_number, "string literal too long");
             // consume the rest of it
-            while (next != '"') next = fgetc(stream);
+            while (next != '"') next = fgetc(state->stream);
             break;
         }
     }
     buffer[i] = '\0';
-    return makeToken(TOK_STRINGVAL, strdup(buffer), line_number);
+    return makeToken(TOK_STRINGVAL, strdup(buffer), state->line_number);
 }
 
 // lex a hex constant
-Token lexHex() {
+Token lexHex(LexerState* state) {
     // grab the whole thang
     buffer[0] = '0';
     buffer[1] = 'x';
@@ -173,31 +176,31 @@ Token lexHex() {
     int i = 2;
     bool done = false;
     while (!done) {
-        char next = fgetc(stream);
+        char next = fgetc(state->stream);
         if (isxdigit(next)) {
             buffer[i] = next;
             i++;
         } else if (isalpha(next)) {
-            issue(file_name, line_number, "illegal '%c' found in hexadecimal literal", next);
-            ungetc(next, stream);
+            issue(state->file_name, state->line_number, "illegal '%c' found in hexadecimal literal", next);
+            ungetc(next, state->stream);
             done = true;
         }
         else {
-            ungetc(next, stream);
+            ungetc(next, state->stream);
             done = true;
         }
         if (i >= BUFFER_SIZE) {
-            issue(file_name, line_number, "hexadecimal literal too long");
+            issue(state->file_name, state->line_number, "hexadecimal literal too long");
             // consume the rest of it
-            while (isxdigit(next)) next = fgetc(stream);
+            while (isxdigit(next)) next = fgetc(state->stream);
             break;
         }
     }
     buffer[i] = '\0';
-    return makeToken(TOK_INTVAL, strdup(buffer), line_number);
+    return makeToken(TOK_INTVAL, strdup(buffer), state->line_number);
 }
 
-Token lexBinary() {
+Token lexBinary(LexerState* state) {
     // grab the whole thang
     buffer[0] = '0';
     buffer[1] = 'b';
@@ -205,31 +208,31 @@ Token lexBinary() {
     int i = 2;
     bool done = false;
     while (!done) {
-        char next = fgetc(stream);
+        char next = fgetc(state->stream);
         if (next == '0' || next == '1') {
             buffer[i] = next;
             i++;
         } else if (isalnum(next)) {
-            issue(file_name, line_number, "illegal '%c' found in binary literal", next);
-            ungetc(next, stream);
+            issue(state->file_name, state->line_number, "illegal '%c' found in binary literal", next);
+            ungetc(next, state->stream);
             done = true;
         }
         else {
-            ungetc(next, stream);
+            ungetc(next, state->stream);
             done = true;
         }
         if (i >= BUFFER_SIZE) {
-            issue(file_name, line_number, "binary literal too long");
+            issue(state->file_name, state->line_number, "binary literal too long");
             // consume the rest of it
-            while (next == '0' || next == '1') next = fgetc(stream);
+            while (next == '0' || next == '1') next = fgetc(state->stream);
             break;
         }
     }
     buffer[i] = '\0';
-    return makeToken(TOK_INTVAL, strdup(buffer), line_number);
+    return makeToken(TOK_INTVAL, strdup(buffer), state->line_number);
 }
 
-Token lexOctal() {
+Token lexOctal(LexerState* state) {
     // grab the whole thang
     buffer[0] = '0';
     buffer[1] = 'o';
@@ -237,41 +240,41 @@ Token lexOctal() {
     int i = 2;
     bool done = false;
     while (!done) {
-        char next = fgetc(stream);
+        char next = fgetc(state->stream);
         if (next >= '0' && next <= '7') {
             buffer[i] = next;
             i++;
         } else if (isalnum(next)) {
-            issue(file_name, line_number, "illegal '%c' found in octal literal", next);
-            ungetc(next, stream);
+            issue(state->file_name, state->line_number, "illegal '%c' found in octal literal", next);
+            ungetc(next, state->stream);
             done = true;
         }
         else {
-            ungetc(next, stream);
+            ungetc(next, state->stream);
             done = true;
         }
         if (i >= BUFFER_SIZE) {
-            issue(file_name, line_number, "octal literal too long");
+            issue(state->file_name, state->line_number, "octal literal too long");
             // consume the rest of it
-            while (next >= '0' && next <= '7') next = fgetc(stream);
+            while (next >= '0' && next <= '7') next = fgetc(state->stream);
             break;
         }
     }
     buffer[i] = '\0';
-    return makeToken(TOK_INTVAL, strdup(buffer), line_number);
+    return makeToken(TOK_INTVAL, strdup(buffer), state->line_number);
 
 
 }
 
 // we saw the start of a number, lex it!
-Token lexNumber(char start) {
+Token lexNumber(char start, LexerState* state) {
     // check for hex, binary, octal
     if (start == '0') {
-        char next = fgetc(stream);
-        if (next == 'x' || next == 'X') return lexHex();
-        else if (next == 'b' || next == 'B') return lexBinary();
-        else if (next == 'o' || next == 'O') return lexOctal();
-        else ungetc(next, stream);
+        char next = fgetc(state->stream);
+        if (next == 'x' || next == 'X') return lexHex(state);
+        else if (next == 'b' || next == 'B') return lexBinary(state);
+        else if (next == 'o' || next == 'O') return lexOctal(state);
+        else ungetc(next, state->stream);
     }
 
     // grab the whole thang
@@ -282,15 +285,15 @@ Token lexNumber(char start) {
     int i = 1;
     bool done = false;
     while (!done) {
-        char next = fgetc(stream);
+        char next = fgetc(state->stream);
         if (next == '.' && !seendot) {
             buffer[i] = next;
             i++;
             seendot = true;
         }
         else if (next == '.') {
-            issue(file_name, line_number, "multiple '.' found in number literal");
-            ungetc(next, stream);
+            issue(state->file_name, state->line_number, "multiple '.' found in number literal");
+            ungetc(next, state->stream);
             done = true;
         }
         // scientific notation can have an e
@@ -299,17 +302,17 @@ Token lexNumber(char start) {
             i++;
             seene = true;
 
-            next = fgetc(stream);
+            next = fgetc(state->stream);
             if (next == '-') {
                 buffer[i] = next;
                 i++;
             } else {
-                ungetc(next, stream);
+                ungetc(next, state->stream);
             }
         }
         else if (next == 'e' || next == 'E') {
-            issue(file_name, line_number, "multiple 'E' found in number literal");
-            ungetc(next, stream);
+            issue(state->file_name, state->line_number, "multiple 'E' found in number literal");
+            ungetc(next, state->stream);
             done = true;
         }
         else if (isdigit(next)) {
@@ -317,46 +320,46 @@ Token lexNumber(char start) {
             i++;
         }
         else if (isalpha(next)) {
-            issue(file_name, line_number, "'%c' found in number literal", next);
-            ungetc(next, stream);
+            issue(state->file_name, state->line_number, "'%c' found in number literal", next);
+            ungetc(next, state->stream);
             done = true;
         } else {
-            ungetc(next, stream);
+            ungetc(next, state->stream);
             done = true;
         }
         if (i >= BUFFER_SIZE) {
-            issue(file_name, line_number, "numeric literal too long");
+            issue(state->file_name, state->line_number, "numeric literal too long");
             // consume the rest of it
-            while (isdigit(next) || next == '.') next = fgetc(stream);
+            while (isdigit(next) || next == '.') next = fgetc(state->stream);
             break;
         }
     }
     buffer[i] = '\0';
 
-    if (seendot || seene) return makeToken(TOK_FLOATVAL, strdup(buffer), line_number);
-    else return makeToken(TOK_INTVAL, strdup(buffer), line_number);
+    if (seendot || seene) return makeToken(TOK_FLOATVAL, strdup(buffer), state->line_number);
+    else return makeToken(TOK_INTVAL, strdup(buffer), state->line_number);
 }
 
 // we saw the start of a id or keyword, lex it!
-Token lexWord(char start) {
+Token lexWord(char start, LexerState* state) {
     // grab the whole thang
     buffer[0] = start;
 
     int i = 1;
     bool done = false;
     while (!done) {
-        char next = fgetc(stream);
+        char next = fgetc(state->stream);
         if (!isalnum(next) && next != '_') {
-            ungetc(next, stream);
+            ungetc(next, state->stream);
             done = true;
         } else {
             buffer[i] = next;
             i++;
         }
         if (i >= BUFFER_SIZE) {
-            issue(file_name, line_number, "identifier name too long");
+            issue(state->file_name, state->line_number, "identifier name too long");
             // consume the rest of it
-            while (isalnum(next) || next == '_') next = fgetc(stream);
+            while (isalnum(next) || next == '_') next = fgetc(state->stream);
             break;
         }
     }
@@ -367,29 +370,29 @@ Token lexWord(char start) {
     if (keytoken != TOK_END) return TOK(keytoken);
 
     // it's an id or type name based on first letter's capitaization
-    if (isupper(buffer[0])) return makeToken(TOK_TYPENAME, strdup(buffer), line_number);
-    else return makeToken(TOK_IDNAME, strdup(buffer), line_number);
+    if (isupper(buffer[0])) return makeToken(TOK_TYPENAME, strdup(buffer), state->line_number);
+    else return makeToken(TOK_IDNAME, strdup(buffer), state->line_number);
 }
 
 // returns the next token in the input stream
-Token lex() {
+Token lex(LexerState* state) {
     do {
         // if we need dedents, do that first
-        if (dedents_remaining > 0) {
-            dedents_remaining--;
-            indent_level--;
+        if (state->dedents_remaining > 0) {
+            state->dedents_remaining--;
+            state->indent_level--;
             return TOK(TOK_DEDENT);
         }
 
-        int current = fgetc(stream);
+        int current = fgetc(state->stream);
 
         // if this is not a space character, and it was the start of the line, dedent all the way
-        if (current != ' ' && current != '\n' && start_of_line) {
-            start_of_line = false;
-            ungetc(current, stream);
+        if (current != ' ' && current != '\n' && state->start_of_line) {
+            state->start_of_line = false;
+            ungetc(current, state->stream);
 
-            if (indent_level > 0) {
-                dedents_remaining = indent_level;
+            if (state->indent_level > 0) {
+                state->dedents_remaining = state->indent_level;
             }
 
             continue;
@@ -407,65 +410,65 @@ Token lex() {
             case '}': return TOK(TOK_RBRACE);
             case '_': return TOK(TOK_USCORE);
 
-            case '+': return TOK(match('=') ? TOK_PLUSASSIGN : TOK_PLUS);
-            case '%': return TOK(match('=') ? TOK_MODASSIGN : TOK_MODULUS);
-            case '&': return TOK(match('=') ? TOK_BITANDASSIGN : TOK_BITAND);
-            case '^': return TOK(match('=') ? TOK_BITXORASSIGN : TOK_BITXOR);
-            case '=': return TOK(match('=') ? TOK_EQUALS : TOK_ASSIGN);
-            case ':': return TOK(match(':') ? TOK_CONS : TOK_COLON);
+            case '+': return TOK(match('=', state) ? TOK_PLUSASSIGN : TOK_PLUS);
+            case '%': return TOK(match('=', state) ? TOK_MODASSIGN : TOK_MODULUS);
+            case '&': return TOK(match('=', state) ? TOK_BITANDASSIGN : TOK_BITAND);
+            case '^': return TOK(match('=', state) ? TOK_BITXORASSIGN : TOK_BITXOR);
+            case '=': return TOK(match('=', state) ? TOK_EQUALS : TOK_ASSIGN);
+            case ':': return TOK(match(':', state) ? TOK_CONS : TOK_COLON);
 
             case '!':
-                if (match('=')) return TOK(TOK_NOTEQUALS);
+                if (match('=', state)) return TOK(TOK_NOTEQUALS);
                 else {
-                    issue(file_name, line_number, "stray '!' in program");
+                    issue(state->file_name, state->line_number, "stray '!' in program");
                     continue;
                 }
 
             case '.':
-                if (match('.')) return TOK(TOK_ELIPSIS);
+                if (match('.', state)) return TOK(TOK_ELIPSIS);
                 else {
                     // it might be the start of a number
-                    char next = fgetc(stream);
-                    ungetc(next, stream);
-                    if (isdigit(next)) return lexNumber(current);
+                    char next = fgetc(state->stream);
+                    ungetc(next, state->stream);
+                    if (isdigit(next)) return lexNumber(current, state);
                     else {
-                        issue(file_name, line_number, "stray '.' in program");
+                        issue(state->file_name, state->line_number, "stray '.' in program");
                         continue;
                     }
                 }
 
             case '-':
-                if (match('=')) return TOK(TOK_MINUSASSIGN);
-                else if (match('>')) return TOK(TOK_ARROW);
+                if (match('=', state)) return TOK(TOK_MINUSASSIGN);
+                else if (match('>', state)) return TOK(TOK_ARROW);
                 else return TOK(TOK_MINUS);
 
             case '*':
-                if (match('=')) return TOK(TOK_TIMESASSIGN);
-                else if (match('*')) {
-                if (match('=')) return TOK(TOK_POWERASSIGN);
+                if (match('=', state)) return TOK(TOK_TIMESASSIGN);
+                else if (match('*', state)) {
+                if (match('=', state)) return TOK(TOK_POWERASSIGN);
                     else return TOK(TOK_POWER);
                 } else return TOK(TOK_TIMES);
 
             case '/':
-                if (match('='))
+                if (match('=', state))
                     return TOK(TOK_DIVASSIGN);
-                else if (match('/')) {
-                    if (match('=')) return TOK(TOK_INTDIVASSIGN);
+                else if (match('/', state)) {
+                    if (match('=', state)) return TOK(TOK_INTDIVASSIGN);
                     else return TOK(TOK_INTDIV);
 
                 } else return TOK(TOK_DIVIDE);
 
             case '<':
-               if (match('=')) return TOK(TOK_LESSEQ);
-               else if (match('<')) {
-                   if (match('=')) return TOK(TOK_LSHIFTASSIGN);
+               if (match('=', state)) return TOK(TOK_LESSEQ);
+               else if (match('<', state)) {
+                   if (match('=', state)) return TOK(TOK_LSHIFTASSIGN);
                    else return TOK(TOK_LSHIFT);
                } else return TOK(TOK_LESS);
 
             case '>':
-               if (match('=')) return TOK(TOK_GREATEREQ);
-               else if (match('>')) {
-                   if (match('=')) return TOK(TOK_RSHIFTASSIGN);
+               if (match('=', state)) return TOK(TOK_GREATEREQ);
+               else if (match('>', state)) {
+                   if (match('=', state)) return TOK(TOK_RSHIFTASSIGN);
                    else return TOK(TOK_RSHIFT);
                } else return TOK(TOK_GREATER);
 
@@ -473,72 +476,72 @@ Token lex() {
             // comments
             case '#':
                while (current != '\n') {
-                   current = fgetc(stream);
+                   current = fgetc(state->stream);
                }
                continue;
 
             // string literals
             case '"':
-               return lexString();
+               return lexString(state);
 
             // we do not allow tabs or carriage returns, for now anyway
             case '\t':
-               issue(file_name, line_number, "stray '\\t' in program");
+               issue(state->file_name, state->line_number, "stray '\\t' in program");
                continue;
             case '\r':
-               issue(file_name, line_number, "stray '\\r' in program");
+               issue(state->file_name, state->line_number, "stray '\\r' in program");
                continue;
 
             // spaces are tough...
             case ' ':
-               if (start_of_line) {
+               if (state->start_of_line) {
                    // no longer start of line
-                   start_of_line = false;
+                   state->start_of_line = false;
 
                    // count the number of spaces here
                    int spaces = 0;
                    while (current == ' ') {
                        spaces++;
-                       current = fgetc(stream);
+                       current = fgetc(state->stream);
                    }
 
                    // if this was ALL spaces, or a comment is hit, skip
                    if (current == '\n' || current == '#') {
-                       ungetc(current, stream);
+                       ungetc(current, state->stream);
                        continue;
                    }
 
                    // otherwise put the thing after the spaces back in
-                   ungetc(current, stream);
+                   ungetc(current, state->stream);
 
                    // if this is the FIRST indent, this is the level of one
-                   if (spaces_per_indent == 0) {
-                       spaces_per_indent = spaces;
+                   if (state->spaces_per_indent == 0) {
+                       state->spaces_per_indent = spaces;
                    }
 
                    // compute indentation level
-                   int level = spaces / spaces_per_indent;
-                   if ((spaces % spaces_per_indent) != 0) {
-                       issue(file_name, line_number, "indentation of %d spaces not consistent with previous indent width of %d",
-                               spaces, spaces_per_indent);
+                   int level = spaces / state->spaces_per_indent;
+                   if ((spaces % state->spaces_per_indent) != 0) {
+                       issue(state->file_name, state->line_number, "indentation of %d spaces not consistent with previous indent width of %d",
+                               spaces, state->spaces_per_indent);
                        continue;
                    }
 
                    // if we indented, do that
-                   if (level == (indent_level + 1)) {
-                       indent_level++;
+                   if (level == (state->indent_level + 1)) {
+                       state->indent_level++;
                        return TOK(TOK_INDENT);
                    }
 
                    // if we indented too much, that's an error
-                   if (level > indent_level) {
-                       issue(file_name, line_number, "indentation of more than one level encountered");
+                   if (level > state->indent_level) {
+                       issue(state->file_name, state->line_number, "indentation of more than one level encountered");
                        continue;
                    }
 
                    // if we are de-denting, trigger that
-                   if (level < indent_level) {
-                       dedents_remaining = indent_level - level;
+                   if (level < state->indent_level) {
+                       state->dedents_remaining = state->indent_level - level;
                        continue;
                    }
 
@@ -552,51 +555,51 @@ Token lex() {
 
             // ding!
             case '\n':
-                start_of_line = true;
-                line_number++;
+                state->start_of_line = true;
+                state->line_number++;
                 return TOK(TOK_NEWLINE);
 
             // this is the line extender character we DONT say start of line
             case '\\':
-                if (match('\n')) {
-                    line_number++;
+                if (match('\n', state)) {
+                    state->line_number++;
                     continue;
                 } else {
-                    issue(file_name, line_number, "unexpected character after line break");
+                    issue(state->file_name, state->line_number, "unexpected character after line break");
                     // consume rest of this line
-                    char next = fgetc(stream);
-                    while (next != '\n') next = fgetc(stream);
+                    char next = fgetc(state->stream);
+                    while (next != '\n') next = fgetc(state->stream);
                     continue;
                 }
 
             // we also allow | to be a line ender because it's nice for discriminated unions
             case '|': 
-                if (match('=')) return TOK(TOK_BITORASSIGN);
-                else if (match('\n')) {
+                if (match('=', state)) return TOK(TOK_BITORASSIGN);
+                else if (match('\n', state)) {
                     // consume the \n w/o setting start of line to true
-                    line_number++;
+                    state->line_number++;
                     return TOK(TOK_BAR);
                 } else return TOK(TOK_BAR);
 
             case EOF:
                 // if we were indented, we need to trigger dedents on subsequent lex calls
-                if (indent_level != 0) {
-                    dedents_remaining = indent_level;
+                if (state->indent_level != 0) {
+                    state->dedents_remaining = state->indent_level;
                     continue;
                 } else return TOK(TOK_END);
         }
 
         // now we need to handle things that don't start with a specifc character
         if (isalpha(current)) {
-            return lexWord(current);
+            return lexWord(current, state);
         }
 
         // start of a number
         if (isdigit(current)) {
-            return lexNumber(current);
+            return lexNumber(current, state);
         }
 
-        issue(file_name, line_number, "stray '%c' found in program", current);
+        issue(state->file_name, state->line_number, "stray '%c' found in program", current);
     } while (true); // keep looping over skippables
 }
 

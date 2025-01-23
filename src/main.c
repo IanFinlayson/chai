@@ -13,12 +13,12 @@ int main(int argc, char* argv[]) {
         return -1;
     }
 
-    setStream(file, argv[1]);
+    LexerState lexer = createLexerState(file, argv[1]);
 
-    Token t = lex();
+    Token t = lex(&lexer);
     while (t.type != TOK_END) {
         printToken(t);
-        t = lex();
+        t = lex(&lexer);
     }
     printToken(t);
     printf("\n");
