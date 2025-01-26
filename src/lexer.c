@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include "lexer.h"
+#include "hashtable.h"
 #include "errors.h"
 #include "token.h"
 
@@ -25,93 +26,49 @@ bool match(char expected, LexerState* state) {
     }
 }
 
-// we create a hash table of reserved words so when we see an id we can look it up
-#define KEYWORD_SIZE 16
-#define HASHTABLE_SIZE 255
+// this is global but is the same for all lexers that may be made
+HashTable keywords;
+bool hashSetup = false;
 
-typedef struct {
-    char keyword[KEYWORD_SIZE];
-    TokenType token;
-} KeywordTableEntry;
-
-// this is global, but all lexers can share this table
-KeywordTableEntry keywords[HASHTABLE_SIZE];
-bool table_innited = false;
-
-// get a hash code of a keyword
-int hashKeyword(const char* keyword) {
-    int length = strlen(keyword);
-    int code = 0;
-    for (int i = 0; i < length; i++) {
-        code += keyword[i] * 31;
-    }
-    return code % HASHTABLE_SIZE;
-}
-
-void insertKeyword(const char* keyword, TokenType token) {
-    int index = hashKeyword(keyword);
-    while (keywords[index].token != TOK_END) {
-        index = (index + 1) % HASHTABLE_SIZE;
-    }
-
-    strcpy(keywords[index].keyword, keyword);
-    keywords[index].token = token;
-}
-
-// TODO call this ONE time
+// this is called only once
 void setupKeywords() {
-    for (int i = 0; i < HASHTABLE_SIZE; i++) {
-        strcpy(keywords[i].keyword, "");
-        keywords[i].token = TOK_END;
-    }
+    // the table is big to avoid collisions
+    keywords = hashCreate(128);
 
-    insertKeyword("and", TOK_AND);
-    insertKeyword("assert", TOK_ASSERT);
-    insertKeyword("break", TOK_BREAK);
-    insertKeyword("case", TOK_CASE);
-    insertKeyword("class", TOK_CLASS);
-    insertKeyword("continue", TOK_CONTINUE);
-    insertKeyword("def", TOK_DEF);
-    insertKeyword("elif", TOK_ELIF);
-    insertKeyword("else", TOK_ELSE);
-    insertKeyword("for", TOK_FOR);
-    insertKeyword("if", TOK_IF);
-    insertKeyword("in", TOK_IN);
-    insertKeyword("lambda", TOK_LAMBDA);
-    insertKeyword("let", TOK_LET);
-    insertKeyword("match", TOK_MATCH);
-    insertKeyword("not", TOK_NOT);
-    insertKeyword("of", TOK_OF);
-    insertKeyword("or", TOK_OR);
-    insertKeyword("pass", TOK_PASS);
-    insertKeyword("return", TOK_RETURN);
-    insertKeyword("type", TOK_TYPE);
-    insertKeyword("var", TOK_VAR);
-    insertKeyword("while", TOK_WHILE);
-    insertKeyword("Int", TOK_INT);
-    insertKeyword("Float", TOK_FLOAT);
-    insertKeyword("String", TOK_STRING);
-    insertKeyword("Bool", TOK_BOOL);
-    insertKeyword("Void", TOK_VOID);
-    insertKeyword("True", TOK_TRUE);
-    insertKeyword("False", TOK_FALSE);
+    hashInsert(keywords, "and", (void*) TOK_AND);
+    hashInsert(keywords, "assert", (void*) TOK_ASSERT);
+    hashInsert(keywords, "break", (void*) TOK_BREAK);
+    hashInsert(keywords, "case", (void*) TOK_CASE);
+    hashInsert(keywords, "class", (void*) TOK_CLASS);
+    hashInsert(keywords, "continue", (void*) TOK_CONTINUE);
+    hashInsert(keywords, "def", (void*) TOK_DEF);
+    hashInsert(keywords, "elif", (void*) TOK_ELIF);
+    hashInsert(keywords, "else", (void*) TOK_ELSE);
+    hashInsert(keywords, "for", (void*) TOK_FOR);
+    hashInsert(keywords, "if", (void*) TOK_IF);
+    hashInsert(keywords, "in", (void*) TOK_IN);
+    hashInsert(keywords, "implement", (void*) TOK_IMPLEMENT);
+    hashInsert(keywords, "lambda", (void*) TOK_LAMBDA);
+    hashInsert(keywords, "let", (void*) TOK_LET);
+    hashInsert(keywords, "match", (void*) TOK_MATCH);
+    hashInsert(keywords, "not", (void*) TOK_NOT);
+    hashInsert(keywords, "of", (void*) TOK_OF);
+    hashInsert(keywords, "or", (void*) TOK_OR);
+    hashInsert(keywords, "pass", (void*) TOK_PASS);
+    hashInsert(keywords, "return", (void*) TOK_RETURN);
+    hashInsert(keywords, "trait", (void*) TOK_TRAIT);
+    hashInsert(keywords, "type", (void*) TOK_TYPE);
+    hashInsert(keywords, "var", (void*) TOK_VAR);
+    hashInsert(keywords, "while", (void*) TOK_WHILE);
+    hashInsert(keywords, "Int", (void*) TOK_INT);
+    hashInsert(keywords, "Float", (void*) TOK_FLOAT);
+    hashInsert(keywords, "String", (void*) TOK_STRING);
+    hashInsert(keywords, "Bool", (void*) TOK_BOOL);
+    hashInsert(keywords, "Void", (void*) TOK_VOID);
+    hashInsert(keywords, "True", (void*) TOK_TRUE);
+    hashInsert(keywords, "False", (void*) TOK_FALSE);
 }
 
-TokenType lookupKeyword(const char* keyword) {
-    // ensure table is built one time
-    if (!table_innited) {
-        setupKeywords();
-        table_innited = true;
-    }
-
-    int index = hashKeyword(keyword);
-
-    while (keywords[index].token != TOK_END && strcmp(keywords[index].keyword, keyword)) {
-        index = (index + 1) % HASHTABLE_SIZE;
-    }
-
-    return keywords[index].token;
-}
 
 LexerState createLexerState(FILE* file, const char* name) {
     LexerState state;
@@ -122,6 +79,12 @@ LexerState createLexerState(FILE* file, const char* name) {
     state.spaces_per_indent = 0;
     state.indent_level = 0;
     state.dedents_remaining = 0;
+
+    if (!hashSetup) {
+        setupKeywords();
+        hashSetup = true;
+    }
+
     return state;
 }
 
@@ -366,8 +329,10 @@ Token lexWord(char start, LexerState* state) {
     buffer[i] = '\0';
 
     // look this up in the keyword hash table and return if found
-    TokenType keytoken = lookupKeyword(buffer);
-    if (keytoken != TOK_END) return TOK(keytoken);
+    void* keytoken = hashLookup(keywords, buffer);
+    if (keytoken != NULL) {
+        return TOK((TokenType) keytoken);
+    }
 
     // it's an id or type name based on first letter's capitaization
     if (isupper(buffer[0])) return makeToken(TOK_TYPENAME, strdup(buffer), state->line_number);

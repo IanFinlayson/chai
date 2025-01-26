@@ -25,6 +25,7 @@ void printToken(Token t) {
         case TOK_FOR: printf("for "); break;
         case TOK_IF: printf("if "); break;
         case TOK_IN: printf(" in "); break;
+        case TOK_IMPLEMENT: printf(" implement "); break;
         case TOK_LAMBDA: printf("lambda "); break;
         case TOK_LET: printf("let "); break;
         case TOK_MATCH: printf("match "); break;
@@ -33,6 +34,7 @@ void printToken(Token t) {
         case TOK_OR: printf(" or "); break;
         case TOK_PASS: printf("pass"); break;
         case TOK_RETURN: printf("return "); break;
+        case TOK_TRAIT: printf(" trait "); break;
         case TOK_TYPE: printf("type"); break;
         case TOK_VAR: printf("var "); break;
         case TOK_WHILE: printf("while "); break;

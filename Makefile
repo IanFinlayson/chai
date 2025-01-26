@@ -1,5 +1,5 @@
 # options
-CC=clang
+CC=gcc
 CFLAGS=-W -Wall -pedantic -g
 TARGET=chai
 
