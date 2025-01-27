@@ -69,7 +69,6 @@ void setupKeywords() {
     hashInsert(keywords, "False", (void*) TOK_FALSE);
 }
 
-
 LexerState createLexerState(FILE* file, const char* name) {
     LexerState state;
     state.stream = file;
@@ -225,8 +224,6 @@ Token lexOctal(LexerState* state) {
     }
     buffer[i] = '\0';
     return makeToken(TOK_INTVAL, strdup(buffer), state->line_number);
-
-
 }
 
 // we saw the start of a number, lex it!
@@ -436,7 +433,6 @@ Token lex(LexerState* state) {
                    if (match('=', state)) return TOK(TOK_RSHIFTASSIGN);
                    else return TOK(TOK_RSHIFT);
                } else return TOK(TOK_GREATER);
-
 
             // comments
             case '#':

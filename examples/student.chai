@@ -1,0 +1,32 @@
+
+# design question, is there a better way to indicate
+# the initialization of a field?  properties?
+# things auto put into constructor??
+
+class Student:
+    # we could also assign theese initial values here instead of constructor
+    var name String
+    var credits Int
+    var gpa Float
+
+    def Student(name String):
+        self.name = name
+        self.credits = 0
+        self.gpa = 0
+
+    def print():
+        print("Name:", self.name)
+        print("Credits:", self.credits)
+        print("GPA:", self.gpa)
+
+    def canGraduate():
+        return self.credits >= 120 and self.gpa >= 2.0
+
+    def setName(name String):
+        self.name = name
+
+def main():
+    s1 = Student()
+    s1.setName("Duncan Bumpkiss")
+    s1.print()
+
