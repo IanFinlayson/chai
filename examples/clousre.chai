@@ -1,0 +1,14 @@
+
+def makeCounter(start Int, step Int) Void -> Int:
+    def counter(): 
+        start += step
+        return start
+    return counter
+
+def main():
+    c1 = makeCounter(1, 10)
+    c2 = makeCounter(10, -1)
+    for i in [1 .. 10]:
+        print(c1())
+        print(c2())
+
