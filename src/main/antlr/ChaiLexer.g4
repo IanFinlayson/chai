@@ -13,11 +13,13 @@ ASSERT:     'assert';
 BREAK:      'break';
 CASE:       'case';
 CONTINUE:   'continue';
+CLASS:      'class';
 DEF:        'def';
 ELIF:       'elif';
 ELSE:       'else';
 FOR:        'for';
 IF:         'if';
+IMPLEMENT:  'implement';
 IN:         'in';
 LAMBDA:     'lambda';
 LET:        'let';
@@ -27,6 +29,8 @@ OF:         'of';
 OR:         'or';
 PASS:       'pass';
 RETURN:     'return';
+SELF:       'self';
+TRAIT:      'trait';
 TYPE:       'type';
 VAR:        'var';
 WHILE:      'while';
@@ -74,6 +78,7 @@ BAR:        '|';
 ARROW:      '->';
 CONS:       '::';
 USCORE:     '_';
+DOT:        '.';
 
 PLUSASSIGN:     '+=';
 MINUSASSIGN:    '-=';
@@ -89,19 +94,25 @@ BITANDASSIGN:   '&=';
 BITORASSIGN:    '|=';
 BITXORASSIGN:   '^=';
 
-
 /* chai differentiates between id (start lower case) and type (upper case) names */
 IDNAME:     [a-z][_0-9a-zA-Z]*;
 TYPENAME:   [A-Z][_0-9a-zA-Z]*;
 
-/* TODO add in more for these (hex numbers, scientific notation, etc. */
-INTVAL:     [0-9]+;
-FLOATVAL:   [0-9]*'.'[0-9]+;
+/* we take ints in 4 bases */
+INTVAL: DECINT | OCTINT | BININT | HEXINT;
+DECINT: '0' | [1-9][0-9]*;
+OCTINT: '0' [oO] [0-7]+;
+BININT: '0' [bB] [01]+;
+HEXINT: '0' [xX] [0-9a-fA-F]+;
+
+/* floats can be regular or in scientific notation */
+FLOATVAL: REGFLOAT | SCIFLOAT;
+REGFLOAT: [0-9]* '.' [0-9]+;
+SCIFLOAT: (DECINT | REGFLOAT) [eE] [+-]? DECINT;
 
 /* thank you antlr book */
 STRINGVAL: '"' ( ~[\\"\r\n] | ESC)* '"';
 fragment ESC: '\\' [tn"\\];
-
 
 /* comments */
 COMMENT: '#'~[\n\r]* -> channel(HIDDEN);

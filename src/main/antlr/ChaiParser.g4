@@ -4,61 +4,66 @@ options {
     tokenVocab = ChaiLexer;
 }
 
-// the program is a list of toplevel constructs (or blank lines)
-program: (toplevel | NEWLINE)* EOF;
+// a program is a collection of units
+program:
+    (unit | NEWLINE)* EOF;
 
-// things that can exist outside of anything
-toplevel: functiondef
-        | typedef
-        ;
+// units can be top-level things, or also inside a class/def
+unit: 
+    (VAR | LET) IDNAME type? (ASSIGN expression)? NEWLINE
+    | functiondef
+    | typedef
+    | classdef
+    ;
 
-// a function definition line
-functiondef: DEF IDNAME typeparams? LPAREN paramlist? RPAREN type? COLON NEWLINE INDENT statements DEDENT;
-
-// a list of 0 or more formal parameters to a function
+// a def statement
+functiondef: DEF IDNAME typeparams? LPAREN paramlist? RPAREN functype? COLON NEWLINE INDENT statements DEDENT;
+functype: type | VOID;
 paramlist: (param COMMA)* param;
 
 // a single parameter, with a default value and/or a type
-param: IDNAME type                  # namedParam
-     | IDNAME ASSIGN term type?     # defaultParam
+param: IDNAME type
+     | IDNAME ASSIGN term type?
      ;
 
-// a type definition such as a discriminated union (but really anything)
-typedef: TYPE TYPENAME typeparams? ASSIGN type;
+// a class declaration (pass is allowed, or else must be units
+classdef: CLASS TYPENAME COLON NEWLINE INDENT ((unit | NEWLINE)+ | PASS) DEDENT;
 
 // one or more type parameters for generic code
-typeparams: LESS (TYPENAME COMMA)* TYPENAME GREATER;
+typeparams: LESS (TYPENAME COMMA)+ TYPENAME GREATER;
 
-// any data type
-type: INT                           # intType
-    | FLOAT                         # floatType
-    | STRING                        # stringType
-    | BOOL                          # boolType
-    | VOID                          # voidType
-    | TYPENAME typeparamfills?      # namedType
+// a type definition such as a discriminated union (but really anything)
+typedef: TYPE TYPENAME typeparams? ASSIGN type NEWLINE;
+
+// any type usable in
+type: INT
+    | FLOAT
+    | STRING
+    | BOOL
+    | TYPENAME typeparamfills?
 
     // a tuple type
-    | LPAREN (type COMMA)+ type RPAREN  # tupleType
+    | LPAREN (type COMMA)+ type RPAREN
 
     // a list type
-    | LBRACK type RBRACK                # listType
+    | LBRACK type RBRACK
 
     // a dict type
-    | LBRACE type COLON type RBRACE     # dictType
+    | LBRACE type COLON type RBRACE
     
     // a set type
-    | LBRACE type RBRACE                # setType
+    | LBRACE type RBRACE
 
     // discriminated union
-    | unionpart BAR unionpart (BAR unionpart)*  # unionType
+    | unionpart BAR unionpart (BAR unionpart)*
     
     // a function type
-    | type ARROW type                           # functionType
+    | type ARROW type
     ;
 
 // filling in type params with real types
-typeparamfills: LESS (type COMMA)* type GREATER;
-    
+typeparamfills: LESS (type COMMA)+ type GREATER;
+
 // piece of a discriminated union
 unionpart: TYPENAME (OF type)?;
 
@@ -66,53 +71,52 @@ unionpart: TYPENAME (OF type)?;
 statements: (statement | NEWLINE)+;
 
 // any valid Chai statement
-statement: functioncall                                     # funcallStatement
-         | lvalue ASSIGN expression                         # assignStatement
-         | (VAR | LET) IDNAME type? ASSIGN expression       # varStatement
-         | modassign                                        # modassignStatement
-         | ASSERT expression                                # assertStatement
-         | RETURN expression?                               # returnStatement
-         | ifstmt                                           # ifstatement
-         | PASS                                             # passStatement
-         | CONTINUE                                         # continueStatement
-         | BREAK                                            # breakStatement
-         | FOR IDNAME IN expression COLON NEWLINE INDENT statements DEDENT  # forStatement
-         | WHILE expression COLON NEWLINE INDENT statements DEDENT          # whileStatement
-         | MATCH expression COLON NEWLINE INDENT caseline+ DEDENT           # matchStatment
-         | toplevel                                                         # toplevelStatement
+statement:
+         lvalue ASSIGN expression
+         | modassign
+         | ASSERT expression
+         | RETURN expression?
+         | PASS
+         | CONTINUE
+         | BREAK
+         | ifstmt
+         | FOR IDNAME IN expression COLON NEWLINE INDENT statements DEDENT
+         | WHILE expression COLON NEWLINE INDENT statements DEDENT
+         | MATCH expression COLON NEWLINE INDENT caseline+ DEDENT
+         | unit
+         | expression
          ;
 
-// something that can be assigned into -- basically name or list/dict/tuple/set reference
-lvalue: IDNAME                              # justID
-      | lvalue LBRACK expression RBRACK     # nestedLvalue
-      ;
+// something that can be assigned into -- basically name or list/dict/tuple/set reference, or class reference
+lvalue: (SELF DOT)? IDNAME lvaluecont*;
+lvaluecont: DOT IDNAME
+          | LBRACK expression RBRACK
+          ;
 
 // an operator assign type statement like `i += 1`
 modassign: lvalue op=(PLUSASSIGN | MINUSASSIGN | TIMESASSIGN | DIVASSIGN | MODASSIGN | INTDIVASSIGN
-                    | LSHIFTASSIGN | RSHIFTASSIGN | BITANDASSIGN | BITORASSIGN | BITXORASSIGN)
-                 expression;
+                    | LSHIFTASSIGN | RSHIFTASSIGN | BITANDASSIGN | BITORASSIGN | BITXORASSIGN) expression;
 
 // a case in a match statement
 caseline: CASE destructure COLON NEWLINE INDENT statements DEDENT;
 
 // a thing that can be used as part of a destructured match statement
-destructure: IDNAME                                             # idDestr
-           | literal                                            # literalDestr
-           | USCORE                                             # uscoreDestr
-           | LPAREN (destructure COMMA)+ destructure RPAREN     # tupleDestr
-           | destructure (CONS destructure)+                    # consDestr
-           | LBRACK (destructure (COMMA destructure)*)? RBRACK  # listDestr
-           | TYPENAME destructure?                              # unionDestr
+destructure: IDNAME
+           | literal
+           | USCORE
+           | LPAREN (destructure COMMA)+ destructure RPAREN
+           | destructure (CONS destructure)+
+           | LBRACK (destructure (COMMA destructure)*)? RBRACK
+           | TYPENAME destructure?
            ;
-
 
 // we don't get else if for free
 ifstmt: IF expression COLON NEWLINE INDENT statements DEDENT elifclause* elseclause?;
 elifclause: ELIF expression COLON NEWLINE INDENT statements DEDENT;
 elseclause: ELSE COLON NEWLINE INDENT statements DEDENT;
 
-// a function call TODO make this a term, so we can call functions through data structures
-functioncall: IDNAME LPAREN arglist? RPAREN;
+// a function call
+functioncall: term LPAREN arglist? RPAREN;
 
 // the supplied argument list, containing 0 or more expression, separated with commas
 arglist: (argument COMMA)* argument;
@@ -123,25 +127,27 @@ argument: expression
         ;
 
 // any valid Chai expression
-expression: <assoc=right> expression POWER expression                       # powerExpression
-          | op=(COMPLEMENT | PLUS | MINUS) expression                       # unaryExpression
-          | <assoc=right> expression CONS expression                        # consExpression
-          | expression op=(TIMES | DIVIDE | INTDIV | MODULUS) expression    # timesdivExpression
-          | expression op=(PLUS | MINUS) expression                         # plusMinusExpression
-          | expression op=(LSHIFT | RSHIFT) expression                      # shiftExpression
-          | expression BITAND expression                                    # bitandExpression
-          | expression BITXOR expression                                    # bitxorExpression
-          | expression BAR expression                                       # bitorExpression
-          | expression op=(LESS | GREATER | LESSEQ | GREATEREQ | EQUALS | NOTEQUALS) expression     # compareExpression
-          | expression IN expression                                        # inExpression
-          | expression NOT IN expression                                    # notinExpression
-          | NOT expression                                                  # notExpression
-          | expression AND expression                                       # andExpression
-          | expression OR expression                                        # orExpression
-          | expression IF expression ELSE expression                        # ifelseExpression
-          | lambda                                                          # lambdaExpression
-          | functioncall                                                    # funcallExpression
-          | term                                                            # termExpression
+expression: expression DOT IDNAME
+          | expression DOT functioncall
+          | <assoc=right> expression POWER expression
+          | op=(COMPLEMENT | PLUS | MINUS) expression
+          | <assoc=right> expression CONS expression
+          | expression op=(TIMES | DIVIDE | INTDIV | MODULUS) expression
+          | expression op=(PLUS | MINUS) expression
+          | expression op=(LSHIFT | RSHIFT) expression
+          | expression BITAND expression
+          | expression BITXOR expression
+          | expression BAR expression
+          | expression op=(LESS | GREATER | LESSEQ | GREATEREQ | EQUALS | NOTEQUALS) expression
+          | expression IN expression
+          | expression NOT IN expression
+          | NOT expression
+          | expression AND expression
+          | expression OR expression
+          | expression IF expression ELSE expression
+          | lambda
+          | functioncall
+          | term
           ;
 
 
@@ -150,50 +156,55 @@ lambda: LAMBDA lambdaParams? COLON expression;
 lambdaParams: (IDNAME type COMMA)* IDNAME type;
 
 // a term is an individual piece of an expression
-term: IDNAME                                                        # idTerm
+term: IDNAME
     // list index like nums[i]
-    | term LBRACK expression RBRACK                                 # listIndexTerm
+    | term LBRACK expression RBRACK
+
+    // self as used in classes
+    | SELF
 
     // list slice
-    | term LBRACK expression? COLON expression? RBRACK              # listSliceTerm
+    | term LBRACK expression? COLON expression? RBRACK
 
     // sth in parens
-    | LPAREN expression RPAREN                                      # parensTerm
+    | LPAREN expression RPAREN
 
     // a list literal like [3, 4, 5]
-    | LBRACK (expression (COMMA expression)*)? RBRACK               # listLiteralTerm
+    | LBRACK (expression (COMMA expression)*)? RBRACK
     
     // a list range
-    | LBRACK expression ELIPSIS expression RBRACK                   # listRangeTerm
+    | LBRACK expression ELIPSIS expression RBRACK
           
     // a list comprehension
-    | LBRACK expression FOR IDNAME IN expression (IF expression)? RBRACK    # listcompTerm
+    | LBRACK expression FOR IDNAME IN expression (IF expression)? RBRACK
 
     // tuple literal like (3, 4, 5) (we don't allow 0 or 1 length tuples)
-    | LPAREN (expression COMMA)+ expression RPAREN                  # tupleLiteralTerm
+    | LPAREN (expression COMMA)+ expression RPAREN
 
     // a set literal
-    | LBRACE (expression (COMMA expression)*)? RBRACE               # setLiteralTerm
+    | LBRACE (expression (COMMA expression)*)? RBRACE
 
     // a dictionary literal
-    | LBRACE (dictentry (COMMA dictentry)*) RBRACE                  # dictLiteralTerm
-    | LBRACE COLON RBRACE                                           # emptydictLiteralTerm
+    | LBRACE (dictentry (COMMA dictentry)*) RBRACE
+    | LBRACE COLON RBRACE
     
     // a discriminated union
-    | TYPENAME expression?                                          # unionTerm
+    | TYPENAME expression?
+
+    // a class reference
+    | SELF
 
     // an actual value from the lexer
-    | literal                                                       # simpleLiteralTerm
+    | literal
     ;
 
 dictentry: expression COLON expression;
 
 // any straight up value from the lexer
-literal: INTVAL         # intLiteral
-       | FLOATVAL       # floatLiteral
-       | STRINGVAL      # stringLiteral
-       | TRUE           # trueLiteral
-       | FALSE          # falseLiteral
+literal: INTVAL
+       | FLOATVAL
+       | STRINGVAL
+       | TRUE
+       | FALSE
        ;
-
 

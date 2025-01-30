@@ -1,38 +1,39 @@
-Re-think ranges:
-    Do Haskell stype to allow a step and infinite ranges?
+Lexer/parser:
+    - lines ending with \
+    - or lines ending with | for unions
+
+    - get the traits implemented
+
+    - test, test, test
+
+    - think through the following language ideas:
+
+
+Generators:
+    - Add the yield keyword to lexer and parser
+    - Allow for Int* to indicate a generator of Int in the type system
+    - Change the list range syntax to be like Haskell:
         [1,2..10] = [1,2,3,4,5,6,7,8,9,10]
         [1,3..10] = [1,3,5,7,9]
         [4,3..0]  = [4,3,2,1,0]
         [0,5..]   = [0,5,10,15,20,25,30,35...  -- infinite
         [1,1..]   = [1,1,1,1,1,1,1,1,1,1,1...  -- infinite
-    Or math style [) (] type things?  Not sure about the asymmetery of that...
-    Or just use the range function?
-    Should produce generators eventually either way!
+
+Traits:
+    - add trait stuff into the parser, including the implement block
+    - can we make the implement block add methods to a type separate from any trait?
+      like we could add our own methods to String or List....
+    - think through the traits built into the language:
+        - like Show, Ord, etc. type classes in Haskell
+        - maybe Generator is a trait so people can make classes that are generators
+        - also callable, addable, etc. are traits??? not sure - this can provide operator overloading essentially
+
+
+
 
 Things to add into language:
     - combine up def and match stmts??
-    - generators, lazy sequences, yield, how to encode in type system?
-        Idea: we use -> for normal function return
-              and ->* or maybe >> for yield return types
-
-        ACTUALLY no, the generator is not a thing with the function, but rather
-        the type being produced.  Like a range or list comp can also make a generator
-        so it should be something like *Int or `Float` or something to indicae that the
-        thing being returned is a generaor of a type.
-
-        OR maybe it is a function thing and a range like [1 ..] actually produces
-        a function which returns the next in a series each time you call it.
-
-    - libraries
+    - libraries and modules
     - multiple fors in list comprehension (like python)?
 
-Front End improvements:
-    - allow line breaks in discriminated unions?
-    - make long lines being joined with \ work
-    - maybe steal python lexer...or write one by hand...
-
-Roadmap:
-    - write random code samples for each feature
-    - write a tree-walking interpreter in Java, not efficient but easy to try things out in
-    - write a more efficient compiler/VM backend
 

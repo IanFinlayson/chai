@@ -7,7 +7,7 @@ endif
 
 " keywords
 syn keyword chaiKeyword if elif else while for in def lambda return and or not var let type of match case 
-syn keyword chaiKeyword assert break continue pass class implement trait
+syn keyword chaiKeyword assert break continue pass class implement trait self
 
 " types
 syn keyword chaiType Int Float String Bool True False Void
