@@ -19,7 +19,7 @@ public class Main {
             stream = CharStreams.fromFileName(args[0]);
             lexer = new ChaiLexer(stream);
         } catch (Exception e) {
-            System.out.println("Could not open '" + args[0] + "' for reading");
+            System.out.println("could not open '" + args[0] + "' for reading");
             return;
         }
         CommonTokenStream tokens = new CommonTokenStream(lexer);
@@ -35,10 +35,13 @@ public class Main {
         // do the parsing
         ParseTree tree = parser.program();
         if (tree == null) {
-            System.out.println("Couldn't parse at all!");
+            System.out.println("internal compiler error");
             return;
         } else {
-            System.out.println("Successfully parsed the code");
+            // TODO if parsing failed, we should not type check
+            // do type checking
+            TypeChecker checker = new TypeChecker();
+            checker.visit(tree);
         }
     }
 }

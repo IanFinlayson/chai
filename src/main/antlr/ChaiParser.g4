@@ -6,7 +6,10 @@ options {
 
 // a program is a collection of units
 program:
-    (unit | NEWLINE)* EOF;
+    (unit | imprt | NEWLINE)* EOF;
+
+// imports can only exist at top level
+imprt: IMPORT IDNAME NEWLINE;
 
 // units can be top-level things, or also inside a class/def
 unit: 
@@ -59,6 +62,9 @@ type: INT
     
     // a function type
     | type ARROW type
+
+    // a generator type
+    | type STAR
     ;
 
 // filling in type params with real types
@@ -76,6 +82,7 @@ statement:
          | modassign
          | ASSERT expression
          | RETURN expression?
+         | YIELD expression
          | PASS
          | CONTINUE
          | BREAK
@@ -132,7 +139,7 @@ expression: expression DOT IDNAME
           | <assoc=right> expression POWER expression
           | op=(COMPLEMENT | PLUS | MINUS) expression
           | <assoc=right> expression CONS expression
-          | expression op=(TIMES | DIVIDE | INTDIV | MODULUS) expression
+          | expression op=(STAR | DIVIDE | INTDIV | MODULUS) expression
           | expression op=(PLUS | MINUS) expression
           | expression op=(LSHIFT | RSHIFT) expression
           | expression BITAND expression
@@ -172,9 +179,9 @@ term: IDNAME
     // a list literal like [3, 4, 5]
     | LBRACK (expression (COMMA expression)*)? RBRACK
     
-    // a list range
-    | LBRACK expression ELIPSIS expression RBRACK
-          
+    // a list range like [1 .. 10] [1, 3 .. 10] [1 .. ] or [10, 20 .. ]
+    | LBRACK expression (COMMA expression)? ELIPSIS expression? RBRACK
+
     // a list comprehension
     | LBRACK expression FOR IDNAME IN expression (IF expression)? RBRACK
 

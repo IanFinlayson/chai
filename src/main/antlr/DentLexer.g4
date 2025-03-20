@@ -122,7 +122,6 @@ lexer grammar DentLexer;
 
 	@Override
 	public Token nextToken() {
-
 		// Return tokens from the queue if it is not empty.
 		if (!tokenQueue.isEmpty()) { return tokenQueue.poll(); }
 
@@ -164,17 +163,23 @@ lexer grammar DentLexer;
 
 }
 
-NEWLINE : ( '\r'? '\n' | '\r' ) {
+/* we allow a \ character to continue a line to the next one */
+LINECONT: '\\' NEWLINE WS {
+	setChannel(HIDDEN);
+};
+
+NEWLINE: ( '\r'? '\n' | '\r' ) {
 	if (pendingDent) { setChannel(HIDDEN); }
 	pendingDent = true;
 	indentCount = 0;
 	initialIndentToken = null;
-} ;
+};
 
-WS : [ \t]+ {
+WS: [ \t]+ {
 	setChannel(HIDDEN);
 	if (pendingDent) { indentCount += getText().length(); }
-} ;
+};
 
-INDENT : 'INDENT' { setChannel(HIDDEN); };
-DEDENT : 'DEDENT' { setChannel(HIDDEN); };
+INDENT: 'INDENT' { setChannel(HIDDEN); };
+DEDENT: 'DEDENT' { setChannel(HIDDEN); };
+

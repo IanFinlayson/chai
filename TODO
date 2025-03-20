@@ -1,25 +1,15 @@
 Lexer/parser:
-    - lines ending with \
-    - or lines ending with | for unions
+    - maybe make lines ending with | for unions an acceptable line breaking character
 
-    - get the traits implemented
-
-    - test, test, test
-
-    - think through the following language ideas:
+Type checker:
+    - make a type checker
 
 
-Generators:
-    - Add the yield keyword to lexer and parser
-    - Allow for Int* to indicate a generator of Int in the type system
-    - Change the list range syntax to be like Haskell:
-        [1,2..10] = [1,2,3,4,5,6,7,8,9,10]
-        [1,3..10] = [1,3,5,7,9]
-        [4,3..0]  = [4,3,2,1,0]
-        [0,5..]   = [0,5,10,15,20,25,30,35...  -- infinite
-        [1,1..]   = [1,1,1,1,1,1,1,1,1,1,1...  -- infinite
+
+
 
 Traits:
+    - decide what to do for run-time polymorphism
     - add trait stuff into the parser, including the implement block
     - can we make the implement block add methods to a type separate from any trait?
       like we could add our own methods to String or List....
@@ -28,12 +18,127 @@ Traits:
         - maybe Generator is a trait so people can make classes that are generators
         - also callable, addable, etc. are traits??? not sure - this can provide operator overloading essentially
 
+THIS IS FROM THE overview docs of when I was putting this in.
 
+## Traits -- this is left for now, but we are not implementing this yet!
 
+Type parameters provide static polymorphism, while Traits provide dynamic
+polymorphism.  A trait is similar to an interface in Java.  For example,
+suppose we are making graphical program where we want a list of things that
+are drawn to the screen, but each will do so differently.
 
-Things to add into language:
-    - combine up def and match stmts??
-    - libraries and modules
-    - multiple fors in list comprehension (like python)?
+We introduce a trait which provides the needed functionality:
 
+```
+trait Drawable:
+    def draw(s Screen)
+    def getLayer() Int
+```
+
+We can then indicate that a class has said trait:
+
+```
+class Character implement Drawable:
+    var bitmap Image
+    var x = 0
+    var y = 0
+
+    def Character(x, y):
+        self.x = x
+        self.y = y
+
+    def draw(s Screen) Bool:
+        self.bitmap.draw(s)
+        return True
+
+    # presumably this is used for z-sorting
+    def getLayer() Int:
+        return 1
+
+    def otherThing():
+        print("some other method not part of trait")
+```
+
+If a class provides multiple traits, they can be separated with the & operator in the
+class declaration line.
+
+We can also implement a trait for a class after it has been created.  For
+instance, we could have done the above like this instead:
+
+```
+class Character:
+    var bitmap Image
+    var x = 0
+    var y = 0
+
+    def Character(x, y):
+        self.x = x
+        self.y = y
+
+    def otherThing():
+        print("some other method not part of trait")
+```
+
+And provide the code to make this class drawable separately, even in a
+different file:
+
+```
+implement Drawable for Character c:
+    def draw(s Screen) Bool:
+        c.bitmap.draw(s)
+        return True
+
+    def getLayer() Int:
+        return 1
+```
+
+Of course the reason to do this is to be able to write code to the polymorphic
+trait.  For instance
+
+```
+var objects [Drawable]
+
+# we can add any objects to this list that have the Drawable trait:
+objects += Character()
+objects += Enemy("Goblin")
+objects += Enemy("Skeleton")
+
+# we can then call the methods of the trait
+sort(objects, key = lambda a, b: a.getLayer() < b.getLayer())
+
+for obj in objects:
+    obj.draw(screen)
+```
+
+Because we can implement a trait outside of the class statement, we can do so
+for classes we did not write or, in fact, any type at all.  We could implement
+the Drawable trait for Strings for instance:
+
+```
+implement Drawable for String s:
+    def draw(s Screen):
+        s.writeText(s)
+    
+    def getLayer() Int:
+        return 0
+```
+
+Traits can thus be added for any type: those built in to the language, part of
+libraries, or ones we created ourselves.
+
+We can also indicate that a type should fulfill multiple traits by combining
+them with the & operator.  For instance, the following function takes a
+parameter that can be any type with both the Drawable and Updatable traits:
+
+```
+def addObjectToScene(object Drawable & Updatable):
+    pass
+```
+
+If we have a set of traits we will be using often, we can also make a type alias
+for it instead:
+
+```
+type Entity = Drawable & Updatable
+```
 

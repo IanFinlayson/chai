@@ -103,7 +103,7 @@ documentation, but are summarized here.
 | else | execute code if a previous if (and possibly elifs) were all false |
 | for | begin a for loop construct |
 | if | check a condition and execute code if it's true |
-| implement | indicates a class has a given trait |
+| import | load chai code from another file |
 | in | used in a for loop, and also as an operator on collections |
 | lambda | define an anonymous function |
 | let | create a constant |
@@ -114,7 +114,6 @@ documentation, but are summarized here.
 | pass | take no action (used when a statement is syntactically required) |
 | return | return to the caller of a function, possibly with a value |
 | self | refers to the object represented by a class |
-| trait | creates a type trait |
 | type | used to declare new types |
 | var | create a variable |
 | while | begin a while loop construct |
