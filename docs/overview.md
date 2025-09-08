@@ -493,7 +493,7 @@ This also allows for the creation of higher-order functions such as map, which
 can be written in Chai like this:
 
 ```
-def map<From, To>(f From -> To, list [From]) [To]:
+def map<From, To>(f (From -> To), list [From]) [To]:
     var result [To] = []
     for item in list:
         result += f(item)
@@ -507,7 +507,7 @@ Here, we have two type parameters, called From and To.  This map function takes
 a list and a function.  It applies the function to every element of the list,
 giving us a new list with the results.  The From type is the type of the
 elements of the list being passed in.  The To type is the type of the resulting
-list.  Here the function f has type `From -> To` which is a function which
+list.  Here the function f has type `(From -> To)` which is a function which
 takes one From type parameter and returns one To type value.
 
 We do not need to supply the types of map when calling it, since the compiler

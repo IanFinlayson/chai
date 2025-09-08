@@ -1,5 +1,5 @@
 
-def makeCounter(start Int, step Int) Void -> Int:
+def makeCounter(start Int, step Int) (Void -> Int):
     def counter(): 
         start += step
         return start

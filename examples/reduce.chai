@@ -1,5 +1,5 @@
 
-def reduce<T>(f T -> T -> T, start T, list [T]) T:
+def reduce<T>(f (T -> T -> T), start T, list [T]) T:
     var accum = start
     for item in list:
         accum = f(accum, item)

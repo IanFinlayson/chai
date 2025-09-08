@@ -19,8 +19,8 @@ unit:
     | classdef
     ;
 
-// a def statement
-functiondef: DEF IDNAME typeparams? LPAREN paramlist? RPAREN functype? COLON NEWLINE INDENT statements DEDENT;
+// a def statement (typename for the name is ONLY for constructors -- checked in type checker)
+functiondef: DEF (IDNAME | TYPENAME) typeparams? LPAREN paramlist? RPAREN functype? COLON NEWLINE INDENT statements DEDENT;
 functype: type | VOID;
 paramlist: (param COMMA)* param;
 
@@ -33,7 +33,7 @@ param: IDNAME type
 classdef: CLASS TYPENAME COLON NEWLINE INDENT ((unit | NEWLINE)+ | PASS) DEDENT;
 
 // one or more type parameters for generic code
-typeparams: LESS (TYPENAME COMMA)+ TYPENAME GREATER;
+typeparams: LESS (TYPENAME COMMA)* TYPENAME GREATER;
 
 // a type definition such as a discriminated union (but really anything)
 typedef: TYPE TYPENAME typeparams? ASSIGN type NEWLINE;
@@ -61,14 +61,14 @@ type: INT
     | unionpart BAR unionpart (BAR unionpart)*
     
     // a function type
-    | type ARROW type
+    | LPAREN (functype ARROW)* functype RPAREN
 
     // a generator type
     | type STAR
     ;
 
 // filling in type params with real types
-typeparamfills: LESS (type COMMA)+ type GREATER;
+typeparamfills: LESS (type COMMA)* type GREATER;
 
 // piece of a discriminated union
 unionpart: TYPENAME (OF type)?;

@@ -1,4 +1,4 @@
-def filter<T>(f T -> Bool, list [T]) [T]:
+def filter<T>(f (T -> Bool), list [T]) [T]:
     var result = []
     for item in list:
         if f(item):

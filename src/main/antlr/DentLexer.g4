@@ -168,6 +168,19 @@ LINECONT: '\\' NEWLINE WS {
 	setChannel(HIDDEN);
 };
 
+/* we also allow a | to serve double duty: it is a legit character
+   that is used in discriminated unions, and also as a line continuation
+   this is for things like:
+   type Direction = North |
+                    South |
+                    East |
+                    West
+*/
+
+// TODO
+
+
+
 NEWLINE: ( '\r'? '\n' | '\r' ) {
 	if (pendingDent) { setChannel(HIDDEN); }
 	pendingDent = true;

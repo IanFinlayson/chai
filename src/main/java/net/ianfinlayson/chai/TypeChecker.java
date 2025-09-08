@@ -12,12 +12,6 @@ public class TypeChecker extends ChaiParserBaseVisitor<Type> {
 
 
 
-
-
-
-
-
-
     @Override public Type visitImprt(ChaiParser.ImprtContext ctx) { return visitChildren(ctx); }
     @Override public Type visitUnit(ChaiParser.UnitContext ctx) { return visitChildren(ctx); }
     @Override public Type visitFunctiondef(ChaiParser.FunctiondefContext ctx) { return visitChildren(ctx); }

@@ -1,5 +1,5 @@
 
-def map<T1, T2>(f T1 -> T2, list [T1]) [T2]:
+def map<T1, T2>(f (T1 -> T2), list [T1]) [T2]:
     var result = []
     for item in list:
         result += f(item)
