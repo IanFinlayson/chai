@@ -1,5 +1,6 @@
 
-type Option<T> = None | Some of T
+type Option<T> = None |
+                 Some of T
 
 def slope(x0 Int, y0 Int, x1 Int, y1 Int) Option<Int>:
     if x0 != x1:

@@ -1,5 +1,3 @@
-
-
 # a simple guess the number program
 def main():
     var min = 1
