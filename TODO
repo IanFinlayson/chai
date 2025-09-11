@@ -1,8 +1,34 @@
-Lexer/parser:
-    - maybe make lines ending with | for unions an acceptable line breaking character
+0. Make a regression test setup with the programs we have so far
 
-Type checker:
-    - make a type checker
+1. Decide on variadic functions, keyword and default arguments vs. currying, and how function types look
+    1.1 Document in the docs
+    1.2 Make lexer changes
+    1.3 Make parser changes
+    1.4 Put in some tests
+
+2. Double check our destructures and make sure they work / work with for loops as we like
+    2.1 Fix any issues and make tests for them
+
+3. Begin writing the type checker
+    3.1 Start with simple programs and build out from there
+    3.2 We can look at how it worked in the old version if we want to
+    3.3 Make errors look nice and put in tests (good AND bad progs)
+
+4. Type error/warning issues
+    4.1 Make sure that the typing for empty literals makes sense and is documented
+    4.1 Decide if non-exhaustive matches are an error (for unions at least)
+    4.2 Decide how things like loop-able, call-able, hash-able types are reprensented
+            we should do this well so it can integrate with traits later on
+
+5. Afer type checking works and we feel good about it, pick a new goal:
+    5.1 Decide on implementation goal (tree-walk, vm, etc.)
+    5.2 Consider adding new features to language
+        5.2.1 Pipeline operator
+        5.2.2 Traits (documented below)
+
+
+
+
 
 
 

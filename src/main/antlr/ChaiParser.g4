@@ -163,12 +163,18 @@ lambda: LAMBDA lambdaParams? COLON expression;
 lambdaParams: (IDNAME type COMMA)* IDNAME type;
 
 // a term is an individual piece of an expression
-term: IDNAME
+term:
+    // an identifier of some kind
+    IDNAME
+
     // list index like nums[i]
     | term LBRACK expression RBRACK
 
     // self as used in classes
     | SELF
+
+    // a constructor
+    | (INT | FLOAT | STRING | BOOL | TYPENAME) LPAREN (expression (COMMA expression)*)? RPAREN
 
     // list slice
     | term LBRACK expression? COLON expression? RBRACK
@@ -197,9 +203,6 @@ term: IDNAME
     
     // a discriminated union
     | TYPENAME expression?
-
-    // a class reference
-    | SELF
 
     // an actual value from the lexer
     | literal
