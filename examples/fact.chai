@@ -6,5 +6,5 @@ def fact(num Int) Int:
 
 def main():
     for i in [1 .. 10]:
-        print(i, "! = ", fact(i))
+        println(i + "! = " + fact(i))
 

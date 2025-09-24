@@ -13,7 +13,7 @@ def main():
     while not done:
         # make a guess
         guess = (max + min) // 2
-        print("Is your number", guess, "? ")
+        println("Is your number " + guess + "? ")
         answer = input("")
         round += 1
         
@@ -25,6 +25,6 @@ def main():
         elif answer == "high":
             max = guess - 1
         else:
-            print("Answers are 'yes', 'low', or 'high'.")
-    print("Got it!")
+            println("Answers are 'yes', 'low', or 'high'.")
+    println("Got it!")
 

@@ -9,5 +9,5 @@ def isEven(num Int) Bool:
     return num % 2 == 0
 
 def main():
-    print(filter(isEven, [1 .. 20]))
+    println(filter(isEven, [1 .. 20]))
 

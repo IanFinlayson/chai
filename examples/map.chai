@@ -6,5 +6,5 @@ def map<T1, T2>(f (T1 -> T2), list [T1]) [T2]:
     return result
 
 def main():
-    print(map(lambda x Int: x * x, [1 .. 10]))
+    println(map(lambda x Int: x * x, [1 .. 10]))
 

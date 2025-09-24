@@ -15,5 +15,5 @@ def getCoords(d Direction) (Int, Int):
 
 def main():
     let d = North
-    print(getCoords(d))
+    println(getCoords(d))
 

@@ -9,6 +9,6 @@ def main():
     c1 = makeCounter(1, 10)
     c2 = makeCounter(10, -1)
     for i in [1 .. 10]:
-        print(c1())
-        print(c2())
+        println(c1())
+        println(c2())
 

@@ -1,7 +1,7 @@
 def main():
     let add = lambda a Int, b Int: a + b
-    print(add(5, 7))
+    println(add(5, 7))
     
     # should print H
-    print((lambda s String: s[0])("Hey"))
+    println((lambda s String: s[0])("Hey"))
     

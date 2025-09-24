@@ -11,7 +11,7 @@ def slope(x0 Int, y0 Int, x1 Int, y1 Int) Option<Int>:
 def main():
     match slope(10, 5, 9, 8):
         case None:
-            print("Could not find slope of vertical line!")
+            println("Could not find slope of vertical line!")
         case Some num:
-            print("The slope of the line is", num)
+            println("The slope of the line is " + num)
 

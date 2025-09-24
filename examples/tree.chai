@@ -20,7 +20,7 @@ def traverse<T>(tree Tree<T>):
             return
         case Node (root, left, right):
             traverse(left)
-            print(root)
+            println(root)
             traverse(right)
 
 # test this out

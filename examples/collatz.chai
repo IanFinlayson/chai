@@ -1,7 +1,7 @@
 def collatz(number Int) Int:
     var steps = 0
     while number != 1:
-        print(number)
+        println(number)
         if number % 2 == 0:
             number //= 2
         else:
@@ -12,5 +12,5 @@ def collatz(number Int) Int:
 def main():
     let number = 7
     let steps = collatz(number)
-    print("Done in ", steps, " steps.")
+    println("Done in " + steps + " steps.")
 

@@ -1,0 +1,35 @@
+#!/bin/bash
+
+
+run_test() {
+    echo "Testing $1"
+    gradle --quiet --console plain run --args="tests/$1" > ./$1.output
+    diff -q ./$1.output tests/$1.out
+    result=$?
+    rm -f ./$1.output
+    return $result
+}
+
+tests=$(cd tests && ls *.chai)
+fails="0"
+total="0"
+for test in $tests
+do
+    run_test $test
+    if [ "$?" -ne 0 ]
+    then
+        fails=$(($fails+1))
+    fi
+    total=$(($total+1))
+done
+
+if [ $fail -eq "0" ]
+then
+    echo "All test cases have passed!"
+else
+    echo "$fails of $total test cases have failed"
+fi
+
+
+
+

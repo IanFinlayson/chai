@@ -10,9 +10,9 @@ class Student:
         self.gpa = 0
 
     def print():
-        print("Name:", self.name)
-        print("Credits:", self.credits)
-        print("GPA:", self.gpa)
+        println("Name:" + self.name)
+        println("Credits:" + self.credits)
+        println("GPA:" + self.gpa)
 
     def canGraduate():
         return self.credits >= 120 and self.gpa >= 2.0

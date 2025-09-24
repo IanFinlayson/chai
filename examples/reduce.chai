@@ -7,5 +7,5 @@ def reduce<T>(f (T -> T -> T), start T, list [T]) T:
     
 def main():
     let sum = reduce(lambda x Int, y Int: x + y, 0, [1 .. 100])
-    print(sum)
+    println(sum)
 
