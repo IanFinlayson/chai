@@ -12,5 +12,5 @@ def collatz(number Int) Int:
 def main():
     let number = 7
     let steps = collatz(number)
-    println("Done in " + steps + " steps.")
+    println("Done in ", steps, " steps.")
 

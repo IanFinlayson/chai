@@ -20,14 +20,15 @@ unit:
     ;
 
 // a def statement (typename for the name is ONLY for constructors -- checked in type checker)
-functiondef: DEF (IDNAME | TYPENAME) typeparams? LPAREN paramlist? RPAREN functype? COLON NEWLINE INDENT statements DEDENT;
+functiondef: DEF (IDNAME | TYPENAME) typeparams? LPAREN paramlist? variadic? RPAREN functype? COLON NEWLINE INDENT statements DEDENT;
 functype: type | VOID;
 paramlist: (param COMMA)* param;
 
-// a single parameter, with a default value and/or a type
-param: IDNAME type
-     | IDNAME ASSIGN term type?
-     ;
+// a single parameter
+param: IDNAME type;
+
+// a variadic parameter
+variadic: IDNAME ELIPSIS type;
 
 // a class declaration (pass is allowed, or else must be units
 classdef: CLASS TYPENAME COLON NEWLINE INDENT ((unit | NEWLINE)+ | PASS) DEDENT;
@@ -126,12 +127,7 @@ elseclause: ELSE COLON NEWLINE INDENT statements DEDENT;
 functioncall: term LPAREN arglist? RPAREN;
 
 // the supplied argument list, containing 0 or more expression, separated with commas
-arglist: (argument COMMA)* argument;
-
-// a single argument, maybe a keyword one
-argument: expression
-        | IDNAME ASSIGN expression
-        ;
+arglist: (expression COMMA)* expression;
 
 // any valid Chai expression
 expression: expression DOT IDNAME

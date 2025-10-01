@@ -1,0 +1,13 @@
+
+def sum(nums .. Int) Int:
+    total = 0
+    for num in nums:
+        total += num
+    return total
+
+def main():
+    print(sum())
+    print(sum(17))
+    print(sum(17, 3))
+    print(sum(17, 3, 9, 11, 404, -27))
+

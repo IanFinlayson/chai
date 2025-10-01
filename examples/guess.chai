@@ -13,7 +13,7 @@ def main():
     while not done:
         # make a guess
         guess = (max + min) // 2
-        println("Is your number " + guess + "? ")
+        println("Is your number ", guess, "? ")
         answer = input("")
         round += 1
         

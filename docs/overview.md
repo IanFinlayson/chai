@@ -21,7 +21,7 @@ Chai:
 ```
 # a simple program
 def main():
-    print("Hello World!")
+    println("Hello World!")
 ```
 
 Chai includes the basic Python control structures including loops and if/else
@@ -32,13 +32,13 @@ def main():
     var number = Int(input("Starting number: "))
     
     while number != 1:
-        print(number)
+        println(number)
         if number % 2 == 0:
             number /= 2
         else:
             number = number * 3 + 1
     
-    print("Done")
+    println("Done")
 ```
 
 Note that variables are introduced with the `var` keyword.  This prevents the
@@ -79,7 +79,7 @@ def fact(num Int) Int:
 
 def main():
     for i in [1 .. 10]:
-        print(i, "! = ", fact(i))
+        println(i, "! = ", fact(i))
 ```
 
 By providing local type inference but requiring declarations on function
@@ -100,7 +100,7 @@ Like Python, for loops can be used to iterate over elements in a list:
 
 ```
 for num in nums:
-    print(num)
+    println(num)
 ```
 
 Unlike Python, lists are homogeneous -- all elements must be of the same
@@ -148,7 +148,7 @@ sentiments["great"] = 3
 
 And read values using the same syntax:
 ```
-print(sentiments["awesome"])
+println(sentiments["awesome"])
 ```
 
 If we want to make an empty dictionary, we do so like this:
@@ -174,7 +174,7 @@ something is in a set:
 
 ```
 if "Sauron" in villains:
-    print("Author is a LOTR fan!")
+    println("Author is a LOTR fan!")
 ```
 
 Set elements are unordered and do not allow duplicate values.
@@ -289,7 +289,7 @@ as they are needed.  We can call it like so:
 
 ```
 for fib in fibFinite(100):
-    print(fib)
+    println(fib)
 ```
 
 Here we never store the whole list of numbers at any point, using less memory.
@@ -357,11 +357,11 @@ For example, we can use this to match values from a tuple:
 def printInfo(info (String, Int)):
     match info:
         case ("", _):
-            print("No name given")
+            println("No name given")
         case (_, 0):
-            print("No age given")
+            println("No age given")
         case (name, age):
-            print(name, "is", age, "years old!")
+            println(name, "is", age, "years old!")
 ```
 
 The match statement _destructures_ its arguments.  Here the third
@@ -388,15 +388,15 @@ These destructuring matches can be nested of course:
 def printInfo(info [(String, Int)]):
     match info:
         case []:
-            print("Done!")
+            println("Done!")
         case (name, 0) :: rest:
-            print(name, "is missing their age!")
+            println(name, "is missing their age!")
             printInfo(rest)
         case ("Hammy", _) :: rest:
-            print("If your name is Hammy, I don't care your age!")
+            println("If your name is Hammy, I don't care your age!")
             printInfo(rest)
         case (name, age) :: rest:
-            print(name, "is", age, "years old.")
+            println(name, "is", age, "years old.")
             printInfo(rest)
 ```
 
@@ -420,7 +420,7 @@ def main():
     let add7 = add(7)
 
     # should print 12
-    print(add7(5))
+    println(add7(5))
 ```
 
 This can be helpful, especially when used with higher-order functions.  For
@@ -431,6 +431,33 @@ well) to form new functions by pre-supplying the function argument:
 let sum = reduce(add)
 let capitalize = map(toupper)
 ```
+
+
+## Variadic Functions
+
+Chai supports functions with an unbounded number of parameters, provided
+that they are all the same type and variadic parameters are the last into
+a function.  For example, the `print` and `println` functions take any
+number of parameters.  We can also write our own variadic sum function
+to add any number of integers:
+
+```
+def sum(nums .. Int):
+    total = 0
+    for num in nums:
+        total += num
+    return total
+```
+
+Here, the nums parameter can be treated as a list of integers.  However
+when called, it will be done using separate parameters:
+
+```
+let x1 = sum()
+let x2 = sum(4, 5)
+let x3 = sum(11, 42, 19, 6, -4)
+```
+
 
 
 ## Lambda Functions
@@ -444,7 +471,7 @@ Here is an example of a simple lambda:
 ```
 def main():
     let func = lambda x Int: x + 1
-    print(func(5))
+    println(func(5))
 ```
 
 This should print 6.  Lambda's are often used with higher-order functions such
@@ -558,7 +585,7 @@ class Person:
         friends = []        # 'self' optional here
 
     def print():
-        print(name, "is", age, "years old, and has", len(friends), "friends.")
+        println(name, "is", age, "years old, and has", len(friends), "friends.")
 ```
 
 This demonstrates the use of classes to group data and methods together.  Notice

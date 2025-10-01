@@ -23,7 +23,7 @@ do
     total=$(($total+1))
 done
 
-if [ $fail -eq "0" ]
+if [ $fails -eq "0" ]
 then
     echo "All test cases have passed!"
 else
