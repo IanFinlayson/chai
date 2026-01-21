@@ -28,10 +28,6 @@ public class Main {
         }
     }
 
-
-
-
-
     public static void main(String args[]) {
         // get input file
         if (args.length != 1) {

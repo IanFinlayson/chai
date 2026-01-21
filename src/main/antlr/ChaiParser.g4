@@ -39,7 +39,7 @@ typeparams: LESS (TYPENAME COMMA)* TYPENAME GREATER;
 // a type definition such as a discriminated union (but really anything)
 typedef: TYPE TYPENAME typeparams? ASSIGN type NEWLINE;
 
-// any type usable in
+// any type usable in Chai
 type: INT
     | FLOAT
     | STRING
@@ -152,7 +152,6 @@ expression: expression DOT IDNAME
           | functioncall
           | term
           ;
-
 
 // a lambda function
 lambda: LAMBDA lambdaParams? COLON expression;
