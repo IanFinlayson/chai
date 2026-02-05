@@ -1,1 +1,5 @@
-../examples/hello.chai
+# hello world program
+
+def main():
+    println("Hello World!")
+

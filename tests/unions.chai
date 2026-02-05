@@ -1,1 +1,19 @@
-../examples/unions.chai
+# make a simple union
+type Direction = North | South | East | West
+
+# match based off it
+def getCoords(d Direction) (Int, Int):
+    match d:
+        case North:
+            return (0, -1)
+        case South:
+            return (0, 1)
+        case East:
+            return (1, 0)
+        case West:
+            return (-1, 0)
+
+def main():
+    let d = North
+    println(getCoords(d))
+

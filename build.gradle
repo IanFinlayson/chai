@@ -13,8 +13,8 @@ repositories {
 }
 
 dependencies {
-    antlr 'org.antlr:antlr4:4.13.1'
-    implementation 'org.antlr:antlr4-runtime:4.13.1'
+    antlr 'org.antlr:antlr4:4.13.2'
+    implementation 'org.antlr:antlr4-runtime:4.13.2'
 }
 
 // antlr stuff
@@ -42,7 +42,7 @@ sourceSets {
 
 // make it runnable
 application {
-    mainClassName = 'net.ianfinlayson.chai.Main'
+    mainClass = 'net.ianfinlayson.chai.Main'
 }
 
 // make it so we can get input (why not the default??)

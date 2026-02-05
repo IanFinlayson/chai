@@ -9,7 +9,7 @@ program:
     (unit | imprt | NEWLINE)* EOF;
 
 // imports can only exist at top level
-imprt: IMPORT IDNAME NEWLINE;
+imprt: (IMPORT | OPEN) IDNAME (DOT IDNAME)* NEWLINE;
 
 // units can be top-level things, or also inside a class/def
 unit: 

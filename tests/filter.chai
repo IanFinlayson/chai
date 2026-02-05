@@ -1,1 +1,13 @@
-../examples/filter.chai
+def filter<T>(f (T -> Bool), list [T]) [T]:
+    var result = []
+    for item in list:
+        if f(item):
+            result += item
+    return result
+
+def isEven(num Int) Bool:
+    return num % 2 == 0
+
+def main():
+    println(filter(isEven, [1 .. 20]))
+

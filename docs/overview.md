@@ -1,9 +1,5 @@
 # Chai Programming Language Overview
 
-
-# TODO: import
-
-
 ## Overview
 
 Chai aims to be a high-level, general-purpose programming language.  It combines
@@ -531,7 +527,7 @@ def map<From, To>(f (From -> To), list [From]) [To]:
     return result
 
 def main():
-    let perfect_squares = map(lambda x: x * x, [1 .. 10])
+    let perfect_squares = map(lambda x Int: x * x, [1 .. 10])
 ```
 
 Here, we have two type parameters, called From and To.  This map function takes
@@ -545,7 +541,7 @@ We do not need to supply the types of map when calling it, since the compiler
 infers them from the parameters.  If we wanted to, we could though:
 
 ```
-let perfect_squares = map<Int, Int>(lambda x: x * x, [1 .. 10])
+let perfect_squares = map<Int, Int>(lambda x Int: x * x, [1 .. 10])
 ```
 
 ## None
@@ -583,7 +579,7 @@ class Person:
     var age Int
     var friends [Person]
 
-    def Person(name, age):
+    def Person(name String, age Int):
         self.name = name
         self.age = age
         friends = []        # 'self' optional here
@@ -601,144 +597,52 @@ Chai classes are a little simpler than they are in Python or other
 object-oriented languages.  In particular, inheritance is not supported.
 Implementation inheritance has vanishingly few worthwhile applications, and we
 do not believe it worth the complexity.  *Interface* inheritance  is worthwhile,
-and is provided through traits.
+and we are looking into supporting that through type traits in the future.
 
 Like Python, Chai does not support access modifiers such as public, private,
 etc.  All methods and fields are essentially public.
 
 
+## Module System
 
-## Traits
-
-Type parameters provide static polymorphism, while Traits provide dynamic
-polymorphism.  A trait is similar to an interface in Java.  For example,
-suppose we are making graphical program where we want a list of things that
-are drawn to the screen, but each will do so differently.
-
-We introduce a trait which provides the needed functionality:
+Chai programs exist in directories, with a number of .chai files, potentially
+in nested directories.  If a file needs to reference types or functions from
+another file, it can do so with an `import` statement:
 
 ```
-trait Drawable:
-    def draw(s Screen)
-    def getLayer() Int
+import utils
+import graphics.sprites
 ```
 
-We can then indicate that a class has said trait:
+The first of these lines will allow us to reference code inside of `utils.chai`
+and the second allows us to reference code in `graphics/sprites.chai`.  Doing
+so could look like this:
 
 ```
-class Character implement Drawable:
-    var bitmap Image
-    var x = 0
-    var y = 0
-
-    def Character(x, y):
-        self.x = x
-        self.y = y
-
-    def draw(s Screen) Bool:
-        self.bitmap.draw(s)
-        return True
-
-    # presumably this is used for z-sorting
-    def getLayer() Int:
-        return 1
-
-    def otherThing():
-        print("some other method not part of trait")
+def main():
+    utils.bogoSort([4, 1, 3])
+    let s = sprites.Sprite("mario.png", (0, 0))
 ```
 
-If a class provides multiple traits, they can be separated with the & operator in the
-class declaration line.
+If the imported Chai file is inside a sub-directory (as sprites.chai is), only
+the name of the module itself is included (i.e. it's not
+graphics.sprites.Sprite).
 
-We can also implement a trait for a class after it has been created.  For
-instance, we could have done the above like this instead:
-
-```
-class Character:
-    var bitmap Image
-    var x = 0
-    var y = 0
-
-    def Character(x, y):
-        self.x = x
-        self.y = y
-
-    def otherThing():
-        print("some other method not part of trait")
-```
-
-And provide the code to make this class drawable separately, even in a
-different file:
+We can also use the `open` keyword if we don't want to have to namespace things.
+So we could alternatively have done the following:
 
 ```
-implement Drawable for Character c:
-    def draw(s Screen) Bool:
-        c.bitmap.draw(s)
-        return True
+open utils
+open graphics/sprites
 
-    def getLayer() Int:
-        return 1
+def main():
+    bogoSort([4, 1, 3)
+    let s = Sprite("mario.png", (0, 0))
 ```
 
-Of course the reason to do this is to be able to write code to the polymorphic
-trait.  For instance
-
-```
-var objects [Drawable]
-
-# we can add any objects to this list that have the Drawable trait:
-objects += Character()
-objects += Enemy("Goblin")
-objects += Enemy("Skeleton")
-
-# we can then call the methods of the trait
-sort(objects, key = lambda a, b: a.getLayer() < b.getLayer())
-
-for obj in objects:
-    obj.draw(screen)
-```
-
-Because we can implement a trait outside of the class statement, we can do so
-for classes we did not write or, in fact, any type at all.  We could implement
-the Drawable trait for Strings for instance:
-
-```
-implement Drawable for String s:
-    def draw(s Screen):
-        s.writeText(s)
-    
-    def getLayer() Int:
-        return 0
-```
-
-Traits can thus be added for any type: those built in to the language, part of
-libraries, or ones we created ourselves.
-
-We can also indicate that a type should fulfill multiple traits by combining
-them with the & operator.  For instance, the following function takes a
-parameter that can be any type with both the Drawable and Updatable traits:
-
-```
-def addObjectToScene(object Drawable & Updatable):
-    pass
-```
-
-If we have a set of traits we will be using often, we can also make a type alias
-for it instead:
-
-```
-type Entity = Drawable & Updatable
-```
+Chai allows circular imports, but top-level variable definitions can only be
+initialized to values known at compile-time.  This makes it so we cannot
+run into issues where initialization order of modules really matters at all.
 
 
-## Standard Traits
-
-Chai's type system includes several traits that are used by the language and
-libraries:
-
- - Equatable
- - Comparable
- - Printable
- - Hashable
- - Iterable
 

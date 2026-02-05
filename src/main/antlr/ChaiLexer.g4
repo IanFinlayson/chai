@@ -118,6 +118,7 @@ LET:        'let';
 MATCH:      'match';
 NOT:        'not';
 OF:         'of';
+OPEN:       'open';
 OR:         'or';
 PASS:       'pass';
 RETURN:     'return';

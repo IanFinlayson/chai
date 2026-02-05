@@ -1,1 +1,7 @@
-../examples/lambda.chai
+def main():
+    let add = lambda a Int, b Int: a + b
+    println(add(5, 7))
+    
+    # should print H
+    println((lambda s String: s[0])("Hey"))
+    

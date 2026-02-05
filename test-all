@@ -3,7 +3,7 @@
 
 run_test() {
     echo "Testing $1"
-    gradle --quiet --console plain run --args="tests/$1" > ./$1.output
+    ./gradlew --quiet --console plain run --args="tests/$1" > ./$1.output
     diff -q ./$1.output tests/$1.out
     result=$?
     rm -f ./$1.output
