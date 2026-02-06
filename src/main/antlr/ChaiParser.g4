@@ -124,7 +124,7 @@ elifclause: ELIF expression COLON NEWLINE INDENT statements DEDENT;
 elseclause: ELSE COLON NEWLINE INDENT statements DEDENT;
 
 // a function call
-functioncall: term LPAREN arglist? RPAREN;
+functioncall: term typeparamfills? LPAREN arglist? RPAREN;
 
 // the supplied argument list, containing 0 or more expression, separated with commas
 arglist: (expression COMMA)* expression;

@@ -1,0 +1,250 @@
+import utils
+import graphics.sprites
+
+
+type Stuff = (Int, Float, String)
+
+def yar(s Stuff):
+    for i in [0 .. 2]:
+        print(s[i])
+
+def sets():
+    let villains = {"Darth Vader", "Voldemort", "Sauron"}
+    if "Sauron" in villains:
+        println("Author is a LOTR fan!")
+    let empty {String} = {}
+    return empty + villains
+
+def dicties():
+    let sentiments = {"good": 2, "awesome": 4, "bad": -2, "awful": -3}
+
+    sentiments["great"] = 3
+
+    println(sentiments["awesome"])
+    let phonebook {String:String} = {:}
+    return phonebook
+
+def collatz():
+    var number = Int(input("Starting number: "))
+    
+    var count = 0
+    while number != 1:
+        count += 1
+        if number % 2 == 0:
+            number /= 2
+        else:
+            number = number * 3 + 1
+    return count
+
+def listy(ls [Int]):
+    let nums = [1, 2, 3, 4]
+    for num in nums:
+        print(num)
+    return ls + [7]
+
+def sup():
+    print("Sup bro?")
+    let name = "Johann Fitzsimmons"
+    var lname String
+
+    lname = "Shortles"
+    var num Float = 10
+
+    let tuppy = (num, lname, True, "why though?")
+
+def comps():
+    let evens = [x for x in [0 .. 100] if x % 2 == 0]
+    let squares  = [x ** 2 for x in [1 .. 10]]
+    let powersOf2 = [2 ** x for x in [0 .. ]]
+    let devilOrGoat = ["Devil" if year % 2 == 0 else "Goat" for year in [1900 .. ]]
+    let numList = List([1 .. 100])
+    return evens[5]
+
+def ranges():
+    nums = [1 .. 10]
+    evens = [2, 4 .. 100]
+    odds = [9, 7 .. 1]
+    naturals = [1 ..]
+    negatives = [-1, -2 ..]
+    ones = [1, 1 ..]
+
+type Date = (Int, Int, Int)
+
+def getBirthDay() Date:
+    return (10, 26, 1984)
+
+
+
+# generators and shit
+def fibFinite(num Int) Int*:
+    var a = 1
+    var b = 1
+    for i in [1 .. num]:
+        yield a
+        let temp = a
+        a = b
+        b = temp
+
+def fibInfinite() Int*:
+    var a = 1
+    var b = 1
+    while True:
+        yield a
+        let temp = a
+        a = b
+        b = temp
+
+def callFibbies():
+    for fib in fibFinite(100):
+        println(fib)
+
+
+
+
+type Direction = North | South | East | West
+
+type Tree = Leaf | Node of (Int, Tree, Tree)
+
+# insert a value into a tree
+def insert(tree Tree, value Int) Tree:
+    match tree:
+        case Leaf:
+            return Node (value, Leaf, Leaf)
+        case Node (root, left, right):
+            if value < root:
+                return Node (root, insert(left, value), right)
+            else:
+                return Node (root, left, insert(right, value))
+
+def printInfo(info (String, Int)):
+    match info:
+        case ("", _):
+            println("No name given")
+        case (_, 0):
+            println("No age given")
+        case (name, age):
+            println(name, "is", age, "years old!")
+
+
+def count(nums [Int], accum Int) Int:
+    match nums:
+        case []:
+            return accum
+        case next :: rest:
+            return count(rest, accum + next)
+
+def printInfo(info [(String, Int)]):
+    match info:
+        case []:
+            println("Done!")
+        case (name, 0) :: rest:
+            println(name, "is missing their age!")
+            printInfo(rest)
+        case ("Hammy", _) :: rest:
+            println("If your name is Hammy, I don't care your age!")
+            printInfo(rest)
+        case (name, age) :: rest:
+            println(name, "is", age, "years old.")
+            printInfo(rest)
+
+
+
+
+def add(a Int, b Int) Int:
+    return a + b
+
+def calladd():
+    # make a function with 7 pre-filled in for argument 1
+    let add7 = add(7)
+
+    # should print 12
+    println(add7(5))
+
+
+
+def sum(nums .. Int):
+    total = 0
+    for num in nums:
+        total += num
+    return total
+
+def sumcall():
+    let x1 = sum()
+    let x2 = sum(4, 5)
+    let x3 = sum(11, 42, 19, 6, -4)
+
+
+def lamby():
+    let func = lambda x Int: x + 1
+    println(func(5))
+
+
+def reduce(f (Int->Int->Int), ls [Int]):
+    var accum = ls[0]
+    for num in ls[1:]:
+        accum = f(accum, num)
+    return accum
+
+def main():
+    let x = Int(input())
+    let factorial = reduce(lambda x Int, y Int: x * y, [1 .. x])
+    print(factorial(6))
+
+def sort<T>(list [T]):
+    var sorted = false
+    while not sorted:
+        sorted = true
+        for i in [0 .. len(list) - 2]:
+            if list[i] > list[i + 1]:
+                var temp = list[i]
+                list[i] = list[i + 1]
+                list[i + 1] = temp
+
+def map<From, To>(f (From -> To), list [From]) [To]:
+    var result [To] = []
+    for item in list:
+        result += f(item)
+    return result
+
+def callmap():
+    print("bur")
+    let perfect_squares = map(lambda x Int: x * x, [1 .. 10])
+    print(perfect_squares)
+
+    # TODO FIXME allow this!
+    let again = map<Int, Int>(lambda x Int: x * x, [1 .. 10])
+    print(again)
+
+
+
+type Option<T> = None | Some of T
+
+def slope(x0 Int, y0 Int, x1 Int, y1 Int) Option<Int>:
+    if x0 != x1:
+        return Some (y1 - y0) / (x1 - x0)
+    else:
+        return None
+
+class Person:
+    var name String
+    var age Int
+    var friends [Person]
+
+    def Person(name String, age Int):
+        self.name = name
+        self.age = age
+        friends = []        # 'self' optional here
+
+    def print():
+        println(name, "is", age, "years old, and has", len(friends), "friends.")
+
+def makeStuds():
+    let s1 = Person("Bob", 42)
+    let s2 = Person("Susan", 36)
+
+def importies():
+    utils.bogoSort([4, 1, 3])
+    let s = sprites.Sprite("mario.png", (0, 0))
+
+
+
