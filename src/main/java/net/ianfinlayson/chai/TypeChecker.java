@@ -1,7 +1,5 @@
 package net.ianfinlayson.chai;
 
-//import org.antlr.v4.runtime.tree.TerminalNode;
-
 
 public class TypeChecker extends ChaiParserBaseVisitor<Type> {
 
@@ -42,3 +40,4 @@ public class TypeChecker extends ChaiParserBaseVisitor<Type> {
 	@Override public Type visitDictentry(ChaiParser.DictentryContext ctx) { return visitChildren(ctx); }
 	@Override public Type visitLiteral(ChaiParser.LiteralContext ctx) { return visitChildren(ctx); }
 }
+
